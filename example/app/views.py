@@ -46,7 +46,7 @@ def index(request):
 
         # order by annotated field coalesced with original field.
         Blog.objects.annotate(
-            title_i18n=Coalesce(RawSQL('i18n->>%s', ('title_nl',), 'title'))
+            title_i18n=Coalesce('title', RawSQL('i18n->>%s', ('title_nl',)))
         ).order_by('-title_i18n'),
 
     ]
