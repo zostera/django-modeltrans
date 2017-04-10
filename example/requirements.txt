@@ -6,3 +6,4 @@ pytz==2017.2
 wheel==0.26.0
 # master (unreleased) version with JSONColumn
 https://github.com/bradleyayers/django-tables2/archive/master.zip
+sqlparse==0.2.3

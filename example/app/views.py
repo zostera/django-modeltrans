@@ -7,17 +7,9 @@ from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
 
+from sqlparse import format as format_sql
+
 from .models import Blog
-
-
-def format_sql(q):
-    return (
-        str(q)
-        .replace('FROM', '\nFROM\n  ')
-        .replace('WHERE', '\nWHERE')
-        .replace('ORDER BY', '\nORDER BY')
-        .replace(',', ',\n  ')
-    )
 
 
 class Table(tables.Table):
@@ -74,7 +66,7 @@ def index(request):
     for q in test_qs:
         tables.append({
             'data': DataTable(q),
-            'query': format_sql(q.query)
+            'query': format_sql(str(q.query), reindent=True)
         })
 
     return render(request, 'index.html', {
