@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import json
-
 import django_tables2 as tables
 from django.db.models.expressions import RawSQL
+from django.db.models.functions import Coalesce
 from django.shortcuts import render
-from django.utils.html import format_html
 
 from .models import Blog
 
@@ -30,11 +28,6 @@ class DataTable(tables.Table):
             'class': 'table table-compact table-striped'
         }
 
-    def render_i18n(self, value):
-        if value is None:
-            return '-'
-        return format_html('<pre>{}</pre>', json.dumps(value, indent=2))
-
 
 def index(request):
     test_qs = [
@@ -47,7 +40,15 @@ def index(request):
         # Blog.objects.order_by(RawSQL('i18n->>%s DESC', ('title_nl', ))),
 
         # order by annotated field
-        Blog.objects.annotate(title_i18n=RawSQL('i18n->>%s', ('title_nl',))).order_by('-title_i18n'),
+        Blog.objects.annotate(
+            title_i18n=RawSQL('i18n->>%s', ('title_nl',))
+        ).order_by('-title_i18n'),
+
+        # order by annotated field coalesced with original field.
+        Blog.objects.annotate(
+            title_i18n=Coalesce(RawSQL('i18n->>%s', ('title_nl',), 'title'))
+        ).order_by('-title_i18n'),
+
     ]
 
     tables = []
