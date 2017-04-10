@@ -1,0 +1,6 @@
+# Python binaries
+*.pyc
+
+.env
+
+.tox
