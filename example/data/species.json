@@ -1,0 +1,10 @@
+[
+    {"name": "Falcon", "i18n": {"name_nl": "Valk"}},
+    {"name": "Frog", "i18n": {"name_nl": "Kikker"}},
+    {"name": "Toad", "i18n": {"name_nl": "Pad"}},
+    {"name": "Duck", "i18n": {"name_nl": "Eend"}},
+    {"name": "Dragonfly", "i18n": {"name_nl": "Libellen"}},
+    {"name": "Crayfish"},
+    {"name": "Cod", "i18n": {"name_de": "Kabeljau", "name_fr": "Morue"}},
+    {"name": "Dolphin", "i18n": {"name_nl": "Dolfijn"}}
+]

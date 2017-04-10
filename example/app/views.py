@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import json
+
 import django_tables2 as tables
 from django.db.models import CharField
 from django.db.models.expressions import RawSQL
@@ -16,20 +18,10 @@ class Table(tables.Table):
     data = tables.TemplateColumn(template_name='datatable.html')
     query = tables.TemplateColumn(template_name='query.html')
 
-    class Meta:
-        template = 'django_tables2/bootstrap.html'
-        attrs = {
-            'class': 'table table-compact table-striped'
-        }
-
 
 class DataTable(tables.Table):
     class Meta:
         model = Blog
-        template = 'django_tables2/bootstrap.html'
-        attrs = {
-            'class': 'table table-compact table-striped'
-        }
 
 
 def index(request):
@@ -71,4 +63,17 @@ def index(request):
 
     return render(request, 'index.html', {
         'table': Table(tables)
+    })
+
+
+def fixtures(request):
+    Blog.objects.all().delete()
+    with open('data/species.json') as f:
+        data = json.load(f)
+
+        for item in data:
+            Blog.objects.create(title=item['name'], i18n=item.get('i18n', None))
+
+    return render(request, 'index.html', {
+        'table': DataTable(Blog.objects.all())
     })

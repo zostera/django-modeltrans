@@ -129,3 +129,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+DJANGO_TABLES2_TEMPLATE = 'django_tables2/bootstrap.html'
+DJANGO_TABLES2_TABLE_ATTRS = {
+    'class': 'table table-compact table-striped'
+}

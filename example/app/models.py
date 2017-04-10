@@ -9,7 +9,6 @@ from .manager import MultilingualQuerySetManager
 
 class Blog(models.Model):
     title = models.CharField(max_length=255)
-    slug = models.SlugField(null=True)
     body = models.TextField(null=True)
 
     i18n = JSONField(editable=False, null=True)
