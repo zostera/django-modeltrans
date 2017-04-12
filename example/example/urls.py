@@ -16,10 +16,11 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from app.views import fixtures, index
+from app.views import fixtures, index, test
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'fixtures/', fixtures),
+    url(r'test/', test),
     url(r'', index),
 ]

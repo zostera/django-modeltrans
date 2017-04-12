@@ -19,3 +19,11 @@ class Blog(models.Model):
 
     def __str__(self):
         return self.title
+
+class BlogI18n(Blog):
+    # proxy model to test MultilingualQuerySetManager without
+    # compromising the original's functionality
+
+    objects = MultilingualQuerySetManager()
+    class Meta(object):
+        proxy = True

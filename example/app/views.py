@@ -4,14 +4,15 @@ from __future__ import unicode_literals
 import json
 
 import django_tables2 as tables
-from django.db.models import CharField
+from django.db import models
+from django.db.models import CharField, TextField
 from django.db.models.expressions import RawSQL
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, Cast
 from django.shortcuts import render
 
 from sqlparse import format as format_sql
 
-from .models import Blog
+from .models import Blog, BlogI18n
 
 
 class Table(tables.Table):
@@ -27,7 +28,7 @@ class DataTable(tables.Table):
 def index(request):
     test_qs = [
         # # has_key, PostgreSQL operator  '?'
-        # Blog.objects.filter(i18n__has_key='title_nl'),
+        Blog.objects.filter(i18n__has_key='title_fr'),
         #
         # # order by RawSQL
         # Blog.objects.order_by(RawSQL('i18n->>%s', ('title_nl', ))),
@@ -42,15 +43,25 @@ def index(request):
         # ).order_by('-title_i18n'),
 
         # order by annotated field coalesce'd with original field.
-        Blog.objects.annotate(
-            title_i18n=Coalesce('title', RawSQL('i18n->>%s', ('title_nl',)))
-        ).order_by('-title_i18n'),
+        # Blog.objects.annotate(
+        #     title_i18n=Coalesce('title', RawSQL('i18n->>%s', ('title_nl',)))
+        # ).order_by('-title_i18n'),
 
         # when reversing the arguments to Coalesce, it suddenly complains about
         # the type, an output_field argument needs to be set:
         Blog.objects.annotate(
             title_i18n=Coalesce(RawSQL('i18n->>%s', ('title_nl',)), 'title', output_field=CharField())
         ).order_by('-title_i18n'),
+
+        # full text search op
+        # https://github.com/django/django/pull/6965
+        Blog.objects.annotate(
+            title_i18n=models.Func('i18n', template="%(expressions)s ->> 'title_nl'", output_field=models.TextField())
+        ).filter(title_i18n__contains='al'),
+
+        BlogI18n.objects.annotate(
+            title_nl=Coalesce(RawSQL('i18n->>%s', ('title_nl',)), 'title', output_field=CharField())
+        ).filter(title_nl__contains='al'),
 
     ]
 
@@ -65,6 +76,10 @@ def index(request):
         'table': Table(tables)
     })
 
+def test(request):
+    return render(request, 'index.html', {
+        'table': DataTable(BlogI18n.objects.all().order_by('title_nl'))
+    })
 
 def fixtures(request):
     Blog.objects.all().delete()
@@ -72,7 +87,7 @@ def fixtures(request):
         data = json.load(f)
 
         for item in data:
-            Blog.objects.create(title=item['name'], i18n=item.get('i18n', None))
+            Blog.objects.create(title=item['title'], i18n=item.get('i18n', None))
 
     return render(request, 'index.html', {
         'table': DataTable(Blog.objects.all())

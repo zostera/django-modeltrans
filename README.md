@@ -5,13 +5,12 @@ source of the `order_by` error message:
 https://github.com/django/django/blob/19b8ca5824b63ba1b46a2c12ccb67af920c5b685/django/db/models/sql/query.py#L1364
 
 
-# documentation
-https://www.postgresql.org/docs/9.5/static/functions-json.html
+# relevant 3rd party documentation
+- [PostgreSQL jsonb functions](https://www.postgresql.org/docs/9.5/static/functions-json.html)
 
 # Features
 
-- Use one `JSONBField` for every translatable field rather than one field per
-language per translatable field. (PostGreSQL only)
+- Use one `JSONBField` for every record, rather than one field per language per translatable field.
 - Django >= 1.11 for now
 - PostgreSQL >= 9.4 and Psycopg2 >= 2.5.4.
 
