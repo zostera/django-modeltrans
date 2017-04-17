@@ -60,6 +60,15 @@ class FilterTest(TestCase):
         qs = BlogI18n.objects.exclude(title_nl='Valk').exclude(title_nl='Pad')
         self.assertEquals({m.title for m in qs}, {'Frog', 'Duck', 'Dolphin'})
 
+    def test_get(self):
+        '''get() is just a special case of filter()'''
+        b = BlogI18n.objects.get(title_nl='Valk')
+
+        self.assertEquals(b.title, 'Falcon')
+
+        with self.assertRaisesMessage(BlogI18n.DoesNotExist, 'BlogI18n matching query does not exist.'):
+            BlogI18n.objects.get(title_fr='Boo')
+
 
 class OrderByTest(TestCase):
     EN = ['A', 'B', 'C', 'D', 'E', 'F', 'G']

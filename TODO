@@ -5,6 +5,8 @@
   - [*] Filtering/excluding
   - [*] Ordering
   - [*] Fallback to base language while ordering
+  - [*] get()
+  - [ ] create()
   - [ ] values()
   - [ ] values_list()
   - [ ] select_related()
