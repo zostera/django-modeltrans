@@ -5,7 +5,11 @@
   - [*] Filtering/excluding
   - [*] Ordering
   - [*] Fallback to base language while ordering
-  - [ ] Getting translated fields on a Model instance (if not annotated) (inject a __getattr__ on a Model?)
+  - [ ] values()
+  - [ ] values_list()
+  - [ ] select_related()
+  - [ ] spanning relations
+  - [*] Getting translated fields on a Model instance (if not annotated) (inject a __getattr__ on a Model?)
 
 
  - [ ] Registration of translatable models and fields

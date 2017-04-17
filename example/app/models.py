@@ -13,17 +13,32 @@ class Blog(models.Model):
 
     i18n = JSONField(editable=False, null=True)
 
-    # objects = MultilingualQuerySetManager()
-
-    translatable = ('title', 'body')
-
     def __str__(self):
         return self.title
+
 
 class BlogI18n(Blog):
     # proxy model to test MultilingualQuerySetManager without
     # compromising the original's functionality
 
+    translatable = ('title', 'body')
     objects = MultilingualQuerySetManager()
+
     class Meta(object):
         proxy = True
+
+    def __getattr__(self, key):
+        key_original = key[0:key.rfind('_')]
+
+        if '_' not in key_original and key_original not in self.translatable:
+            raise AttributeError(
+                "'{}' object has no attribute '{}'".format(self.__class__.__name__, key)
+            )
+        lang = key[key.rfind('_') + 1:]
+
+        if key in self.i18n:
+            return self.i18n[key]
+        else:
+            raise AttributeError(
+                "'{}.title' has no translation '{}'".format(self.__class__.__name__, lang)
+            )

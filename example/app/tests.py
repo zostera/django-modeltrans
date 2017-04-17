@@ -92,3 +92,17 @@ class OrderByTest(TestCase):
 
         qs = BlogI18n.objects.all().order_by('-title')
         self.assertEquals(key(qs, 'title'), sorted(self.EN, reverse=True))
+
+
+class TranslatedFieldGetTest(TestCase):
+    def test_has_no_translation(self):
+        m = BlogI18n(title='Falcon', i18n={
+            'title_nl': 'Valk',
+            'title_de': 'Falk'
+        })
+
+        with self.assertRaisesMessage(AttributeError, "'BlogI18n.title' has no translation 'fr'"):
+            m.title_fr
+
+        self.assertEquals(m.title_nl, 'Valk')
+        self.assertEquals(m.title_de, 'Falk')
