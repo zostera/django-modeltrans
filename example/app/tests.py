@@ -60,6 +60,10 @@ class FilterTest(TestCase):
         qs = BlogI18n.objects.exclude(title_nl='Valk').exclude(title_nl='Pad')
         self.assertEquals({m.title for m in qs}, {'Frog', 'Duck', 'Dolphin'})
 
+    def test_exclude_contains(self):
+        qs = BlogI18n.objects.exclude(title_nl__contains='o')
+        self.assertEquals({m.title for m in qs}, {'Falcon', 'Frog', 'Toad', 'Duck'})
+
     def test_get(self):
         '''get() is just a special case of filter()'''
         b = BlogI18n.objects.get(title_nl='Valk')
