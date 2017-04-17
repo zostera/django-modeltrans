@@ -1,9 +1,4 @@
-# django-model-translation2
-
-source of the `order_by` error message:
-
-https://github.com/django/django/blob/19b8ca5824b63ba1b46a2c12ccb67af920c5b685/django/db/models/sql/query.py#L1364
-
+# django-modeltranslation2
 
 # relevant 3rd party documentation
 - [PostgreSQL jsonb functions](https://www.postgresql.org/docs/9.5/static/functions-json.html)
@@ -14,12 +9,18 @@ https://github.com/django/django/blob/19b8ca5824b63ba1b46a2c12ccb67af920c5b685/d
 - Django >= 1.11 for now
 - PostgreSQL >= 9.4 and Psycopg2 >= 2.5.4.
 
+# Running the tests
+
+in `example` subdirectory, with the requirements in `requirements.txt`, use `./manage.py test`
+
 
 # Attribution
-Lots of concepts and code from https://github.com/deschler/django-modeltranslation,
+Some concepts and code from https://github.com/deschler/django-modeltranslation,
 which is in turn inspired by https://github.com/zmathew/django-linguo
 
-We started this solution at Zostera because we did not like the way
-django-modeltranslation adds one field per language and thus requires a migration
-when adding language and the unpredictability of the original field.
+We started this solution at Zostera because we did not like:
+- The way django-modeltranslation adds one field per language (and thus requires a migration
+when adding language)
+- The unpredictability of the original field.
+-
 Since JSONB is supported by Postgres now, we developed this approach.
