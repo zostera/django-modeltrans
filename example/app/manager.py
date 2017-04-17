@@ -1,6 +1,6 @@
 from django.core.exceptions import FieldError
 from django.db import models
-from django.db.models import CharField
+from django.db.models import CharField, TextField
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
 
@@ -9,39 +9,71 @@ class MultilingualQuerySet(models.query.QuerySet):
     def get_translatable_fields(self):
         return getattr(self.model, 'translatable', None)
 
-    def add_i18n_annotate(self, field_name, fallback=True):
+    def add_i18n_annotation(self, original_field, field_name, fallback=True):
         '''
         Add an annotation to the query to extract the translated verion of a field
-        from the jsonb field to allow filtering and ordering
+        from the jsonb field to allow filtering and ordering.
+
+        Arguments:
+            original_field (str): name of the original, untranslated field.
+            field_name (str): name of the translated field to add the
+                annotation for. For example `title_nl` will result in adding
+                someting like `i18n->>title_nl AS title_nl` to the Query.
+            fallback (bool): If `True`, `COALESCE` will be used to get the value
+                of the original field if the requested translation is not
+                available.
         '''
-        if '_' not in field_name:
-            return
-            # raise FieldError('Cannot extract a field ({}), it does not contain a language designator'.format(field_name))
+        assert field_name.startswith(original_field)
 
-        # TODO: split on last _, not on first
-        original = field_name.split('_')[0]
+        if original_field not in self.get_translatable_fields():
+            raise FieldError('Field ({}) is not defined as translatable'.format(original_field))
 
-        if original in self.get_translatable_fields():
-            if fallback:
-                # fallback to the original untranslated field
-                field = Coalesce(RawSQL('i18n->>%s', (field_name, )), original, output_field=CharField())
-            else:
-                field = Cast(RawSQL('i18n->>%s', (field, )), CharField())
+        if fallback:
+            # fallback to the original untranslated field
+            field = Coalesce(RawSQL('i18n->>%s', (field_name, )), original_field, output_field=CharField())
+        else:
+            field = Cast(RawSQL('i18n->>%s', (field_name, )), TextField())
 
-            self.query.add_annotation(field, field_name)
+        self.query.add_annotation(field, field_name)
 
     def order_by(self, *field_names):
-        '''Annotate the queryset if a translated field is requested for sorting'''
+        '''
+        Annotate translated fields before sorting
+        '''
 
         for field in field_names:
             # remove descending prefix to create the annotation
             if field[0] == '-':
                 field = field[1:]
-            self.add_i18n_annotate(field)
+            if '_' not in field:
+                continue
+
+            original_field = field[0:field.rfind('_')]
+
+            self.add_i18n_annotation(original_field, field, fallback=True)
 
         return super(MultilingualQuerySet, self).order_by(*field_names)
 
     def filter(self, *args, **kwargs):
+        '''
+        Annotate filter fields before filtering.
+
+        title_nl__contains='foo' should add an annotation for title_nl
+        title_nl='bar' should add an annotation for title_nl
+        '''
+        for field in kwargs.keys():
+            for translatable in self.get_translatable_fields():
+                if field.startswith(translatable):
+
+                    if '__' in field:
+                        field = field[0:field.rfind('__')]
+
+                    original_field = field[0:field.rfind('_')]
+                    self.add_i18n_annotation(original_field, field, fallback=False)
+
+
+        # TODO: handle args to translate the Q objects
+
         return super(MultilingualQuerySet, self).filter(*args, **kwargs)
 
 

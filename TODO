@@ -1,0 +1,18 @@
+ - [*] Verify that null by default is ok.
+ - [ ] POC working in an example project
+  - [ ] Filtering
+  - [*] Ordering
+  - [ ] Fallback to base language while ordering
+
+
+ - [ ] Registration of translatable models and fields
+   - [ ] Remove the need of manually adding the `Manager` to the objects attribute
+   - [ ] inject the `i18n` field in the models.
+ - [ ] Tests
+ - [ ] ModelForm integration
+ - [ ] Django admin integration
+ - [ ] Migration from django-model-translation
+
+
+# After this is fully functional and there is 3rd party interest such features
+ - [ ] Investigate using [MySQL JSON field](http://django-mysql.readthedocs.io/en/latest/model_fields/json_field.html)

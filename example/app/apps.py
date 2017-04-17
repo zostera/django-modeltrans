@@ -6,3 +6,4 @@ from django.apps import AppConfig
 
 class AppConfig(AppConfig):
     name = 'app'
+    verbose = 'Example app for django-modeltranslation2'
