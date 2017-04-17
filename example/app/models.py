@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 
 
@@ -9,7 +8,6 @@ class Blog(models.Model):
     title = models.CharField(max_length=255)
     body = models.TextField(null=True)
 
-    i18n = JSONField(editable=False, null=True)
     translatable = ('title', )
 
     def __str__(self):

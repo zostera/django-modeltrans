@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import ForeignKey, Manager, OneToOneField
 from django.db.models.base import ModelBase
@@ -12,11 +12,6 @@ from modeltranslation2.decorators import register  # NOQA re-export
 from modeltranslation2.manager import (MultilingualManager,
                                        MultilingualQuerysetManager)
 from modeltranslation2.settings import AVAILABLE_LANGUAGES
-# from modeltranslation.fields import (NONE, LanguageCacheSingleObjectDescriptor,
-#                                      TranslatedRelationIdDescriptor,
-#                                      TranslationFieldDescriptor,
-#                                      create_translation_field)
-from modeltranslation2.utils import build_localized_fieldname, parse_field
 
 
 class AlreadyRegistered(Exception):
@@ -126,56 +121,24 @@ class TranslationOptions(with_metaclass(FieldsAggregationMetaClass, object)):
         return '%s: %s + %s' % (self.__class__.__name__, local, inherited)
 
 
-def add_translation_fields(model, opts):
+def add_translation_field(model, opts):
     '''
-    Monkey patches the original model class to provide additional fields for
-    every language.
+    Monkey patches the original model class to provide the `i18n` field.
 
     Adds newly created translation fields to the given translation options.
     '''
-    # model_empty_values = getattr(opts, 'empty_values', NONE)
-    # for field_name in opts.local_fields.keys():
-    #     field_empty_value = parse_field(model_empty_values, field_name, NONE)
-    #     for l in mt_settings.AVAILABLE_LANGUAGES:
-    #         # Create a dynamic translation field
-    #         translation_field = create_translation_field(
-    #             model=model, field_name=field_name, lang=l, empty_value=field_empty_value)
-    #         # Construct the name for the localized field
-    #         localized_field_name = build_localized_fieldname(field_name, l)
-    #         # Check if the model already has a field by that name
-    #
-    #         if hasattr(model, localized_field_name):
-    #             # Check if are not dealing with abstract field inherited.
-    #             for cls in model.__mro__:
-    #                 if hasattr(cls, '_meta') and cls.__dict__.get(localized_field_name, None):
-    #                     cls_opts = translator._get_options_for_model(cls)
-    #                     if not cls._meta.abstract or field_name not in cls_opts.local_fields:
-    #                         raise ValueError("Error adding translation field. Model '%s' already"
-    #                                          " contains a field named '%s'." %
-    #                                          (model._meta.object_name, localized_field_name))
-    #         # This approach implements the translation fields as full valid
-    #         # django model fields and therefore adds them via add_to_class
-    #         model.add_to_class(localized_field_name, translation_field)
-    #         opts.add_translation_field(field_name, translation_field)
-    #
-    # # Rebuild information about parents fields. If there are opts.local_fields, field cache would be
-    # # invalidated (by model._meta.add_field() function). Otherwise, we need to do it manually.
-    # if len(opts.local_fields) == 0:
-    #     try:
-    #         model._meta._fill_fields_cache()
-    #     except AttributeError:
-    #         # Django 1.8 removed _fill_fields_cache
-    #         model._meta._expire_cache()
-    #         model._meta.get_fields()
+    model.add_to_class('i18n', JSONField(editable=False, null=True))
+
+    if len(opts.local_fields) == 0:
+        model._meta._expire_cache()
+        model._meta.get_fields()
 
 
 def has_custom_queryset(manager):
     '''
     Check whether manager (or its parents) has declared some custom get_queryset method.
     '''
-    old_diff = getattr(manager, 'get_query_set', None) != getattr(Manager, 'get_query_set', None)
-    new_diff = getattr(manager, 'get_queryset', None) != getattr(Manager, 'get_queryset', None)
-    return old_diff or new_diff
+    return getattr(manager, 'get_queryset', None) != getattr(Manager, 'get_queryset', None)
 
 
 def add_manager(model):
@@ -422,7 +385,7 @@ class Translator(object):
         if model._meta.proxy:
             delete_cache_fields(model)
         else:
-            add_translation_fields(model, opts)
+            add_translation_field(model, opts)
 
         # Delete all fields cache for related model (parent and children)
         related = ((
