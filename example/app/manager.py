@@ -39,14 +39,16 @@ class MultilingualQuerySet(models.query.QuerySet):
     def order_by(self, *field_names):
         '''
         Annotate translated fields before sorting
+        sorting on `-title_nl` will add an annotation for `title_nl`
         '''
 
         for field in field_names:
-            # remove descending prefix to create the annotation
-            if field[0] == '-':
-                field = field[1:]
             if '_' not in field:
                 continue
+
+            # remove descending prefix, not relevant for the annotation
+            if field[0] == '-':
+                field = field[1:]
 
             original_field = field[0:field.rfind('_')]
 
@@ -54,27 +56,26 @@ class MultilingualQuerySet(models.query.QuerySet):
 
         return super(MultilingualQuerySet, self).order_by(*field_names)
 
-    def filter(self, *args, **kwargs):
+    def _filter_or_exclude(self, negate, *args, **kwargs):
         '''
-        Annotate filter fields before filtering.
+        Annotate filter/exclude fields before filtering.
 
         title_nl__contains='foo' should add an annotation for title_nl
         title_nl='bar' should add an annotation for title_nl
         '''
         for field in kwargs.keys():
             for translatable in self.get_translatable_fields():
-                if field.startswith(translatable):
+                # strip the query type
+                if '__' in field:
+                    field = field[0:field.rfind('__')]
 
-                    if '__' in field:
-                        field = field[0:field.rfind('__')]
-
+                if field.startswith(translatable) and '_' in field:
                     original_field = field[0:field.rfind('_')]
                     self.add_i18n_annotation(original_field, field, fallback=False)
 
-
         # TODO: handle args to translate the Q objects
 
-        return super(MultilingualQuerySet, self).filter(*args, **kwargs)
+        return super(MultilingualQuerySet, self)._filter_or_exclude(negate, *args, **kwargs)
 
 
 def multilingual_queryset_factory(old_cls, instantiate=True):

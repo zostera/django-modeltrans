@@ -7,7 +7,7 @@ import django_tables2 as tables
 from django.db import models
 from django.db.models import CharField, TextField
 from django.db.models.expressions import RawSQL
-from django.db.models.functions import Coalesce, Cast
+from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import render
 
 from sqlparse import format as format_sql
@@ -59,7 +59,7 @@ def index(request):
             title_i18n=models.Func('i18n', template="%(expressions)s ->> 'title_nl'", output_field=models.TextField())
         ).filter(title_i18n__contains='al'),
 
-        BlogI18n.objects.annotate(
+        Blog.objects.annotate(
             title_nl=Coalesce(RawSQL('i18n->>%s', ('title_nl',)), 'title', output_field=CharField())
         ).filter(title_nl__contains='al'),
 

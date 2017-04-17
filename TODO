@@ -1,8 +1,11 @@
+ # django-modeltranslation2 TODO
+
  - [*] Verify that null by default is ok.
  - [ ] POC working in an example project
-  - [ ] Filtering
+  - [*] Filtering/excluding
   - [*] Ordering
-  - [ ] Fallback to base language while ordering
+  - [*] Fallback to base language while ordering
+  - [ ] Getting translated fields on a Model instance (if not annotated) (inject a __getattr__ on a Model?)
 
 
  - [ ] Registration of translatable models and fields

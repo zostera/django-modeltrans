@@ -31,13 +31,34 @@ class FilterTest(TestCase):
         '''
         We want to do a text contains in translated value lookup
         '''
-
         qs = BlogI18n.objects.filter(title_nl__contains='al')
-
         self.assertEquals(qs[0].title_nl, 'Valk')
 
-    def test_filter_contains_fallback(self):
-        pass
+        qs = BlogI18n.objects.filter(title__contains='al')
+        self.assertEquals(qs[0].title, 'Falcon')
+
+    def test_filter_exact(self):
+        qs = BlogI18n.objects.filter(title_nl='Valk')
+        self.assertEquals(qs[0].title, 'Falcon')
+
+        qs = BlogI18n.objects.filter(title='Falcon')
+        self.assertEquals(qs[0].title, 'Falcon')
+
+    def test_filter_startswith(self):
+        qs = BlogI18n.objects.filter(title_nl__startswith='Va')
+        self.assertEquals(qs[0].title, 'Falcon')
+
+    def test_exclude_exact(self):
+        expected = {'Frog', 'Toad', 'Duck', 'Dolphin'}
+
+        qs = BlogI18n.objects.exclude(title='Falcon')
+        self.assertEquals({m.title for m in qs}, expected)
+
+        qs = BlogI18n.objects.exclude(title_nl='Valk')
+        self.assertEquals({m.title for m in qs}, expected)
+
+        qs = BlogI18n.objects.exclude(title_nl='Valk').exclude(title_nl='Pad')
+        self.assertEquals({m.title for m in qs}, {'Frog', 'Duck', 'Dolphin'})
 
 
 class OrderByTest(TestCase):
