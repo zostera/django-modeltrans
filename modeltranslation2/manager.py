@@ -89,13 +89,38 @@ def multilingual_queryset_factory(old_cls, instantiate=True):
     return NewClass() if instantiate else NewClass
 
 
-class MultilingualQuerySetManager(models.Manager):
+class MultilingualQuerysetManager(models.Manager):
     def get_queryset(self):
-        qs = super(MultilingualQuerySetManager, self).get_queryset()
+        qs = super(MultilingualQuerysetManager, self).get_queryset()
         return self._patch_queryset(qs)
 
     def _patch_queryset(self, qs):
         qs.__class__ = multilingual_queryset_factory(qs.__class__, instantiate=False)
-        # qs._post_init()
-        # qs._rewrite_applied_operations()
         return qs
+
+
+class MultilingualManager(MultilingualQuerysetManager):
+    use_for_related_fields = True
+
+    def rewrite(self, *args, **kwargs):
+        return self.get_queryset().rewrite(*args, **kwargs)
+
+    def populate(self, *args, **kwargs):
+        return self.get_queryset().populate(*args, **kwargs)
+
+    def raw_values(self, *args, **kwargs):
+        return self.get_queryset().raw_values(*args, **kwargs)
+
+    def get_queryset(self):
+        """
+        This method is repeated because some managers that don't use super() or alter queryset class
+        may return queryset that is not subclass of MultilingualQuerySet.
+        """
+        qs = super(MultilingualManager, self).get_queryset()
+        if isinstance(qs, MultilingualQuerySet):
+            # Is already patched by MultilingualQuerysetManager - in most of the cases
+            # when custom managers use super() properly in get_queryset.
+            return qs
+        return self._patch_queryset(qs)
+
+    get_query_set = get_queryset

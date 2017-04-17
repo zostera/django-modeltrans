@@ -9,10 +9,9 @@ from django.db.models import CharField, TextField
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import render
-
 from sqlparse import format as format_sql
 
-from .models import Blog, BlogI18n
+from .models import Blog
 
 
 class Table(tables.Table):
