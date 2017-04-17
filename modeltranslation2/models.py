@@ -67,3 +67,24 @@ def handle_translation_registrations(*args, **kwargs):
     # Trigger autodiscover, causing any TranslationOption initialization
     # code to execute.
     autodiscover()
+
+
+def multilingual_getattr(self, key):
+    '''
+    This method is attached to every translateable model to allow access to the
+    translated versions of the translable fields.
+    '''
+    key_original = key[0:key.rfind('_')]
+
+    if '_' not in key_original and key_original not in self.translatable:
+        raise AttributeError(
+            "'{}' object has no attribute '{}'".format(self.__class__.__name__, key)
+        )
+    lang = key[key.rfind('_') + 1:]
+
+    if self.i18n and key in self.i18n:
+        return self.i18n[key]
+    else:
+        raise AttributeError(
+            "'{}.title' has no translation '{}'".format(self.__class__.__name__, lang)
+        )

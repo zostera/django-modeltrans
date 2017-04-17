@@ -1,11 +1,9 @@
 # django-modeltranslation2
 
-# relevant 3rd party documentation
-- [PostgreSQL jsonb functions](https://www.postgresql.org/docs/9.5/static/functions-json.html)
 
 # Features
 
-- Use one `JSONBField` for every record, rather than one field per language per translatable field.
+- Use one `django.contrib.postgres.JSONField` (PostgreSQL jsonb field) for every record, rather than one field per language per translatable field.
 - Django >= 1.11 for now
 - PostgreSQL >= 9.4 and Psycopg2 >= 2.5.4.
 
@@ -23,3 +21,6 @@ when adding language)
 - The unpredictability of the original field.
 -
 Since JSONB is supported by Postgres now, we developed this approach.
+
+# relevant 3rd party documentation
+- [PostgreSQL jsonb functions](https://www.postgresql.org/docs/9.5/static/functions-json.html)

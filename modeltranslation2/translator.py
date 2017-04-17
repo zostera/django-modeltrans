@@ -13,6 +13,8 @@ from modeltranslation2.manager import (MultilingualManager,
                                        MultilingualQuerysetManager)
 from modeltranslation2.settings import AVAILABLE_LANGUAGES
 
+from .models import multilingual_getattr
+
 
 class AlreadyRegistered(Exception):
     pass
@@ -195,7 +197,7 @@ def patch_constructor(model):
     '''
     Monkey patches the original model to rewrite fields names in __init__
     '''
-    # TODO: add __getattr__ for translated field lookup
+    # TODO: allow using title_nl in construtor
 
     # old_init = model.__init__
     #
@@ -400,9 +402,11 @@ class Translator(object):
         # Patch clean_fields to verify form field clearing
         patch_clean_fields(model)
 
+        # TODO: add __getattr__ for translated field lookup
         # Patch __metaclass__ and other methods to allow deferring to work
         patch_get_deferred_fields(model)
         patch_refresh_from_db(model)
+        model.__getattr__ = multilingual_getattr
 
     def unregister(self, model_or_iterable):
         '''
