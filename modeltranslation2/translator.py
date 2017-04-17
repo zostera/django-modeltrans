@@ -196,6 +196,7 @@ def patch_constructor(model):
     Monkey patches the original model to rewrite fields names in __init__
     '''
     # TODO: add __getattr__ for translated field lookup
+
     # old_init = model.__init__
     #
     # def new_init(self, *args, **kwargs):
@@ -276,14 +277,16 @@ def patch_metaclass(model):
     old_mcs = model.__class__
 
     class translation_deferred_mcs(old_mcs):
-        """
-        This metaclass is essential for deferred subclasses (obtained via only/defer) to work.
+        '''
+        This metaclass is essential for deferred subclasses (obtained via
+        only/defer) to work.
 
-        When deferred subclass is created, some translated fields descriptors could be overridden
-        by DeferredAttribute - which would cause translation retrieval to fail.
-        Prevent this from happening with deleting those attributes from class being created.
-        This metaclass would be called from django.db.models.query_utils.deferred_class_factory
-        """
+        When deferred subclass is created, some translated fields descriptors
+        could be overridden by `DeferredAttribute` - which would cause
+        translation retrieval to fail. Prevent this from happening with deleting
+        those attributes from class being created. This metaclass would be
+        called from django.db.models.query_utils.deferred_class_factory
+        '''
         def __new__(cls, name, bases, attrs):
             if attrs.get('_deferred', False):
                 opts = translator.get_options_for_model(model)
@@ -314,17 +317,6 @@ def delete_cache_fields(model):
         model._meta._expire_cache()
 
 
-def patch_related_object_descriptor_caching(ro_descriptor):
-    '''
-    Patch SingleRelatedObjectDescriptor or ReverseSingleRelatedObjectDescriptor to use
-    language-aware caching.
-    '''
-    class NewSingleObjectDescriptor(LanguageCacheSingleObjectDescriptor, ro_descriptor.__class__):
-        pass
-    ro_descriptor.accessor = ro_descriptor.related.get_accessor_name()
-    ro_descriptor.__class__ = NewSingleObjectDescriptor
-
-
 class Translator(object):
     '''
     A Translator object encapsulates an instance of a translator. Models are
@@ -335,7 +327,7 @@ class Translator(object):
         self._registry = {}
 
     def register(self, model_or_iterable, opts_class=None, **options):
-        """
+        '''
         Registers the given model(s) with the given translation options.
 
         The model(s) should be Model classes, not instances.
@@ -343,7 +335,7 @@ class Translator(object):
         Fields declared for translation on a base class are inherited by
         subclasses. If the model or one of its subclasses is already
         registered for translation, this will raise an exception.
-        """
+        '''
         if isinstance(model_or_iterable, ModelBase):
             model_or_iterable = [model_or_iterable]
 
@@ -412,55 +404,13 @@ class Translator(object):
         patch_get_deferred_fields(model)
         patch_refresh_from_db(model)
 
-        # Substitute original field with descriptor
-        # model_fallback_languages = getattr(opts, 'fallback_languages', None)
-        # model_fallback_values = getattr(opts, 'fallback_values', NONE)
-        # model_fallback_undefined = getattr(opts, 'fallback_undefined', NONE)
-        # for field_name in opts.local_fields.keys():
-        #     field = model._meta.get_field(field_name)
-        #     field_fallback_value = parse_field(model_fallback_values, field_name, NONE)
-        #     field_fallback_undefined = parse_field(model_fallback_undefined, field_name, NONE)
-        #     descriptor = TranslationFieldDescriptor(
-        #         field,
-        #         fallback_languages=model_fallback_languages,
-        #         fallback_value=field_fallback_value,
-        #         fallback_undefined=field_fallback_undefined)
-        #     setattr(model, field_name, descriptor)
-        #     if isinstance(field, ForeignKey):
-        #         # We need to use a special descriptor so that
-        #         # _id fields on translated ForeignKeys work
-        #         # as expected.
-        #         desc = TranslatedRelationIdDescriptor(field_name, model_fallback_languages)
-        #         setattr(model, field.get_attname(), desc)
-        #
-        #         # Set related field names on other model
-        #         if NEW_RELATED_API and not field.remote_field.is_hidden():
-        #             other_opts = self._get_options_for_model(field.remote_field.to)
-        #             other_opts.related = True
-        #             other_opts.related_fields.append(field.related_query_name())
-        #             # Add manager in case of non-registered model
-        #             add_manager(field.remote_field.to)
-        #         elif not NEW_RELATED_API and not field.rel.is_hidden():
-        #             other_opts = self._get_options_for_model(field.rel.to)
-        #             other_opts.related = True
-        #             other_opts.related_fields.append(field.related_query_name())
-        #             add_manager(field.rel.to)  # Add manager in case of non-registered model
-        #
-        #     if isinstance(field, OneToOneField):
-        #         # Fix translated_field caching for SingleRelatedObjectDescriptor
-        #         sro_descriptor = (
-        #             getattr(field.remote_field.to, field.remote_field.get_accessor_name())
-        #             if NEW_RELATED_API
-        #             else getattr(field.rel.to, field.related.get_accessor_name()))
-        #         patch_related_object_descriptor_caching(sro_descriptor)
-
     def unregister(self, model_or_iterable):
-        """
+        '''
         Unregisters the given model(s).
 
         If a model isn't registered, this will raise NotRegistered. If one of
         its subclasses is registered, DescendantRegistered will be raised.
-        """
+        '''
         if isinstance(model_or_iterable, ModelBase):
             model_or_iterable = [model_or_iterable]
         for model in model_or_iterable:
@@ -516,10 +466,10 @@ class Translator(object):
         return self._registry[model]
 
     def get_options_for_model(self, model):
-        """
+        '''
         Thin wrapper around ``_get_options_for_model`` to preserve the
         semantic of throwing exception for models not directly registered.
-        """
+        '''
         opts = self._get_options_for_model(model)
         if not opts.registered and not opts.related:
             raise NotRegistered('The model "%s" is not registered for '

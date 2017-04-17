@@ -11,8 +11,7 @@
 
 # Running the tests
 
-in `example` subdirectory, with the requirements in `requirements.txt`, use `./manage.py test`
-
+in `example` subdirectory, with the requirements in `requirements.txt`, use `PYTHONPATH=.. ./manage.py test`
 
 # Attribution
 Some concepts and code from https://github.com/deschler/django-modeltranslation,
