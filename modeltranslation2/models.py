@@ -1,3 +1,5 @@
+from .manager import get_translatable_fields_for_model
+
 
 def autodiscover():
     '''
@@ -76,7 +78,8 @@ def multilingual_getattr(self, key):
     '''
     key_original = key[0:key.rfind('_')]
 
-    if '_' not in key_original and key_original not in self.translatable:
+    translatable = get_translatable_fields_for_model(self.__class__)
+    if '_' not in key_original and key_original not in translatable:
         raise AttributeError(
             "'{}' object has no attribute '{}'".format(self.__class__.__name__, key)
         )

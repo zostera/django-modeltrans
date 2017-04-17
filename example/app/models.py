@@ -7,8 +7,6 @@ from django.db import models
 class Category(models.Model):
     name = models.CharField(max_length=255)
 
-    translatable = ('name', )
-
     def __str__(self):
         return self.name
 
@@ -18,7 +16,6 @@ class Blog(models.Model):
     body = models.TextField(null=True)
 
     category = models.ForeignKey(Category, null=True)
-    translatable = ('title', )
 
     def __str__(self):
         return self.title

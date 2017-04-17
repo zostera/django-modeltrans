@@ -5,9 +5,17 @@ from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
 
 
+def get_translatable_fields_for_model(model):
+    from modeltranslation2.translator import NotRegistered, translator
+    try:
+        return translator.get_options_for_model(model).get_field_names()
+    except NotRegistered:
+        return None
+
+
 class MultilingualQuerySet(models.query.QuerySet):
     def get_translatable_fields(self):
-        return getattr(self.model, 'translatable', None)
+        return get_translatable_fields_for_model(self.model)
 
     def add_i18n_annotation(self, original_field, field_name, fallback=True):
         '''
