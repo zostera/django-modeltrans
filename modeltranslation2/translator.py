@@ -10,6 +10,7 @@ from modeltranslation2 import settings as mt_settings
 from modeltranslation2.manager import (MultilingualManager,
                                        MultilingualQuerysetManager)
 
+from .manager import transform_translatable_fields
 from .models import multilingual_getattr
 
 
@@ -194,20 +195,11 @@ def patch_constructor(model):
     '''
     Monkey patches the original model to rewrite fields names in __init__
     '''
-    # TODO: allow using title_nl in construtor
+    old_init = model.__init__
 
-    # old_init = model.__init__
-    #
-    # def new_init(self, *args, **kwargs):
-    #     self._mt_init = True
-    #     if NEW_DEFERRED_API or not self._deferred:
-    #         populate_translation_fields(self.__class__, kwargs)
-    #         for key, val in list(kwargs.items()):
-    #             new_key = rewrite_lookup_key(model, key)
-    #             # Old key is intentionally left in case old_init wants to play with it
-    #             kwargs.setdefault(new_key, val)
-    #     old_init(self, *args, **kwargs)
-    # model.__init__ = new_init
+    def patched_init(self, *args, **kwargs):
+        old_init(self, *args, **transform_translatable_fields(self.__class__, kwargs))
+    model.__init__ = patched_init
 
 
 def delete_mt_init(sender, instance, **kwargs):
@@ -252,21 +244,6 @@ def patch_get_deferred_fields(model):
             sup.update(self._fields_were_deferred)
         return sup
     model.get_deferred_fields = new_get_deferred_fields
-
-
-def patch_refresh_from_db(model):
-    '''
-    Django >= 1.10: patch refreshing deferred fields. Crucial for only/defer to work.
-    '''
-    # if not hasattr(model, 'refresh_from_db'):
-    #     return
-    # old_refresh_from_db = model.refresh_from_db
-    #
-    # def new_refresh_from_db(self, using=None, fields=None):
-    #     if fields is not None:
-    #         fields = append_translated(self.__class__, fields)
-    #     return old_refresh_from_db(self, using, fields)
-    # model.refresh_from_db = new_refresh_from_db
 
 
 def patch_metaclass(model):
@@ -402,7 +379,6 @@ class Translator(object):
         # TODO: add __getattr__ for translated field lookup
         # Patch __metaclass__ and other methods to allow deferring to work
         patch_get_deferred_fields(model)
-        patch_refresh_from_db(model)
         model.__getattr__ = multilingual_getattr
 
     def unregister(self, model_or_iterable):

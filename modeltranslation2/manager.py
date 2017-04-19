@@ -13,6 +13,24 @@ def get_translatable_fields_for_model(model):
         return None
 
 
+def is_valid_translated_field(model, field):
+    if '_' not in field:
+        return
+    original_field = field[0:field.rfind('_')]
+    return original_field in get_translatable_fields_for_model(model)
+
+
+def transform_translatable_fields(model, fields):
+    i18n = fields['i18n'] if 'i18n' in fields else {}
+    for field, value in fields.items():
+        if is_valid_translated_field(model, field):
+            i18n[field] = value
+            del fields[field]
+
+    fields['i18n'] = i18n
+    return fields
+
+
 class MultilingualQuerySet(models.query.QuerySet):
     def get_translatable_fields(self):
         return get_translatable_fields_for_model(self.model)
@@ -43,6 +61,15 @@ class MultilingualQuerySet(models.query.QuerySet):
             field = Cast(RawSQL('i18n->>%s', (field_name, )), TextField())
 
         self.query.add_annotation(field, field_name)
+
+    def create(self, **kwargs):
+        '''
+        Patch the create method to allow adding the value for a translated field
+        using `Model.objects.create(..., title_nl='...')`.
+        '''
+        return super(MultilingualQuerySet, self).create(
+            **transform_translatable_fields(self.model, kwargs)
+        )
 
     def order_by(self, *field_names):
         '''
@@ -120,10 +147,10 @@ class MultilingualManager(MultilingualQuerysetManager):
         return self.get_queryset().raw_values(*args, **kwargs)
 
     def get_queryset(self):
-        """
+        '''
         This method is repeated because some managers that don't use super() or alter queryset class
         may return queryset that is not subclass of MultilingualQuerySet.
-        """
+        '''
         qs = super(MultilingualManager, self).get_queryset()
         if isinstance(qs, MultilingualQuerySet):
             # Is already patched by MultilingualQuerysetManager - in most of the cases

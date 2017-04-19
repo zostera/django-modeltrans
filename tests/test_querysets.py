@@ -124,3 +124,39 @@ class TranslatedFieldGetTest(TestCase):
 
         self.assertEquals(m.title_nl, 'Valk')
         self.assertEquals(m.title_de, 'Falk')
+
+
+class RefreshFromDbTest(TestCase):
+    def test_refresh_from_db(self):
+        b = Blog.objects.create(title='Falcon', i18n={
+            'title_nl': 'Valk',
+            'title_de': 'Falk'
+        })
+
+        Blog.objects.filter(title='Falcon').update(title='Falcon II')
+
+        b.refresh_from_db()
+        self.assertEquals(b.title, 'Falcon II')
+        self.assertEquals(b.title_nl, 'Valk')
+
+
+class CreatingInstancesTest(TestCase):
+    def test_manager_create(self):
+        b = Blog.objects.create(title='Falcon', title_nl='Valk')
+
+        self.assertEquals(b.title, 'Falcon')
+        self.assertEquals(b.title_nl, 'Valk')
+
+    def test_manager_create_override(self):
+        b = Blog.objects.create(title='Falcon', title_nl='Valk', i18n={
+            'title_nl': 'foo'
+        })
+
+        self.assertEquals(b.title_nl, 'Valk')
+
+    def test_model_constructor(self):
+        b = Blog(title='Falcon', title_nl='Valk')
+        b.save()
+
+        self.assertEquals(b.title, 'Falcon')
+        self.assertEquals(b.title_nl, 'Valk')

@@ -13,9 +13,12 @@
   - [ ] filtering spanning relations
         Category.objects.filter(blog__title_nl__contains='al')
 
-  - [ ] create()
-        Allow calling `create()` with translated versions of a field and make
-        sure they arrive in the `i18n` field.
+  - [*] create(title='...', title_nl='...'),
+  - [*] and Model(title_nl='')
+        Allow calling `create(title_nl='...')` and `Model(title_nl='...').save()`
+        with translated versions of a field and make sure they arrive in the
+        `i18n` field.
+  - [ ] clean() and requiredness of translated fields.
   - [ ] values()
   - [ ] values_list()
   - [ ] select_related()
@@ -26,7 +29,7 @@
     - [*] inject the `i18n` field in the models.
     - [*] inject `__getattr__` to allow access to the translated fields
   - [ ] Tests
-    - [ ] Test suite runnable using `tox`.
+    - [*] Test suite runnable using `tox`.
     - [ ] Test suite runnable in travisci
   - [ ] ModelForm integration
   - [ ] Django admin integration
