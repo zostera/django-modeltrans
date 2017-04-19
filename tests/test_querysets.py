@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from unittest import skip
+
 from django.test import TestCase
 
-from tests.app.models import Blog
+from tests.app.models import Blog, Site
 
 
 def key(queryset, key):
@@ -72,6 +74,14 @@ class FilterTest(TestCase):
         with self.assertRaisesMessage(Blog.DoesNotExist, 'Blog matching query does not exist.'):
             Blog.objects.get(title_fr='Boo')
 
+    @skip('Not yet implemented')
+    def test_filter_spanning_relation(self):
+        '''
+        Not sure if we should support this, but it requires having
+        `MultilingualManager` on non-translated models too.
+        '''
+        Site.objects.filter(blog__title_nl__contains='al')
+
 
 class OrderByTest(TestCase):
     EN = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
@@ -81,10 +91,6 @@ class OrderByTest(TestCase):
     def setUp(self):
         for i, en in enumerate(self.EN):
             Blog.objects.create(title=en, i18n={'title_nl': self.NL[i], 'title_fr': self.FR[i]})
-
-    # def test_order_by_fails_for_normal_model(self):
-    #     with self.assertRaises(FieldError):
-    #         list(Blog.objects.all().order_by('title_nl'))
 
     def test_order_by_two_fields(self):
         '''Multiple translated fields should work too'''
