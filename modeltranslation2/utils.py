@@ -8,10 +8,10 @@ from modeltranslation2 import settings
 
 
 def get_language():
-    """
+    '''
     Return an active language code that is guaranteed to be in
     settings.LANGUAGES (Django does not seem to guarantee this for us).
-    """
+    '''
     lang = _get_language()
     if lang is None:  # Django >= 1.8
         return settings.DEFAULT_LANGUAGE
@@ -23,17 +23,17 @@ def get_language():
 
 
 def get_language_bidi(lang):
-    """
+    '''
     Check if a language is bi-directional.
-    """
+    '''
     lang_info = get_language_info(lang)
     return lang_info['bidi']
 
 
 def get_translation_fields(field):
-    """
+    '''
     Returns a list of localized fieldnames for a given field.
-    """
+    '''
     return [build_localized_fieldname(field, l) for l in settings.AVAILABLE_LANGUAGES]
 
 
@@ -49,6 +49,8 @@ def _build_localized_verbose_name(verbose_name, lang):
     if lang == 'id':
         lang = 'ind'
     return force_text('%s [%s]') % (force_text(verbose_name), lang)
+
+
 build_localized_verbose_name = lazy(_build_localized_verbose_name, six.text_type)
 
 

@@ -4,12 +4,15 @@
 # Features
 
 - Use one `django.contrib.postgres.JSONField` (PostgreSQL jsonb field) for every record, rather than one field per language per translatable field.
-- Django >= 1.11 for now
+- Django 1.9, 1.10, 1.11 for now
 - PostgreSQL >= 9.4 and Psycopg2 >= 2.5.4.
 
 # Running the tests
 
-in `example` subdirectory, with the requirements in `requirements.txt`, use `PYTHONPATH=.. ./manage.py test`
+`tox`
+in `example` subdirectory, with the requirements in `requirements.txt`, use
+
+`PYTHONPATH=.. ./manage.py test`
 
 # Attribution
 Some concepts and code from https://github.com/deschler/django-modeltranslation,

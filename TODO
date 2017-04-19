@@ -10,6 +10,9 @@
  - [ ] Building a package django-modeltranslation2 on the POC
   - [*] read translatable fields from `TranslationOptions`, not from the model
         attribute.
+  - [ ] filtering spanning relations
+        Category.objects.filter(blog__title_nl__contains='al')
+
   - [ ] create()
         Allow calling `create()` with translated versions of a field and make
         sure they arrive in the `i18n` field.
@@ -23,6 +26,8 @@
     - [*] inject the `i18n` field in the models.
     - [*] inject `__getattr__` to allow access to the translated fields
   - [ ] Tests
+    - [ ] Test suite runnable using `tox`.
+    - [ ] Test suite runnable in travisci
   - [ ] ModelForm integration
   - [ ] Django admin integration
   - [ ] Migration from django-model-translation

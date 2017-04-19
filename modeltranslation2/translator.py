@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models import ForeignKey, Manager, OneToOneField
+from django.db.models import Manager
 from django.db.models.base import ModelBase
 from django.db.models.signals import post_init
 from django.utils.six import with_metaclass
 
 from modeltranslation2 import settings as mt_settings
-# Re-export the decorator for convenience
-from modeltranslation2.decorators import register  # NOQA re-export
 from modeltranslation2.manager import (MultilingualManager,
                                        MultilingualQuerysetManager)
-from modeltranslation2.settings import AVAILABLE_LANGUAGES
 
 from .models import multilingual_getattr
 
@@ -91,7 +88,7 @@ class TranslationOptions(with_metaclass(FieldsAggregationMetaClass, object)):
                             'Fieldname in required_languages which is not in fields option.')
 
     def _check_languages(self, languages, extra=()):
-        correct = list(AVAILABLE_LANGUAGES) + list(extra)
+        correct = list(mt_settings.AVAILABLE_LANGUAGES) + list(extra)
         if any(l not in correct for l in languages):
             raise ImproperlyConfigured(
                 'Language in required_languages which is not in AVAILABLE_LANGUAGES.')
@@ -261,15 +258,15 @@ def patch_refresh_from_db(model):
     '''
     Django >= 1.10: patch refreshing deferred fields. Crucial for only/defer to work.
     '''
-    if not hasattr(model, 'refresh_from_db'):
-        return
-    old_refresh_from_db = model.refresh_from_db
-
-    def new_refresh_from_db(self, using=None, fields=None):
-        if fields is not None:
-            fields = append_translated(self.__class__, fields)
-        return old_refresh_from_db(self, using, fields)
-    model.refresh_from_db = new_refresh_from_db
+    # if not hasattr(model, 'refresh_from_db'):
+    #     return
+    # old_refresh_from_db = model.refresh_from_db
+    #
+    # def new_refresh_from_db(self, using=None, fields=None):
+    #     if fields is not None:
+    #         fields = append_translated(self.__class__, fields)
+    #     return old_refresh_from_db(self, using, fields)
+    # model.refresh_from_db = new_refresh_from_db
 
 
 def patch_metaclass(model):
