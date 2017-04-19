@@ -21,14 +21,17 @@ def is_valid_translated_field(model, field):
 
 
 def transform_translatable_fields(model, fields):
-    i18n = fields['i18n'] if 'i18n' in fields else {}
+    ret = {
+        'i18n': fields['i18n'] if 'i18n' in fields else {}
+    }
+
     for field, value in fields.items():
         if is_valid_translated_field(model, field):
-            i18n[field] = value
-            del fields[field]
+            ret['i18n'][field] = value
+        else:
+            ret[field] = value
 
-    fields['i18n'] = i18n
-    return fields
+    return ret
 
 
 class MultilingualQuerySet(models.query.QuerySet):
