@@ -202,11 +202,6 @@ def patch_constructor(model):
     model.__init__ = patched_init
 
 
-def delete_mt_init(sender, instance, **kwargs):
-    if hasattr(instance, '_mt_init'):
-        del instance._mt_init
-
-
 def patch_clean_fields(model):
     '''
     Patch clean_fields method to handle different form types submission.
@@ -371,8 +366,6 @@ class Translator(object):
         # Patch __init__ to rewrite fields
         patch_constructor(model)
 
-        # Connect signal for model
-        post_init.connect(delete_mt_init, sender=model)
         # Patch clean_fields to verify form field clearing
         patch_clean_fields(model)
 

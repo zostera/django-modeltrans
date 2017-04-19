@@ -18,6 +18,7 @@
         Allow calling `create(title_nl='...')` and `Model(title_nl='...').save()`
         with translated versions of a field and make sure they arrive in the
         `i18n` field.
+  - [ ] deferred fields `defer()`, `only()`
   - [ ] clean() and requiredness of translated fields.
   - [ ] values()
   - [ ] values_list()
