@@ -21,8 +21,12 @@ def is_valid_translated_field(model, field):
 
 
 def transform_translatable_fields(model, fields):
+    '''
+    Transform the kwargs for a <Model>.objects.create() or <Model>()
+    to allow passing translated field names.
+    '''
     ret = {
-        'i18n': fields['i18n'] if 'i18n' in fields else {}
+        'i18n': fields.get('i18n', {})
     }
 
     for field, value in fields.items():

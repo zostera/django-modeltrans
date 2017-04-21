@@ -10,9 +10,10 @@
 # Running the tests
 
 `tox`
-in `example` subdirectory, with the requirements in `requirements.txt`, use
 
-`PYTHONPATH=.. ./manage.py test`
+Running the tests without tox,
+`PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.app.settings django-admin test`
+
 
 # Attribution
 Some concepts and code from https://github.com/deschler/django-modeltranslation,

@@ -43,6 +43,7 @@
 
 # alternatives
 - https://github.com/tatterdemalion/django-nece/tree/master/nece
+- https://github.com/raphaelm/django-i18nfield
 
 # After this is fully functional and there is 3rd party interest such features
  - [ ] Investigate using [MySQL JSON field](http://django-mysql.readthedocs.io/en/latest/model_fields/json_field.html)

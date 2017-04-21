@@ -369,9 +369,10 @@ class Translator(object):
         # Patch clean_fields to verify form field clearing
         patch_clean_fields(model)
 
-        # TODO: add __getattr__ for translated field lookup
         # Patch __metaclass__ and other methods to allow deferring to work
         patch_get_deferred_fields(model)
+
+        # add a __getattr__ for translated field lookup
         model.__getattr__ = multilingual_getattr
 
     def unregister(self, model_or_iterable):
