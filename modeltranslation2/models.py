@@ -1,4 +1,6 @@
 from .manager import get_translatable_fields_for_model
+from .settings import DEFAULT_LANGUAGE
+from .utils import get_language
 
 
 def autodiscover():
@@ -76,14 +78,24 @@ def multilingual_getattr(self, key):
     This method is attached to every translateable model to allow access to the
     translated versions of the translable fields.
     '''
-    key_original = key[0:key.rfind('_')]
+    _pos = key.rfind('_')
+    key_original = key[0:_pos]
 
-    translatable = get_translatable_fields_for_model(self.__class__)
-    if '_' not in key_original and key_original not in translatable:
+    valid_language = key_original not in get_translatable_fields_for_model(self.__class__)
+    if '_' not in key_original and valid_language:
         raise AttributeError(
             "'{}' object has no attribute '{}'".format(self.__class__.__name__, key)
         )
     lang = key[key.rfind('_') + 1:]
+
+    # return the value for the current active language.
+    if lang == DEFAULT_LANGUAGE:
+        key = key_original
+        return getattr(self, key)
+
+    if lang == 'i18n':
+        # TODO: implement fallback if field is not translated to this language.
+        key = '{}_{}'.format(key_original, get_language())
 
     if self.i18n and key in self.i18n:
         return self.i18n[key]

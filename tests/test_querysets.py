@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from unittest import skip
 
 from django.test import TestCase
+from django.utils.translation import override
 
 from tests.app.models import Blog, Site
 
@@ -113,6 +114,20 @@ class OrderByTest(TestCase):
 
 
 class TranslatedFieldGetTest(TestCase):
+    def test_active_languate(self):
+        m = Blog(title='Falcon', i18n={
+            'title_nl': 'Valk',
+            'title_de': 'Falk'
+        })
+
+        with override('nl'):
+            self.assertEquals(m.title_en, 'Falcon')
+            self.assertEquals(m.title_de, 'Falk')
+            self.assertEquals(m.title_i18n, 'Valk')
+
+        with override('de'):
+            self.assertEquals(m.title_i18n, 'Falk')
+
     def test_has_no_translation(self):
         m = Blog(title='Falcon', i18n={
             'title_nl': 'Valk',
