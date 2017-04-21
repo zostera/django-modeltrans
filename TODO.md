@@ -23,7 +23,6 @@
   - [ ] values()
   - [ ] values_list()
   - [ ] select_related()
-  - [ ] spanning relations
   - [*] Getting translated fields on a Model instance (if not annotated) (inject a __getattr__ on a Model?)
   - [*] Registration of translatable models and fields
     - [*] Remove the need of manually adding the `Manager` to the objects attribute
@@ -38,12 +37,16 @@
 
 # usage of managers/models in code
 
-- have a `title_i18n` field to get the translated version for the current language including fallback
-- when requesting the language which is the language of untranslated fields, return the original field. (`Blog.objects.filter(title_i18n='foo')` with `en` as active language.)
+- [*] have a `title_i18n` field to get the translated version for the current language including fallback
+- [*] when requesting the language which is the language of untranslated fields, return the original field. (`Blog.objects.filter(title_i18n='foo')` with `en` as active language.)
+- [ ] order by `title_i18n` to automagically order by the active language.
+
 
 # alternatives
 - https://github.com/tatterdemalion/django-nece/tree/master/nece
+  Also uses a `jsonb` PostgreSQL field, but has a bunch of custom `QuerySet` and `Model` methods to get translated values. It also requires one to inherit from a `TranslationModel`.
 - https://github.com/raphaelm/django-i18nfield
+  Stores JSON in a `TextField`, so does not allow lookup, searching or ordering by the translated fields.
 
 # After this is fully functional and there is 3rd party interest such features
  - [ ] Investigate using [MySQL JSON field](http://django-mysql.readthedocs.io/en/latest/model_fields/json_field.html)

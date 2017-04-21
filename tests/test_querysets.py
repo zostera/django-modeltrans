@@ -121,9 +121,11 @@ class TranslatedFieldGetTest(TestCase):
         })
 
         with override('nl'):
+            # value for the active language
+            self.assertEquals(m.title_i18n, 'Valk')
+
             self.assertEquals(m.title_en, 'Falcon')
             self.assertEquals(m.title_de, 'Falk')
-            self.assertEquals(m.title_i18n, 'Valk')
 
         with override('de'):
             self.assertEquals(m.title_i18n, 'Falk')
