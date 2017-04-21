@@ -1,6 +1,6 @@
 from django.conf import settings
 
-DEBUG = getattr(settings, 'MODELTRANSLATION_DEBUG', False)
+DEBUG = getattr(settings, 'MODELTRANS_DEBUG', False)
 
 DEFAULT_LANGUAGE = 'en'
 ENABLE_REGISTRATIONS = True

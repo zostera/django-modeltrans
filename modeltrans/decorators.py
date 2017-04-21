@@ -15,7 +15,7 @@ def register(model_or_iterable, **options):
     class AuthorTranslation(TranslationOptions):
         pass
     '''
-    from modeltranslation.translator import translator, TranslationOptions
+    from modeltrans.translator import translator, TranslationOptions
 
     def wrapper(opts_class):
         if not issubclass(opts_class, TranslationOptions):

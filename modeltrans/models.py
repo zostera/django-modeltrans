@@ -13,7 +13,7 @@ def autodiscover():
     import sys
     import copy
     from django.utils.module_loading import module_has_submodule
-    from modeltranslation2.translator import translator
+    from modeltrans.translator import translator
 
     from importlib import import_module
     from django.conf import settings
@@ -46,7 +46,7 @@ def autodiscover():
             if sys.argv[1] in ('runserver', 'runserver_plus'):
                 models = translator.get_registered_models()
                 names = ', '.join(m.__name__ for m in models)
-                print('modeltranslation2: Registered %d models for translation'
+                print('modeltrans: Registered %d models for translation'
                       ' (%s) [pid: %d].' % (len(models), names, os.getpid()))
         except IndexError:
             pass
@@ -59,7 +59,7 @@ def handle_translation_registrations(*args, **kwargs):
     This makes it possible for scripts/management commands that affect models
     but know nothing of modeltranslation.
     '''
-    from modeltranslation2.settings import ENABLE_REGISTRATIONS
+    from modeltrans.settings import ENABLE_REGISTRATIONS
 
     if not ENABLE_REGISTRATIONS:
         # If the user really wants to disable this, they can, possibly at their

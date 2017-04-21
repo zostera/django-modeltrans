@@ -3,12 +3,10 @@ from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Manager
 from django.db.models.base import ModelBase
-from django.db.models.signals import post_init
 from django.utils.six import with_metaclass
 
-from modeltranslation2 import settings as mt_settings
-from modeltranslation2.manager import (MultilingualManager,
-                                       MultilingualQuerysetManager)
+from modeltrans import settings as mt_settings
+from modeltrans.manager import MultilingualManager, MultilingualQuerysetManager
 
 from .manager import transform_translatable_fields
 from .models import multilingual_getattr

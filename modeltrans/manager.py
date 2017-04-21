@@ -6,7 +6,7 @@ from django.db.models.functions import Cast, Coalesce
 
 
 def get_translatable_fields_for_model(model):
-    from modeltranslation2.translator import NotRegistered, translator
+    from modeltrans.translator import NotRegistered, translator
     try:
         return translator.get_options_for_model(model).get_field_names()
     except NotRegistered:

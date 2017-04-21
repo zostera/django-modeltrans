@@ -4,7 +4,7 @@ from django.utils.functional import lazy
 from django.utils.translation import get_language as _get_language
 from django.utils.translation import get_language_info
 
-from modeltranslation2 import settings
+from modeltrans import settings
 
 
 def get_language():

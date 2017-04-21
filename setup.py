@@ -6,12 +6,12 @@ import sys
 from setuptools import find_packages, setup
 
 # get version without importing
-with open('modeltranslation2/__init__.py', 'rb') as f:
+with open('modeltrans/__init__.py', 'rb') as f:
     VERSION = str(re.search('__version__ = \'(.+?)\'', f.read().decode('utf-8')).group(1))
 
 if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
-    message = '\nreleased [{version}](https://pypi.python.org/pypi/django-modeltranslation2/{version})'
+    message = '\nreleased [{version}](https://pypi.python.org/pypi/django-modeltrans/{version})'
     print(message.format(version=VERSION))
     sys.exit()
 
@@ -22,19 +22,19 @@ if sys.argv[-1] == 'tag':
 
 
 setup(
-    name='django-modeltranslation2',
+    name='django-modeltrans',
     version=VERSION,
     description='Model translations in a jsonb field',
 
     author='Jan Pieter Waagmeester',
     author_email='jieter@zostera.nl',
     license='Simplified BSD',
-    url='https://github.com/jieter/django-modeltranslation2/',
+    url='https://github.com/zostera/django-modeltrans/',
 
     packages=find_packages(exclude=['tests.*', 'tests', 'example.*', 'example']),
     include_package_data=True,  # declarations in MANIFEST.in
 
-    install_requires=['Django>=1.10'],
+    install_requires=['Django>=1.9'],
 
     classifiers=[
         'Environment :: Web Environment',
@@ -49,6 +49,7 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Software Development :: Libraries',
     ],

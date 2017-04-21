@@ -1,4 +1,4 @@
- # django-modeltranslation2 TODO
+ # django-modeltrans TODO
 
  - [*] Verify that null by default is ok.
  - [*] POC working in an example project
@@ -7,7 +7,7 @@
   - [*] Fallback to base language while ordering
   - [*] `Model.objects.get()``
 
- - [ ] Building a package django-modeltranslation2 on the POC
+ - [ ] Building a package django-modeltrans on the POC
   - [*] read translatable fields from `TranslationOptions`, not from the model
         attribute.
   - [ ] filtering spanning relations
