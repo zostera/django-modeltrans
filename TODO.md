@@ -36,6 +36,13 @@
   - [ ] Django admin integration
   - [ ] Migration from django-model-translation
 
+# usage of managers/models in code
+
+- have a `title_i18n` field to get the translated version for the current language including fallback
+- when requesting the language which is the language of untranslated fields, return the original field. (`Blog.objects.filter(title_i18n='foo')` with `en` as active language.)
+
+# alternatives
+- https://github.com/tatterdemalion/django-nece/tree/master/nece
 
 # After this is fully functional and there is 3rd party interest such features
  - [ ] Investigate using [MySQL JSON field](http://django-mysql.readthedocs.io/en/latest/model_fields/json_field.html)
