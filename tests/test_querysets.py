@@ -114,7 +114,7 @@ class OrderByTest(TestCase):
 
 
 class TranslatedFieldGetTest(TestCase):
-    def test_active_languate(self):
+    def test_active_language(self):
         m = Blog(title='Falcon', i18n={
             'title_nl': 'Valk',
             'title_de': 'Falk'
