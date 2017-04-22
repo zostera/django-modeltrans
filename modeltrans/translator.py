@@ -5,23 +5,13 @@ from django.db.models import Manager
 from django.db.models.base import ModelBase
 from django.utils.six import with_metaclass
 
-from modeltrans import settings as mt_settings
+from modeltrans import settings
 from modeltrans.manager import MultilingualManager, MultilingualQuerysetManager
 
+from .exceptions import AlreadyRegistered, DescendantRegistered, NotRegistered
 from .manager import transform_translatable_fields
 from .models import multilingual_getattr
-
-
-class AlreadyRegistered(Exception):
-    pass
-
-
-class NotRegistered(Exception):
-    pass
-
-
-class DescendantRegistered(Exception):
-    pass
+from .utils import build_localized_fieldname
 
 
 class FieldsAggregationMetaClass(type):
@@ -87,7 +77,7 @@ class TranslationOptions(with_metaclass(FieldsAggregationMetaClass, object)):
                             'Fieldname in required_languages which is not in fields option.')
 
     def _check_languages(self, languages, extra=()):
-        correct = list(mt_settings.AVAILABLE_LANGUAGES) + list(extra)
+        correct = list(settings.AVAILABLE_LANGUAGES) + list(extra)
         if any(l not in correct for l in languages):
             raise ImproperlyConfigured(
                 'Language in required_languages which is not in AVAILABLE_LANGUAGES.')
@@ -125,11 +115,27 @@ def add_translation_field(model, opts):
 
     Adds newly created translation fields to the given translation options.
     '''
+    # field to store the translations in
     model.add_to_class('i18n', JSONField(editable=False, null=True))
 
-    if len(opts.local_fields) == 0:
-        model._meta._expire_cache()
-        model._meta.get_fields()
+    # proxy fields to assign and get values from.
+    for field_name in opts.local_fields.keys():
+        # field_i18n to get/assign the current language
+        # field_['nl', 'fr', ...] to get/assign the other languages
+        print 'adding proxy fields for', field_name
+
+        for l in settings.AVAILABLE_LANGUAGES:
+            localized_field_name = build_localized_fieldname(field_name, l)
+
+            if hasattr(model, localized_field_name):
+                # Check if are not dealing with abstract field inherited.
+                for cls in model.__mro__:
+                    if hasattr(cls, '_meta') and cls.__dict__.get(localized_field_name, None):
+                        cls_opts = translator._get_options_for_model(cls)
+                        if not cls._meta.abstract or field_name not in cls_opts.local_fields:
+                            raise ValueError("Error adding translation field. Model '%s' already"
+                                             " contains a field named '%s'." %
+                                             (model._meta.object_name, localized_field_name))
 
 
 def has_custom_queryset(manager):
