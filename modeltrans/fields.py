@@ -1,15 +1,7 @@
 # -*- coding: utf-8 -*-
-from django.core.exceptions import ImproperlyConfigured
-from django.db.models import fields
 
 from .settings import DEFAULT_LANGUAGE
 from .utils import build_localized_fieldname, get_language
-
-SUPPORTED_FIELDS = (
-    fields.CharField,
-    fields.TextField,
-
-)
 
 
 class TranslationFieldProxy(object):
@@ -40,7 +32,7 @@ class TranslationFieldProxy(object):
 
     def __set__(self, instance, value):
         if self.get_language() == DEFAULT_LANGUAGE:
-            setattr(instance, self.original_field)
+            setattr(instance, self.original_field, value)
             return
 
         instance.i18n[self.get_field_name()] = value

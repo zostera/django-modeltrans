@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from unittest import skip
-
 from django.test import TestCase
 from django.utils.translation import override
 
@@ -44,7 +42,6 @@ class TranslatedFieldTest(TestCase):
         with self.assertRaisesMessage(AttributeError, "'Blog' object has no attribute 'foo'"):
             m.foo
 
-    # @skip('Assignment not yet implemented')
     def test_set_translatable_field(self):
         m = Blog.objects.create(title='Toad')
 
@@ -52,6 +49,23 @@ class TranslatedFieldTest(TestCase):
         m.save()
 
         self.assertEquals(Blog.objects.get(title='Toad').title_nl, 'Pad')
+
+    def test_set_translatable_field_active_language(self):
+        m = Blog.objects.create(title='Toad')
+
+        with override('nl'):
+            m.title_i18n = 'Pad'
+        m.save()
+
+        self.assertEquals(Blog.objects.get(title='Toad').title_nl, 'Pad')
+
+    def test_set_default_langauge(self):
+        m = Blog.objects.create(title='Toad 123')
+
+        m.title_en = 'Toad'
+        m.save()
+
+        self.assertEquals(m.title, 'Toad')
 
 
 class RefreshFromDbTest(TestCase):
