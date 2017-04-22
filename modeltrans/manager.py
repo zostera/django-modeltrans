@@ -4,6 +4,8 @@ from django.db.models import CharField, TextField
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
 
+from .utils import get_language
+
 
 def get_translatable_fields_for_model(model):
     from modeltrans.translator import NotRegistered, translator
@@ -92,7 +94,15 @@ class MultilingualQuerySet(models.query.QuerySet):
             if field[0] == '-':
                 field = field[1:]
 
-            original_field = field[0:field.rfind('_')]
+            _pos = field.rfind('_')
+            original_field = field[0:_pos]
+            #
+            # lang = field[_pos:]
+            # if lang == 'i18n':
+            #     # add annotation for current language.
+            #     lang = get_language()
+            #     if lang == DEFAULT_LANGUAGE:
+            #
 
             self.add_i18n_annotation(original_field, field, fallback=True)
 

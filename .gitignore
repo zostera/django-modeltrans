@@ -7,4 +7,7 @@
 
 *.egg-info
 
+reports
+
+.coverage
 __pycache__

@@ -81,8 +81,8 @@ def multilingual_getattr(self, key):
     _pos = key.rfind('_')
     key_original = key[0:_pos]
 
-    valid_language = key_original not in get_translatable_fields_for_model(self.__class__)
-    if '_' not in key_original and valid_language:
+    is_translatable = key_original not in get_translatable_fields_for_model(self.__class__)
+    if '_' not in key_original and is_translatable:
         raise AttributeError(
             "'{}' object has no attribute '{}'".format(self.__class__.__name__, key)
         )

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from unittest import skip
 
+from django.core.exceptions import FieldError
 from django.test import TestCase
 from django.utils.translation import override
 
@@ -11,6 +12,12 @@ from tests.app.models import Blog, Site
 
 def key(queryset, key):
     return list([getattr(model, key) for model in queryset])
+
+
+class AddAnnotationTest(TestCase):
+    def test_non_translatable_field(self):
+        with self.assertRaisesMessage(FieldError, 'Field (foo) is not defined as translatable'):
+            Blog.objects.all().add_i18n_annotation('foo', 'foo_nl')
 
 
 class FilterTest(TestCase):
@@ -141,6 +148,12 @@ class TranslatedFieldGetTest(TestCase):
 
         self.assertEquals(m.title_nl, 'Valk')
         self.assertEquals(m.title_de, 'Falk')
+
+    def test_non_translatable_field(self):
+        m = Blog(title='Falcon')
+
+        with self.assertRaisesMessage(AttributeError, "'Blog' object has no attribute 'foo'"):
+            m.foo
 
 
 class RefreshFromDbTest(TestCase):

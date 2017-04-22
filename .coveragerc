@@ -1,0 +1,8 @@
+[run]
+source =
+    modeltrans
+    tests
+
+
+[html]
+directory = reports/htmlcov
