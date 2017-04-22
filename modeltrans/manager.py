@@ -1,10 +1,10 @@
+# -*- coding: utf-8 -*-
+
 from django.core.exceptions import FieldError
 from django.db import models
 from django.db.models import CharField, TextField
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
-
-from .utils import get_language
 
 
 def get_translatable_fields_for_model(model):

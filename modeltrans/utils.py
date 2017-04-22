@@ -42,7 +42,7 @@ def build_localized_fieldname(field_name, lang):
         # The 2-letter Indonesian language code is problematic with the
         # current naming scheme as Django foreign keys also add "id" suffix.
         lang = 'ind'
-    return str('%s_%s' % (field_name, lang.replace('-', '_')))
+    return str('{}_{}'.format(field_name, lang.replace('-', '_')))
 
 
 def _build_localized_verbose_name(verbose_name, lang):

@@ -44,7 +44,7 @@ class TranslatedFieldTest(TestCase):
         with self.assertRaisesMessage(AttributeError, "'Blog' object has no attribute 'foo'"):
             m.foo
 
-    @skip('Assignment not yet implemented')
+    # @skip('Assignment not yet implemented')
     def test_set_translatable_field(self):
         m = Blog.objects.create(title='Toad')
 

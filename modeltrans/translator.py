@@ -9,8 +9,9 @@ from modeltrans import settings
 from modeltrans.manager import MultilingualManager, MultilingualQuerysetManager
 
 from .exceptions import AlreadyRegistered, DescendantRegistered, NotRegistered
+from .fields import ActiveTranslationFieldProxy, TranslationFieldProxy
 from .manager import transform_translatable_fields
-from .models import multilingual_getattr
+# from .models import multilingual_getattr
 from .utils import build_localized_fieldname
 
 
@@ -109,6 +110,22 @@ class TranslationOptions(with_metaclass(FieldsAggregationMetaClass, object)):
         return '%s: %s + %s' % (self.__class__.__name__, local, inherited)
 
 
+def raise_if_field_exists(model, field_name):
+    if not hasattr(model, field_name):
+        return
+
+    # Check if are not dealing with abstract field inherited.
+    for cls in model.__mro__:
+        if hasattr(cls, '_meta') and cls.__dict__.get(field_name, None):
+            cls_opts = translator._get_options_for_model(cls)
+            if not cls._meta.abstract or field_name not in cls_opts.local_fields:
+                raise ValueError(
+                    'Error adding translation field. Model "{}" already contains a field named "{}".'.format(
+                        model._meta.object_name, field_name
+                    )
+                )
+
+
 def add_translation_field(model, opts):
     '''
     Monkey patches the original model class to provide the `i18n` field.
@@ -120,22 +137,29 @@ def add_translation_field(model, opts):
 
     # proxy fields to assign and get values from.
     for field_name in opts.local_fields.keys():
-        # field_i18n to get/assign the current language
-        # field_['nl', 'fr', ...] to get/assign the other languages
-        print 'adding proxy fields for', field_name
 
-        for l in settings.AVAILABLE_LANGUAGES:
-            localized_field_name = build_localized_fieldname(field_name, l)
+        # first, add a `<original_field>_i18n` proxy field to get the currently
+        # active translation for a field
+        active_translation_field = ActiveTranslationFieldProxy(model, field_name)
+        i18n_field_name = build_localized_fieldname(field_name, 'i18n')
+        raise_if_field_exists(model, i18n_field_name)
 
-            if hasattr(model, localized_field_name):
-                # Check if are not dealing with abstract field inherited.
-                for cls in model.__mro__:
-                    if hasattr(cls, '_meta') and cls.__dict__.get(localized_field_name, None):
-                        cls_opts = translator._get_options_for_model(cls)
-                        if not cls._meta.abstract or field_name not in cls_opts.local_fields:
-                            raise ValueError("Error adding translation field. Model '%s' already"
-                                             " contains a field named '%s'." %
-                                             (model._meta.object_name, localized_field_name))
+        setattr(model, i18n_field_name, active_translation_field)
+
+        # now, for each language, add a proxy field to get the tranlation for
+        # that langauge
+        for language in list(settings.AVAILABLE_LANGUAGES) + [settings.DEFAULT_LANGUAGE, ]:
+            translation_field = TranslationFieldProxy(
+                original_field=field_name,
+                model=model,
+                language=language
+            )
+            localized_field_name = translation_field.get_field_name()
+
+            raise_if_field_exists(model, localized_field_name)
+
+            setattr(model, localized_field_name, translation_field)
+            opts.add_translation_field(field_name, translation_field)
 
 
 def has_custom_queryset(manager):
@@ -229,22 +253,6 @@ def patch_clean_fields(model):
     model.clean_fields = new_clean_fields
 
 
-def patch_get_deferred_fields(model):
-    '''
-    Django >= 1.8: patch detecting deferred fields. Crucial for only/defer to work.
-    '''
-    if not hasattr(model, 'get_deferred_fields'):
-        return
-    old_get_deferred_fields = model.get_deferred_fields
-
-    def new_get_deferred_fields(self):
-        sup = old_get_deferred_fields(self)
-        if hasattr(self, '_fields_were_deferred'):
-            sup.update(self._fields_were_deferred)
-        return sup
-    model.get_deferred_fields = new_get_deferred_fields
-
-
 def patch_metaclass(model):
     '''
     Monkey patches original model metaclass to exclude translated fields on deferred subclasses.
@@ -321,8 +329,10 @@ class Translator(object):
             if model in self._registry:
                 if self._registry[model].registered:
                     raise AlreadyRegistered(
-                        'Model "%s" is already registered for translation' %
-                        model.__name__)
+                        'Model "{}" is already registered for translation'.format(
+                            model.__name__
+                        )
+                    )
                 else:
                     descendants = [d.__name__ for d in self._registry.keys()
                                    if issubclass(d, model) and d != model]
@@ -373,18 +383,12 @@ class Translator(object):
         # Patch clean_fields to verify form field clearing
         patch_clean_fields(model)
 
-        # Patch __metaclass__ and other methods to allow deferring to work
-        patch_get_deferred_fields(model)
-
-        # add a __getattr__ for translated field lookup
-        model.__getattr__ = multilingual_getattr
-
     def unregister(self, model_or_iterable):
         '''
         Unregisters the given model(s).
 
         If a model isn't registered, this will raise NotRegistered. If one of
-        its subclasses is registered, DescendantRegistered will be raised.
+        its subclasses is registered, `DescendantRegistered` will be raised.
         '''
         if isinstance(model_or_iterable, ModelBase):
             model_or_iterable = [model_or_iterable]
@@ -401,9 +405,11 @@ class Translator(object):
                     # Allowing to unregister a base would necessitate
                     # repatching all submodels.
                     raise DescendantRegistered(
-                        'You need to unregister descendant "%s" before'
-                        ' unregistering its base "%s"' %
-                        (desc.__name__, model.__name__))
+                        'You need to unregister descendant "{}" before'
+                        ' unregistering its base "{}"'.format(
+                            desc.__name__, model.__name__
+                        )
+                    )
                 del self._registry[desc]
 
     def get_registered_models(self, abstract=True):
@@ -446,8 +452,9 @@ class Translator(object):
         '''
         opts = self._get_options_for_model(model)
         if not opts.registered and not opts.related:
-            raise NotRegistered('The model "%s" is not registered for '
-                                'translation' % model.__name__)
+            raise NotRegistered(
+                'The model "{}" is not registered for translation'.format(model.__name__)
+            )
         return opts
 
 
