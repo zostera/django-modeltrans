@@ -68,6 +68,11 @@ class TranslatedFieldTest(TestCase):
 
         self.assertEquals(m.title, 'Toad')
 
+    def test_clean(self):
+        m = Blog(body='Horses are nice')
+
+        m.full_clean()
+
 
 class RefreshFromDbTest(TestCase):
     def test_refresh_from_db(self):

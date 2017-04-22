@@ -2,14 +2,14 @@
 from django import forms
 from django.core import validators
 
-from modeltranslation.fields import TranslationField
+from modeltrans.fields import TranslationFieldProxy
 
 
 class TranslationModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(TranslationModelForm, self).__init__(*args, **kwargs)
         for f in self._meta.model._meta.fields:
-            if f.name in self.fields and isinstance(f, TranslationField):
+            if f.name in self.fields and isinstance(f, TranslationFieldProxy):
                 del self.fields[f.name]
 
 

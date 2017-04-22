@@ -6,6 +6,7 @@ from django.urls import reverse_lazy
 from django.views.generic import DetailView
 from django.views.generic.edit import UpdateView
 
+from .forms import BlogForm
 from .models import Blog
 
 
@@ -19,7 +20,7 @@ class BlogTable(tables.Table):
 
     class Meta:
         model = Blog
-        fields = ('title_i18n', 'title_nl', 'title_fr', 'category')
+        fields = ('title_i18n', 'i18n.title_nl', 'i18n.title_fr', 'category')
 
 
 class BlogListView(tables.SingleTableView):
@@ -35,6 +36,7 @@ class BlogView(DetailView):
 
 class BlogUpdateView(UpdateView):
     model = Blog
+    form = BlogForm
     fields = ['title', 'body']
     template_name = 'blog_update_form.html'
     template_name_suffix = '_update_form'

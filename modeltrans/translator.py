@@ -61,27 +61,35 @@ class TranslationOptions(with_metaclass(FieldsAggregationMetaClass, object)):
         self.fields = dict((f, set()) for f in self.fields)
         self.related_fields = []
 
-    def validate(self):
+    def validate(self, model):
         '''
-        Perform options validation.
+        Perform validation of `TranslationOptions`.
         '''
         # TODO: at the moment only required_languages is validated.
         # Maybe check other options as well?
-        if self.required_languages:
-            if isinstance(self.required_languages, (tuple, list)):
-                self._check_languages(self.required_languages)
-            else:
-                self._check_languages(self.required_languages.keys(), extra=('default',))
-                for fieldnames in self.required_languages.values():
-                    if any(f not in self.fields for f in fieldnames):
-                        raise ImproperlyConfigured(
-                            'Fieldname in required_languages which is not in fields option.')
+        if not self.required_languages:
+            return
 
-    def _check_languages(self, languages, extra=()):
-        correct = list(settings.AVAILABLE_LANGUAGES) + list(extra)
-        if any(l not in correct for l in languages):
-            raise ImproperlyConfigured(
-                'Language in required_languages which is not in AVAILABLE_LANGUAGES.')
+        if isinstance(self.required_languages, (tuple, list)):
+            self._check_languages(self.required_languages, model)
+        else:
+            self._check_languages(self.required_languages.keys(), model)
+            for fieldnames in self.required_languages.values():
+                for field in fieldnames:
+                    if field not in self.fields:
+                        raise ImproperlyConfigured(
+                            'Fieldname "{}" in required_languages which is not '
+                            'defined as translatable for Model "{}".'.format(field, model.__name__)
+                        )
+
+    def _check_languages(self, languages, model):
+        valid_languages = list(settings.AVAILABLE_LANGUAGES) + list((settings.DEFAULT_LANGUAGE, ))
+        for l in languages:
+            if l not in valid_languages:
+                raise ImproperlyConfigured(
+                    'Language "{}" is in required_languages on Model "{}" but '
+                    'not in settings.AVAILABLE_LANGUAGES.'.format(l, model.__name__)
+                )
 
     def update(self, other):
         '''
@@ -120,7 +128,8 @@ def raise_if_field_exists(model, field_name):
             cls_opts = translator._get_options_for_model(cls)
             if not cls._meta.abstract or field_name not in cls_opts.local_fields:
                 raise ValueError(
-                    'Error adding translation field. Model "{}" already contains a field named "{}".'.format(
+                    'Error adding translation field. Model "{}" already contains '
+                    'a field named "{}".'.format(
                         model._meta.object_name, field_name
                     )
                 )
@@ -336,6 +345,7 @@ class Translator(object):
                 else:
                     descendants = [d.__name__ for d in self._registry.keys()
                                    if issubclass(d, model) and d != model]
+                    print descendants
                     raise DescendantRegistered(
                         'Model "%s" cannot be registered after its subclass'
                         ' "%s"' % (model.__name__, descendants[0]))
@@ -352,7 +362,7 @@ class Translator(object):
 
     def _register_single_model(self, model, opts):
         # Now, when all fields are initialized and inherited, validate configuration.
-        opts.validate()
+        opts.validate(model=model)
 
         # Mark the object explicitly as registered -- registry caches
         # options of all models, registered or not.

@@ -7,4 +7,7 @@ pyclean:
 	find . -name "*.pyc" -exec rm -rf {} \;
 	find . -type d -name "__pycache__" -delete
 
-.PHONY: test
+example:
+	cd example && PYTHONPATH=.. ./manage.py runserver
+
+.PHONY: test example

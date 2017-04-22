@@ -27,3 +27,10 @@ class Blog(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Person(models.Model):
+    first_name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255)
+
+    occupation = models.CharField(max_length=255)
