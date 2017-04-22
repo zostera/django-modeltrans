@@ -29,5 +29,48 @@ class ReRegisterTest(TestCase):
             fields = ('name', )
             required_languages = ('en', 'nl', 'spanisch')
 
-        with self.assertRaisesMessage(ImproperlyConfigured, 'Language "spanisch" is in required_languages on Model "TestModel" but not in settings.AVAILABLE_LANGUAGES.'):
+        expected_message = (
+            'Language "spanisch" is in required_languages on '
+            'Model "TestModel" but not in settings.AVAILABLE_LANGUAGES.'
+        )
+
+        with self.assertRaisesMessage(ImproperlyConfigured, expected_message):
             translator.register(TestModel, TestModelTranslationOptions)
+
+    def test_register_with_invalid_language_dict(self):
+        class TestModel2(models.Model):
+            name = models.CharField(max_length=100)
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+
+        class TestModelTranslationOptions(TranslationOptions):
+            fields = ('name', )
+            required_languages = {
+                'vlaams': ('name', )
+            }
+        expected_message = (
+            'Language "vlaams" is in required_languages on Model "TestModel2" '
+            'but not in settings.AVAILABLE_LANGUAGES.'
+        )
+        with self.assertRaisesMessage(ImproperlyConfigured, expected_message):
+            translator.register(TestModel2, TestModelTranslationOptions)
+
+    def test_register_with_invalid_field(self):
+        class TestModel3(models.Model):
+            name = models.CharField(max_length=100)
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+
+        class TestModelTranslationOptions(TranslationOptions):
+            fields = ('name', )
+            required_languages = {
+                'en': ('title', )
+            }
+        expected_message = (
+            'Fieldname "title" in required_languages which is not defined as '
+            'translatable for Model "TestModel3".'
+        )
+        with self.assertRaisesMessage(ImproperlyConfigured, expected_message):
+            translator.register(TestModel3, TestModelTranslationOptions)

@@ -345,7 +345,7 @@ class Translator(object):
                 else:
                     descendants = [d.__name__ for d in self._registry.keys()
                                    if issubclass(d, model) and d != model]
-                    print descendants
+                    print(descendants)
                     raise DescendantRegistered(
                         'Model "%s" cannot be registered after its subclass'
                         ' "%s"' % (model.__name__, descendants[0]))
