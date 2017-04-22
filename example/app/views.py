@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import django_tables2 as tables
+from django.urls import reverse_lazy
 from django.views.generic import DetailView
 from django.views.generic.edit import UpdateView
 
@@ -11,13 +12,14 @@ from .models import Blog
 class BlogTable(tables.Table):
 
     edit = tables.TemplateColumn(
-        template_code='''<a href="{% url 'blog' pk=record.pk %}" class="btn btn-small">edit</a>''',
-        empty_values=()
+        template_code='''<a href="{% url 'blog-edit' pk=record.pk %}" class="btn btn-small">edit</a>''',
+        empty_values=(),
+        orderable=False
     )
 
     class Meta:
         model = Blog
-        fields = ('title_i18n', 'title_nl', 'category')
+        fields = ('title_i18n', 'title_nl', 'title_fr', 'category')
 
 
 class BlogListView(tables.SingleTableView):
@@ -36,3 +38,5 @@ class BlogUpdateView(UpdateView):
     fields = ['title', 'body']
     template_name = 'blog_update_form.html'
     template_name_suffix = '_update_form'
+
+    success_url = reverse_lazy('blogs')

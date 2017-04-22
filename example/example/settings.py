@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
     'django_extensions',
     'django_tables2',
+    'bootstrap3',
     'app',
 ]
 

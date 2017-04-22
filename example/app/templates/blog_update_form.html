@@ -1,9 +1,17 @@
 {% extends "index.html" %}
-
+{% load bootstrap3 %}
 {% block body %}
-edit this
-<form action="{% url 'blog-edit' pk=blog.pk %}" method="post">{% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="Update" />
-</form>
+
+<div class="row">
+    <div class="col-md-6">
+        <form action="{% url 'blog-edit' pk=blog.pk %}" method="post" class="form form-horizontal">
+            {% csrf_token %}
+            {% bootstrap_form form layout='horizontal' %}
+            {% buttons layout='horizontal' %}
+                {% bootstrap_button 'submit' %}
+                <a href="{% url 'blogs' %}" class="btn btn-primary">back</a>
+            {% endbuttons %}
+        </form>
+    </div>
+</div>
 {% endblock %}
