@@ -82,12 +82,12 @@ WSGI_APPLICATION = 'example.wsgi.application'
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': env('DB_NAME', 'meetnetten'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST', 'localhost'),
-        'PORT': env('DB_PORT', 5432),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'model-translation',
+        'USER': 'postgres',
+        'PASSWORD': 'test1234',
+        'HOST': 'localhost',
+        'PORT': 5432,
         'CONN_MAX_AGE': 600,
     }
 }

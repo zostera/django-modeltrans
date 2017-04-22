@@ -1,0 +1,9 @@
+{% extends "index.html" %}
+
+{% block body %}
+edit this
+<form action="{% url 'blog-edit' pk=blog.pk %}" method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Update" />
+</form>
+{% endblock %}

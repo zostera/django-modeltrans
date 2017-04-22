@@ -30,9 +30,10 @@ class TranslatedFieldTest(TestCase):
             'title_de': 'Falk'
         })
 
-        with self.assertRaisesMessage(AttributeError, "'Blog.title' has no translation 'fr'"):
-            m.title_fr
+        # Fallback to base langauge
+        self.assertEquals(m.title_fr, 'Falcon')
 
+        # other translations are still there.
         self.assertEquals(m.title_nl, 'Valk')
         self.assertEquals(m.title_de, 'Falk')
 

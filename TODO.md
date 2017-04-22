@@ -18,7 +18,7 @@
         Allow calling `create(title_nl='...')` and `Model(title_nl='...').save()`
         with translated versions of a field and make sure they arrive in the
         `i18n` field.
-  - [ ] assigning to translated fields: `m = Model(...), m.title_nl = 'foo', m.save()`
+  - [*] assigning to translated fields: `m = Model(...), m.title_nl = 'foo', m.save()`
   - [ ] deferred fields `defer()`, `only()`
   - [ ] clean() and requiredness of translated fields.
   - [ ] values()

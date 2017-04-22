@@ -20,21 +20,13 @@ class TranslationFieldProxy(object):
 
         key = self.get_field_name()
         if key not in instance.i18n:
-            # TODO: implement fallback
-            raise AttributeError(
-                "'{}.{}' has no translation '{}'".format(
-                    instance.__class__.__name__,
-                    self.original_field,
-                    self.get_language()
-                )
-            )
+            return getattr(instance, self.original_field)
         return instance.i18n[key]
 
     def __set__(self, instance, value):
         if self.get_language() == DEFAULT_LANGUAGE:
             setattr(instance, self.original_field, value)
             return
-
         instance.i18n[self.get_field_name()] = value
 
     def get_language(self):
