@@ -83,13 +83,15 @@ class TranslationJSONField(JSONField):
         opts = self.translation_options
 
         for field in value.keys():
-            if field not in opts.local_fields.keys():
-                raise ValidationError('Key "{}" is not a translatable field'.format(field))
+            original_field = field[0:field.rfind('_')]
+            if original_field not in opts.local_fields.keys():
+                raise ValidationError(
+                    'Key "{}" does not belong to a translatable field'.format(field))
 
         if isinstance(opts.required_languages, (tuple, list)):
             for lang in opts.required_languages:
                 for field in opts.local_fields.keys():
-                    if field not in value:
+                    if build_localized_fieldname(field, lang) not in value:
                         raise ValidationError(
                             'Translation for field "{}" in "{}" is required'.format(field, lang)
                         )

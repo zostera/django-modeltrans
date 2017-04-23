@@ -70,13 +70,27 @@ class TranslatedFieldTest(TestCase):
         self.assertEquals(m.title, 'Toad')
 
     def test_clean(self):
-        m = Blog(title='foo', body='Horses are nice', i18n={})
+        m = Blog(title='Horse', body='Horses are nice', i18n={})
 
         with self.assertRaises(ValidationError) as e:
             m.full_clean()
 
         self.assertEquals(list(e.exception), [
             ('i18n', ['Translation for field "title" in "nl" is required'])
+        ])
+
+        # this should validate.
+        m.title_nl = 'Paard'
+        m.full_clean()
+
+    def test_clean_invalid_field(self):
+        m = Blog(title='foo', body='Horses are nice', i18n={'foo': 'bar'})
+
+        with self.assertRaises(ValidationError) as e:
+            m.full_clean()
+
+        self.assertEquals(list(e.exception), [
+            ('i18n', ['Key "foo" does not belong to a translatable field'])
         ])
 
 
