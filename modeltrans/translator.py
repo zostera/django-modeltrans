@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-from django.contrib.postgres.fields import JSONField
+
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Manager
 from django.db.models.base import ModelBase
 from django.utils.six import with_metaclass
 
-from modeltrans import settings
-from modeltrans.manager import MultilingualManager, MultilingualQuerysetManager
-
+from . import settings
 from .exceptions import AlreadyRegistered, DescendantRegistered, NotRegistered
-from .fields import ActiveTranslationFieldProxy, TranslationFieldProxy
-from .manager import transform_translatable_fields
+from .fields import (ActiveTranslationFieldProxy, TranslationFieldProxy,
+                     TranslationJSONField)
+from .manager import (MultilingualManager, MultilingualQuerysetManager,
+                      transform_translatable_fields)
 # from .models import multilingual_getattr
 from .utils import build_localized_fieldname
 
@@ -142,11 +142,10 @@ def add_translation_field(model, opts):
     Adds newly created translation fields to the given translation options.
     '''
     # field to store the translations in
-    model.add_to_class('i18n', JSONField(editable=False, null=True))
+    model.add_to_class('i18n', TranslationJSONField(translation_options=opts))
 
     # proxy fields to assign and get values from.
     for field_name in opts.local_fields.keys():
-
         # first, add a `<original_field>_i18n` proxy field to get the currently
         # active translation for a field
         active_translation_field = ActiveTranslationFieldProxy(model, field_name)
@@ -239,76 +238,6 @@ def patch_constructor(model):
     model.__init__ = patched_init
 
 
-def patch_clean_fields(model):
-    '''
-    Patch clean_fields method to handle different form types submission.
-    '''
-    old_clean_fields = model.clean_fields
-
-    def new_clean_fields(self, exclude=None):
-        if hasattr(self, '_mt_form_pending_clear'):
-            # Some form translation fields has been marked as clearing value.
-            # Check if corresponding translated field was also saved (not excluded):
-            # - if yes, it seems like form for MT-unaware app. Ignore clearing (left value from
-            #   translated field unchanged), as if field was omitted from form
-            # - if no, then proceed as normally: clear the field
-            for field_name, value in self._mt_form_pending_clear.items():
-                field = self._meta.get_field(field_name)
-                orig_field_name = field.translated_field.name
-                if orig_field_name in exclude:
-                    field.save_form_data(self, value, check=False)
-            delattr(self, '_mt_form_pending_clear')
-        old_clean_fields(self, exclude)
-    model.clean_fields = new_clean_fields
-
-
-def patch_metaclass(model):
-    '''
-    Monkey patches original model metaclass to exclude translated fields on deferred subclasses.
-    '''
-    old_mcs = model.__class__
-
-    class translation_deferred_mcs(old_mcs):
-        '''
-        This metaclass is essential for deferred subclasses (obtained via
-        only/defer) to work.
-
-        When deferred subclass is created, some translated fields descriptors
-        could be overridden by `DeferredAttribute` - which would cause
-        translation retrieval to fail. Prevent this from happening with deleting
-        those attributes from class being created. This metaclass would be
-        called from django.db.models.query_utils.deferred_class_factory
-        '''
-        def __new__(cls, name, bases, attrs):
-            if attrs.get('_deferred', False):
-                opts = translator.get_options_for_model(model)
-                were_deferred = set()
-                for field_name in opts.fields.keys():
-                    if attrs.pop(field_name, None):
-                        # Field was deferred. Store this for future reference.
-                        were_deferred.add(field_name)
-                if len(were_deferred):
-                    attrs['_fields_were_deferred'] = were_deferred
-            return super(translation_deferred_mcs, cls).__new__(cls, name, bases, attrs)
-    # Assign to __metaclass__ wouldn't work, since metaclass search algorithm check for __class__.
-    # http://docs.python.org/2/reference/datamodel.html#__metaclass__
-    model.__class__ = translation_deferred_mcs
-
-
-def delete_cache_fields(model):
-    opts = model._meta
-    cached_attrs = ('_field_cache', '_field_name_cache', '_name_map', 'fields', 'concrete_fields',
-                    'local_concrete_fields')
-    for attr in cached_attrs:
-        try:
-            delattr(opts, attr)
-        except AttributeError:
-            pass
-
-    if hasattr(model._meta, '_expire_cache'):
-        model._meta._expire_cache()
-
-
 class Translator(object):
     '''
     A Translator object encapsulates an instance of a translator. Models are
@@ -369,29 +298,14 @@ class Translator(object):
         opts.registered = True
 
         # Add translation fields to the model.
-        if model._meta.proxy:
-            delete_cache_fields(model)
-        else:
+        if not model._meta.proxy:
             add_translation_field(model, opts)
-
-        # Delete all fields cache for related model (parent and children)
-        related = ((
-            f for f in model._meta.get_fields()
-            if (f.one_to_many or f.one_to_one) and
-            f.auto_created
-        ))
-
-        for related_obj in related:
-            delete_cache_fields(related_obj.model)
 
         # Set MultilingualManager
         add_manager(model)
 
         # Patch __init__ to rewrite fields
         patch_constructor(model)
-
-        # Patch clean_fields to verify form field clearing
-        patch_clean_fields(model)
 
     def unregister(self, model_or_iterable):
         '''

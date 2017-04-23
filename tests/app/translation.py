@@ -7,6 +7,7 @@ from .models import Blog, Category, Person
 
 class BlogTranslationOptions(TranslationOptions):
     fields = ('title', )
+    required_languages = ('nl', )
 
 
 class CategoryTranslationOptions(TranslationOptions):

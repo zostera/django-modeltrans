@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from django.contrib.postgres.fields import JSONField
+from django.core.exceptions import ValidationError
+
 from .settings import DEFAULT_LANGUAGE
 from .utils import build_localized_fieldname, get_language
 
@@ -47,3 +50,52 @@ class ActiveTranslationFieldProxy(TranslationFieldProxy):
 
     def get_language(self):
         return get_language()
+
+
+class TranslationJSONField(JSONField):
+    description = 'Translation storage for a model'
+
+    def __init__(self, translation_options, *args, **kwargs):
+        self.translation_options = translation_options
+
+        kwargs['editable'] = False
+        kwargs['null'] = True
+        super(TranslationJSONField, self).__init__(*args, **kwargs)
+
+    def deconstruct(self):
+        name, path, args, kwargs = super(TranslationJSONField, self).deconstruct()
+
+        del kwargs['editable']
+        del kwargs['null']
+
+        if self.translation_options is not None:
+            kwargs['translation_options'] = self.translation_options
+
+        return name, path, args, kwargs
+
+    def validate(self, value, model_instance):
+        '''
+        We must override `validate()` to validate even if the value is {}.
+
+        `{}` is considered an empty value, so validation is skipped for parents's
+        `validate()` method.
+        '''
+        opts = self.translation_options
+
+        for field in value.keys():
+            if field not in opts.local_fields.keys():
+                raise ValidationError('Key "{}" is not a translatable field'.format(field))
+
+        if isinstance(opts.required_languages, (tuple, list)):
+            for lang in opts.required_languages:
+                for field in opts.local_fields.keys():
+                    if field not in value:
+                        raise ValidationError(
+                            'Translation for field "{}" in "{}" is required'.format(field, lang)
+                        )
+        else:
+            raise NotImplementedError(
+                'Validation of required fields not yet implemented for the dict syntax of required_fields'
+            )
+
+        return super(TranslationJSONField, self).validate(value, model_instance)

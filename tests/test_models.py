@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils.translation import override
 
@@ -68,10 +69,15 @@ class TranslatedFieldTest(TestCase):
 
         self.assertEquals(m.title, 'Toad')
 
-    # def test_clean(self):
-    #     m = Blog(body='Horses are nice')
-    #
-    #     m.full_clean()
+    def test_clean(self):
+        m = Blog(title='foo', body='Horses are nice', i18n={})
+
+        with self.assertRaises(ValidationError) as e:
+            m.full_clean()
+
+        self.assertEquals(list(e.exception), [
+            ('i18n', ['Translation for field "title" in "nl" is required'])
+        ])
 
 
 class RefreshFromDbTest(TestCase):
