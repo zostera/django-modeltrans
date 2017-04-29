@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django_tables2',
     'bootstrap3',
     'app',
+    'django_extensions'
 ]
 
 MIDDLEWARE = [

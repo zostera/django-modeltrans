@@ -10,4 +10,7 @@ pyclean:
 example:
 	cd example && PYTHONPATH=.. ./manage.py runserver
 
+shell:
+	cd example && PYTHONPATH=.. ./manage.py shell_plus
+
 .PHONY: test example

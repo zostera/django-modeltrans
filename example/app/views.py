@@ -37,8 +37,15 @@ class BlogView(DetailView):
 class BlogUpdateView(UpdateView):
     model = Blog
     form = BlogForm
-    fields = ['title', 'body']
+    fields = ['title', 'title', 'body']
     template_name = 'blog_update_form.html'
     template_name_suffix = '_update_form'
 
     success_url = reverse_lazy('blogs')
+
+    def get_context_data(self, *args, **kwargs):
+        ret = super(BlogUpdateView, self).get_context_data(*args, **kwargs)
+        for k, r in ret.items():
+            print k, r
+
+        return ret

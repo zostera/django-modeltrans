@@ -1,21 +1,78 @@
 # -*- coding: utf-8 -*-
 
 from django.contrib.postgres.fields import JSONField
-from django.core.exceptions import ValidationError
+from django.db import models
+from django.utils.translation import ugettext as _
 
 from .settings import DEFAULT_LANGUAGE
 from .utils import build_localized_fieldname, get_language
 
 
-class TranslationFieldProxy(object):
+class VirtualFieldMixin(object):
     '''
-    Descriptor for a translation field, pointing to a specific language.
+    Implementation inspired by HStoreVirtualMixin from:
+    https://github.com/djangonauts/django-hstore/blob/master/django_hstore/virtual.py
     '''
-    def __init__(self, model, original_field, language):
-        self.model = model
+    concrete = False
 
+    def deconstruct(self, *args, **kwargs):
+        name, path, args, kwargs = super(VirtualFieldMixin, self).deconstruct(*args, **kwargs)
+        return (name, path, args, {'default': kwargs.get('default'), 'to': None})
+
+    def contribute_to_class(self, cls, name):
+        self.model = cls
+
+        self.attname = name
+        self.name = name
+        self.column = None
+
+        setattr(cls, name, self)
+        cls._meta.add_field(self, virtual=True)
+
+    def db_type(self, connection):
+        return None
+
+    def __get__(self, instance, instance_type=None):
+        field = getattr(instance, 'i18n')
+        if not field:
+            return self.default
+
+        return instance.i18n.get(self.name, self.default)
+
+    def __set__(self, instance, value):
+        instance.i18n[self.name] = value
+
+    def get_field_name(self):
+        return build_localized_fieldname(self.original_field, self.get_language())
+
+    def get_language(self):
+        return self.language if self.language is not None else get_language()
+
+    @property
+    def short_description(self):
+        return _(self.original_field)
+
+
+class TranlatedVirtualField(VirtualFieldMixin, models.CharField):
+
+    def __init__(self, original_field, language=None, *args, **kwargs):
         self.original_field = original_field
         self.language = language
+
+        kwargs['max_length'] = 255
+
+        super(TranlatedVirtualField, self).__init__(*args, **kwargs)
+
+    def deconstruct(self):
+        name, path, args, kwargs = super(TranslationJSONField, self).deconstruct()
+
+        del kwargs['max_length']
+
+        if self.model is not None:
+            kwargs['original_field'] = self.original_field
+            kwargs['language'] = self.language
+
+        return name, path, args, kwargs
 
     def __get__(self, instance=None, owner=None):
         if self.get_language() == DEFAULT_LANGUAGE:
@@ -32,32 +89,15 @@ class TranslationFieldProxy(object):
             return
         instance.i18n[self.get_field_name()] = value
 
-    def get_language(self):
-        return self.language
-
-    def get_field_name(self):
-        return build_localized_fieldname(self.original_field, self.get_language())
-
-
-class ActiveTranslationFieldProxy(TranslationFieldProxy):
-    '''
-    Descriptor for a translation field, pointing to the active language.
-    '''
-
-    def __init__(self, model, original_field):
-        self.model = model
-        self.original_field = original_field
-
-    def get_language(self):
-        return get_language()
 
 
 class TranslationJSONField(JSONField):
+    '''
+    This model fields is used to store the translations in the translated model.
+    '''
     description = 'Translation storage for a model'
 
-    def __init__(self, translation_options, *args, **kwargs):
-        self.translation_options = translation_options
-
+    def __init__(self, *args, **kwargs):
         kwargs['editable'] = False
         kwargs['null'] = True
         super(TranslationJSONField, self).__init__(*args, **kwargs)
@@ -68,36 +108,4 @@ class TranslationJSONField(JSONField):
         del kwargs['editable']
         del kwargs['null']
 
-        if self.translation_options is not None:
-            kwargs['translation_options'] = self.translation_options
-
         return name, path, args, kwargs
-
-    def validate(self, value, model_instance):
-        '''
-        We must override `validate()` to validate even if the value is {}.
-
-        `{}` is considered an empty value, so validation is skipped for parents's
-        `validate()` method.
-        '''
-        opts = self.translation_options
-
-        for field in value.keys():
-            original_field = field[0:field.rfind('_')]
-            if original_field not in opts.local_fields.keys():
-                raise ValidationError(
-                    'Key "{}" does not belong to a translatable field'.format(field))
-
-        if isinstance(opts.required_languages, (tuple, list)):
-            for lang in opts.required_languages:
-                for field in opts.local_fields.keys():
-                    if build_localized_fieldname(field, lang) not in value:
-                        raise ValidationError(
-                            'Translation for field "{}" in "{}" is required'.format(field, lang)
-                        )
-        else:
-            raise NotImplementedError(
-                'Validation of required fields not yet implemented for the dict syntax of required_fields'
-            )
-
-        return super(TranslationJSONField, self).validate(value, model_instance)

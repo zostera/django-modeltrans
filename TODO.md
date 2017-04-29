@@ -21,7 +21,7 @@
   - [*] assigning to translated fields: `m = Model(...), m.title_nl = 'foo', m.save()`
   - [ ] rewrite fieldnames in `F` expressions (https://github.com/deschler/django-modeltranslation/blob/master/modeltranslation/manager.py#L314)
   - [ ] deferred fields `defer()`, `only()`
-  - [ ] clean() and requiredness of translated fields.
+  - [*] clean() and requiredness of translated fields.
   - [ ] values()
   - [ ] values_list()
   - [ ] select_related()
@@ -36,6 +36,7 @@
   - [ ] ModelForm integration
   - [ ] Django admin integration
   - [ ] Migration from django-model-translation
+  - [ ] Documentation
 
 # usage of managers/models in code
 

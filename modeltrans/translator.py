@@ -7,12 +7,11 @@ from django.utils.six import with_metaclass
 
 from . import settings
 from .exceptions import AlreadyRegistered, DescendantRegistered, NotRegistered
-from .fields import (ActiveTranslationFieldProxy, TranslationFieldProxy,
-                     TranslationJSONField)
+from .fields import TranlatedVirtualField, TranslationJSONField
 from .manager import (MultilingualManager, MultilingualQuerysetManager,
                       transform_translatable_fields)
-# from .models import multilingual_getattr
 from .utils import build_localized_fieldname
+from .validators import TranslatedVirtualFieldValidator
 
 
 class FieldsAggregationMetaClass(type):
@@ -142,32 +141,40 @@ def add_translation_field(model, opts):
     Adds newly created translation fields to the given translation options.
     '''
     # field to store the translations in
-    model.add_to_class('i18n', TranslationJSONField(translation_options=opts))
+    model.add_to_class('i18n', TranslationJSONField())
 
     # proxy fields to assign and get values from.
     for field_name in opts.local_fields.keys():
         # first, add a `<original_field>_i18n` proxy field to get the currently
         # active translation for a field
-        active_translation_field = ActiveTranslationFieldProxy(model, field_name)
         i18n_field_name = build_localized_fieldname(field_name, 'i18n')
-        raise_if_field_exists(model, i18n_field_name)
+        active_translation_field = TranlatedVirtualField(
+            original_field=field_name,
+            validators=[
+                TranslatedVirtualFieldValidator(
+                    original_field=field_name,
+                    translation_options=opts
+                )
+            ]
+        )
 
-        setattr(model, i18n_field_name, active_translation_field)
+        active_translation_field.contribute_to_class(model, i18n_field_name)
 
         # now, for each language, add a proxy field to get the tranlation for
         # that langauge
         for language in list(settings.AVAILABLE_LANGUAGES) + [settings.DEFAULT_LANGUAGE, ]:
-            translation_field = TranslationFieldProxy(
+            translation_field = TranlatedVirtualField(
                 original_field=field_name,
-                model=model,
-                language=language
+                language=language,
+                validators=[
+                    TranslatedVirtualFieldValidator(
+                        original_field=field_name,
+                        translation_options=opts,
+                        language=language
+                    )
+                ]
             )
-            localized_field_name = translation_field.get_field_name()
-
-            raise_if_field_exists(model, localized_field_name)
-
-            setattr(model, localized_field_name, translation_field)
-            opts.add_translation_field(field_name, translation_field)
+            translation_field.contribute_to_class(model, translation_field.get_field_name())
 
 
 def has_custom_queryset(manager):
