@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import json
+
 import django_tables2 as tables
+from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import DetailView
 from django.views.generic.edit import UpdateView
 
-from .forms import BlogForm
 from .models import Blog
 
 
@@ -20,7 +22,15 @@ class BlogTable(tables.Table):
 
     class Meta:
         model = Blog
-        fields = ('title', 'title_i18n', 'body', 'category')
+        fields = (
+            # this field should fallback to DEFAULT_LANGUAGE
+            'title_i18n',
+            'title_en',
+            'title_nl',
+            'title_de',
+            'title_fr',
+            'category'
+        )
 
 
 class BlogListView(tables.SingleTableView):
@@ -36,26 +46,22 @@ class BlogView(DetailView):
 
 class BlogUpdateView(UpdateView):
     model = Blog
-    form = BlogForm
-    fields = ['title', 'title', 'body']
+    fields = ['title', 'title_nl', 'body', 'category']
     template_name = 'blog_update_form.html'
     template_name_suffix = '_update_form'
 
     success_url = reverse_lazy('blogs')
 
-    def get_context_data(self, *args, **kwargs):
-        ret = super(BlogUpdateView, self).get_context_data(*args, **kwargs)
-        for k, r in ret.items():
-            print(k, r)
-
-        return ret
 
 
-def activate_language(request, lang):
-    from django.utils.translation import activate
-    from django.shortcuts import redirect
+def fixtures(request):
+    Blog.objects.all().delete()
+    with open('data/species.json') as f:
+        data = json.load(f)
 
-    activate(lang)
-    print('Activated language: {}'.format(lang))
+        for item in data:
+            Blog.objects.create(title=item['title'], i18n=item.get('i18n', None))
 
-    return redirect('index')
+    return render(request, 'table.html', {
+        'table': BlogTable(Blog.objects.all())
+    })

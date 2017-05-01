@@ -45,7 +45,10 @@ class TranlatedVirtualField(models.CharField):
 
         # Use a translated verbose name:
         original_field = cls._meta.get_field(self.original_field)
-        self.verbose_name = _(original_field.verbose_name)
+        translated_field_name = _(original_field.verbose_name)
+        if self.language is not None:
+            translated_field_name += ' ({})'.format(self.language.upper())
+        self.verbose_name = translated_field_name
 
         setattr(cls, name, self)
         cls._meta.add_field(self, private=True)
