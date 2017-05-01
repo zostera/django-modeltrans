@@ -43,6 +43,10 @@ class TranlatedVirtualField(models.CharField):
         self.name = name
         self.column = None
 
+        # Use a translated verbose name:
+        original_field = cls._meta.get_field(self.original_field)
+        self.verbose_name = _(original_field.verbose_name)
+
         setattr(cls, name, self)
         cls._meta.add_field(self, private=True)
 
@@ -84,10 +88,6 @@ class TranlatedVirtualField(models.CharField):
 
     def get_language(self):
         return self.language if self.language is not None else get_language()
-
-    @property
-    def short_description(self):
-        return _(self.original_field)
 
 
 class TranslationJSONField(JSONField):

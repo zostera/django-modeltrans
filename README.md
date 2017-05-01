@@ -10,11 +10,11 @@ Translates Django models in a `JSONField` using a registration approach.
 
 # Usage
 
- - Add `'modeltrans'` your `INSTALLED_APPS`.
+ - Add `'modeltrans'` your list of `INSTALLED_APPS`.
  - Add a list of available languages to your `settings.py`:
    `AVAILABLE_LANGUAGES = ('en', 'nl', 'de', 'fr')`
  - Add a `translation.py` in each app you want to translate models for.
- - For each model you want to translate, create a `TransltionOptions` object:
+ - For each model you want to translate, create a `TransltionOptions` object and register the model using that object:
 ```python
 # models.py
 from django.db import models
@@ -55,14 +55,28 @@ translator.register(Blog, BlogTranslationOptions)
 ...   b.title_i18n
 ...
 'Valk'
+# translations are stored in the field `i18n` in each model:
+>>> b.i18n
+{u'title_nl': u'Valk'}
+# if a translation is not available, None is returned.
+>>> print(b.title_de)
+None
+# fallback to the default language
+>>> with override('de'):
+...     b.title_i18n
+'Falcon'
+# now, if we set the German tranlation, it it is returned from title_i18n:
+>>> b.title_de = 'Falk'
+>>> with override('de'):
+...     b.title_i18n
+'Falk'
 ```
 
 # Running the tests
 
 `tox`
 
-Running the tests without tox, `make test`
-
+Running the tests only for the current envirionment, use `make test`
 
 
 # Attribution

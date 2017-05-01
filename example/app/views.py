@@ -20,7 +20,7 @@ class BlogTable(tables.Table):
 
     class Meta:
         model = Blog
-        fields = ('title_i18n', 'i18n.title_nl', 'i18n.title_fr', 'category')
+        fields = ('title', 'title_i18n', 'body', 'category')
 
 
 class BlogListView(tables.SingleTableView):
@@ -49,3 +49,13 @@ class BlogUpdateView(UpdateView):
             print(k, r)
 
         return ret
+
+
+def activate_language(request, lang):
+    from django.utils.translation import activate
+    from django.shortcuts import redirect
+
+    activate(lang)
+    print('Activated language: {}'.format(lang))
+
+    return redirect('index')
