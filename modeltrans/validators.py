@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.core.exceptions import ValidationError
 
-from .utils import build_localized_fieldname, get_language
+from .utils import get_language
 
 
 class TranslatedVirtualFieldValidator(object):
@@ -17,9 +17,8 @@ class TranslatedVirtualFieldValidator(object):
         original_field = self.original_field
         language = self.language
 
-
         if language in opts.required_languages:
-            if value is None or value is '':
-                 raise ValidationError(
+            if value in (None, ''):
+                raise ValidationError(
                     'Translation for field "{}" in "{}" is required'.format(original_field, language)
                 )

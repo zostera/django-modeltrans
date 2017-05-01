@@ -32,7 +32,8 @@ class TranslatedFieldTest(TestCase):
         })
 
         # Fallback to base langauge
-        self.assertEquals(m.title_fr, 'Falcon')
+        with override('fr'):
+            self.assertEquals(m.title_i18n, 'Falcon')
 
         # other translations are still there.
         self.assertEquals(m.title_nl, 'Valk')
@@ -76,7 +77,7 @@ class TranslatedFieldTest(TestCase):
             m.full_clean()
 
         self.assertEquals(list(e.exception), [
-            ('i18n', ['Translation for field "title_nl" is required'])
+            ('title_nl', ['This field cannot be null.'])
         ])
 
         # With an added `title_nl`, it should validate.

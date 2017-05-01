@@ -46,6 +46,6 @@ class BlogUpdateView(UpdateView):
     def get_context_data(self, *args, **kwargs):
         ret = super(BlogUpdateView, self).get_context_data(*args, **kwargs)
         for k, r in ret.items():
-            print k, r
+            print(k, r)
 
         return ret

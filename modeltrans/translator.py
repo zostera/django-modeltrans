@@ -147,32 +147,23 @@ def add_translation_field(model, opts):
     for field_name in opts.local_fields.keys():
         # first, add a `<original_field>_i18n` proxy field to get the currently
         # active translation for a field
-        i18n_field_name = build_localized_fieldname(field_name, 'i18n')
         active_translation_field = TranlatedVirtualField(
             original_field=field_name,
-            validators=[
-                TranslatedVirtualFieldValidator(
-                    original_field=field_name,
-                    translation_options=opts
-                )
-            ]
+            blank=True,
+            null=True
         )
 
-        active_translation_field.contribute_to_class(model, i18n_field_name)
+        active_translation_field.contribute_to_class(model, active_translation_field.get_field_name())
 
         # now, for each language, add a proxy field to get the tranlation for
-        # that langauge
+        # that specific langauge
         for language in list(settings.AVAILABLE_LANGUAGES) + [settings.DEFAULT_LANGUAGE, ]:
+            blank_allowed = language not in opts.required_languages
             translation_field = TranlatedVirtualField(
                 original_field=field_name,
                 language=language,
-                validators=[
-                    TranslatedVirtualFieldValidator(
-                        original_field=field_name,
-                        translation_options=opts,
-                        language=language
-                    )
-                ]
+                blank=blank_allowed,
+                null=blank_allowed
             )
             translation_field.contribute_to_class(model, translation_field.get_field_name())
 
