@@ -7,7 +7,7 @@ from django.utils.six import with_metaclass
 
 from . import settings
 from .exceptions import AlreadyRegistered, DescendantRegistered, NotRegistered
-from .fields import TranlatedVirtualField, TranslationJSONField
+from .fields import TranslatedVirtualField, TranslationJSONField
 from .manager import MultilingualManager, transform_translatable_fields
 
 
@@ -151,9 +151,9 @@ def add_translation_field(model, opts):
 
     # proxy fields to assign and get values from.
     for field_name in opts.local_fields.keys():
-        # first, add a `<original_field>_i18n` proxy field to get the currently
+        # first, add a `<original_field>_i18n` virtual field to get the currently
         # active translation for a field
-        field = TranlatedVirtualField(
+        field = TranslatedVirtualField(
             original_field=field_name,
             blank=True,
             null=True
@@ -162,11 +162,22 @@ def add_translation_field(model, opts):
         raise_if_field_exists(model, field.get_field_name())
         field.contribute_to_class(model, field.get_field_name())
 
-        # now, for each language, add a proxy field to get the tranlation for
+        # add a virtual field pointing to the original field with name
+        # <orignal_field>_<DEFAULT_LANGUAGE>
+        field = TranslatedVirtualField(
+            original_field=field_name,
+            blank=True,
+            null=True,
+            language=settings.DEFAULT_LANGUAGE
+        )
+        raise_if_field_exists(model, field.get_field_name())
+        field.contribute_to_class(model, field.get_field_name())
+
+        # now, for each language, add a virtual field to get the tranlation for
         # that specific langauge
-        for language in list(settings.AVAILABLE_LANGUAGES) + [settings.DEFAULT_LANGUAGE, ]:
+        for language in list(settings.AVAILABLE_LANGUAGES):
             blank_allowed = language not in opts.required_languages
-            field = TranlatedVirtualField(
+            field = TranslatedVirtualField(
                 original_field=field_name,
                 language=language,
                 blank=blank_allowed,

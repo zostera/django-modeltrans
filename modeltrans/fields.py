@@ -8,7 +8,7 @@ from .settings import DEFAULT_LANGUAGE
 from .utils import build_localized_fieldname, get_language
 
 
-class TranlatedVirtualField(models.CharField):
+class TranslatedVirtualField(models.CharField):
     '''
     Implementation inspired by HStoreVirtualMixin from:
     https://github.com/djangonauts/django-hstore/blob/master/django_hstore/virtual.py
@@ -21,7 +21,7 @@ class TranlatedVirtualField(models.CharField):
 
         kwargs['max_length'] = 255
 
-        super(TranlatedVirtualField, self).__init__(*args, **kwargs)
+        super(TranslatedVirtualField, self).__init__(*args, **kwargs)
 
     def deconstruct(self):
         name, path, args, kwargs = super(TranslationJSONField, self).deconstruct()
