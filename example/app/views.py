@@ -53,7 +53,6 @@ class BlogUpdateView(UpdateView):
     success_url = reverse_lazy('blogs')
 
 
-
 def fixtures(request):
     Blog.objects.all().delete()
     with open('data/species.json') as f:

@@ -8,8 +8,7 @@ from django.utils.six import with_metaclass
 from . import settings
 from .exceptions import AlreadyRegistered, DescendantRegistered, NotRegistered
 from .fields import TranlatedVirtualField, TranslationJSONField
-from .manager import (MultilingualManager, MultilingualQuerysetManager,
-                      transform_translatable_fields)
+from .manager import MultilingualManager, transform_translatable_fields
 
 
 class FieldsAggregationMetaClass(type):
@@ -73,22 +72,20 @@ class TranslationOptions(with_metaclass(FieldsAggregationMetaClass, object)):
                     )
                 )
 
-        # TODO: at the moment only required_languages is validated.
-        # Maybe check other options as well?
-        if not self.required_languages:
-            return
+        # TODO: apply more validation to the options
+        if self.required_languages:
+            if isinstance(self.required_languages, (tuple, list)):
+                self._check_languages(self.required_languages, model)
+            else:
+                self._check_languages(self.required_languages.keys(), model)
 
-        if isinstance(self.required_languages, (tuple, list)):
-            self._check_languages(self.required_languages, model)
-        else:
-            self._check_languages(self.required_languages.keys(), model)
-            for fieldnames in self.required_languages.values():
-                for field in fieldnames:
-                    if field not in self.fields:
-                        raise ImproperlyConfigured(
-                            'Fieldname "{}" in required_languages which is not '
-                            'defined as translatable for Model "{}".'.format(field, model.__name__)
-                        )
+                for fieldnames in self.required_languages.values():
+                    for field in fieldnames:
+                        if field not in self.fields:
+                            raise ImproperlyConfigured(
+                                'Fieldname "{}" in required_languages which is not '
+                                'defined as translatable for Model "{}".'.format(field, model.__name__)
+                            )
 
     def _check_languages(self, languages, model):
         valid_languages = list(settings.AVAILABLE_LANGUAGES) + list((settings.DEFAULT_LANGUAGE, ))
@@ -156,25 +153,27 @@ def add_translation_field(model, opts):
     for field_name in opts.local_fields.keys():
         # first, add a `<original_field>_i18n` proxy field to get the currently
         # active translation for a field
-        active_translation_field = TranlatedVirtualField(
+        field = TranlatedVirtualField(
             original_field=field_name,
             blank=True,
             null=True
         )
 
-        active_translation_field.contribute_to_class(model, active_translation_field.get_field_name())
+        raise_if_field_exists(model, field.get_field_name())
+        field.contribute_to_class(model, field.get_field_name())
 
         # now, for each language, add a proxy field to get the tranlation for
         # that specific langauge
         for language in list(settings.AVAILABLE_LANGUAGES) + [settings.DEFAULT_LANGUAGE, ]:
             blank_allowed = language not in opts.required_languages
-            translation_field = TranlatedVirtualField(
+            field = TranlatedVirtualField(
                 original_field=field_name,
                 language=language,
                 blank=blank_allowed,
                 null=blank_allowed
             )
-            translation_field.contribute_to_class(model, translation_field.get_field_name())
+            raise_if_field_exists(model, field.get_field_name())
+            field.contribute_to_class(model, field.get_field_name())
 
 
 def has_custom_queryset(manager):
@@ -200,8 +199,7 @@ def add_manager(model):
         if manager.__class__ is Manager:
             manager.__class__ = MultilingualManager
         else:
-            class NewMultilingualManager(MultilingualManager, manager.__class__,
-                                         MultilingualQuerysetManager):
+            class NewMultilingualManager(MultilingualManager, manager.__class__):
                 use_for_related_fields = getattr(
                     manager.__class__, "use_for_related_fields", not has_custom_queryset(manager))
                 _old_module = manager.__module__
