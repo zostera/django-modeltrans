@@ -15,7 +15,7 @@ class CategoryTranslationOptions(TranslationOptions):
 
 
 class PersonTranslationOptions(TranslationOptions):
-    fields = ('occupation')
+    fields = ('occupation', )
     required_languages = ('en', 'nl')
 
 

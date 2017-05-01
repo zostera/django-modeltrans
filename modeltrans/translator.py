@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.db.models import Manager
 from django.db.models.base import ModelBase
 from django.utils.six import with_metaclass
@@ -10,8 +10,6 @@ from .exceptions import AlreadyRegistered, DescendantRegistered, NotRegistered
 from .fields import TranlatedVirtualField, TranslationJSONField
 from .manager import (MultilingualManager, MultilingualQuerysetManager,
                       transform_translatable_fields)
-from .utils import build_localized_fieldname
-from .validators import TranslatedVirtualFieldValidator
 
 
 class FieldsAggregationMetaClass(type):
@@ -64,6 +62,17 @@ class TranslationOptions(with_metaclass(FieldsAggregationMetaClass, object)):
         '''
         Perform validation of `TranslationOptions`.
         '''
+        for field in self.fields.keys():
+            try:
+                self.model._meta.get_field(field)
+            except FieldDoesNotExist:
+                raise ImproperlyConfigured(
+                    'Attribute {}.fields contains an item "{}", which is not a field (missing a comma?).'.format(
+                        self.__class__.__name__,
+                        field
+                    )
+                )
+
         # TODO: at the moment only required_languages is validated.
         # Maybe check other options as well?
         if not self.required_languages:

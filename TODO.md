@@ -36,6 +36,9 @@
   - [ ] ModelForm integration
   - [ ] Django admin integration
   - [ ] Migration from django-model-translation
+      - [ ] copy values from existing fields into the `i18n` field
+      - [ ] remove the `<original_field>_<lang>` fields
+      - [ ] move the value of `i18n.<original_field>_<DEFAULT_LANG>` to `<original_field>`
   - [ ] Documentation
 
 # usage of managers/models in code
