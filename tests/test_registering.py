@@ -117,3 +117,23 @@ class ReRegisterTest(TestCase):
 
         fields = get_translatable_fields_for_model(TestModel5)
         self.assertEquals(fields, None)
+
+    def test_unintended_string_to_tuple(self):
+        class TestModel6(models.Model):
+            name = models.CharField(max_length=100)
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+
+        class TestModelTranslationOptions(TranslationOptions):
+            fields = ('name')   # note the missing comma
+
+        # due to different hash algorithms, any char of the field name can occur
+        # in the message
+        expected_message = (
+            r'Attribute TestModel6TranslationOptions\.fields contains an item "[name]", '
+            'which is not a field \(missing a comma\?\)\.'
+        )
+
+        with self.assertRaisesRegexp(ImproperlyConfigured, expected_message):
+            translator.register(TestModel6, TestModelTranslationOptions)
