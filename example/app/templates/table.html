@@ -4,4 +4,8 @@
 
 {% block body %}
 {% render_table table 'django_tables2/bootstrap.html' %}
+
+<code>
+{{ table.data.data.query }}
+</code>
 {% endblock %}
