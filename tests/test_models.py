@@ -70,6 +70,17 @@ class TranslatedFieldTest(TestCase):
 
         self.assertEquals(m.title, 'Toad')
 
+    def test_fallback_getting(self):
+        m = Blog.objects.create(title='Falcon')
+
+        with override('de'):
+            self.assertEquals(m.title_i18n, 'Falcon')
+
+    def test_creating_using_virtual_default_language_field(self):
+        m = Blog.objects.create(title_en='Falcon')
+
+        self.assertEquals(m.title, 'Falcon')
+
     def test_clean(self):
         m = Blog(title='Horse', body='Horses are nice')
 

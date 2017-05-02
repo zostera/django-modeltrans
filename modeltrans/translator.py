@@ -156,7 +156,8 @@ def add_translation_field(model, opts):
         field = TranslatedVirtualField(
             original_field=field_name,
             blank=True,
-            null=True
+            null=True,
+            editable=False  # disable in admin
         )
 
         raise_if_field_exists(model, field.get_field_name())

@@ -6,6 +6,8 @@ from django.db.models import CharField, TextField
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
 
+from . import settings
+
 
 def get_translatable_fields_for_model(model):
     from modeltrans.translator import NotRegistered, translator
@@ -15,10 +17,15 @@ def get_translatable_fields_for_model(model):
         return None
 
 
+def split_translated_fieldname(field_name):
+    _pos = field_name.rfind('_')
+    return (field_name[0:_pos], field_name[_pos + 1:])
+
+
 def is_valid_translated_field(model, field):
     if '_' not in field:
         return
-    original_field = field[0:field.rfind('_')]
+    original_field, lang = split_translated_fieldname(field)
     return original_field in get_translatable_fields_for_model(model)
 
 
@@ -32,7 +39,11 @@ def transform_translatable_fields(model, fields):
     }
 
     for field, value in fields.items():
-        if is_valid_translated_field(model, field):
+        original_field, lang = split_translated_fieldname(field)
+
+        if lang == settings.DEFAULT_LANGUAGE:
+            ret[original_field] = value
+        elif original_field in get_translatable_fields_for_model(model):
             ret['i18n'][field] = value
         else:
             ret[field] = value

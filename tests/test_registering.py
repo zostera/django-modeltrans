@@ -5,6 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.test import TestCase
 
+from modeltrans.decorators import register
 from modeltrans.exceptions import AlreadyRegistered
 from modeltrans.manager import (MultilingualManager, MultilingualQuerySet,
                                 get_translatable_fields_for_model)
@@ -137,3 +138,28 @@ class ReRegisterTest(TestCase):
 
         with self.assertRaisesRegexp(ImproperlyConfigured, expected_message):
             translator.register(TestModel6, TestModelTranslationOptions)
+
+    def test_use_decorator(self):
+        class TestModel7(models.Model):
+            name = models.CharField(max_length=100)
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+
+        @register(TestModel7)
+        class TestModelTranslationOptions(TranslationOptions):
+            fields = ('name', )
+
+        # TODO: verify the model is registered indeed.
+
+    def test_decorator_incorrect_options_object(self):
+        class TestModel8(models.Model):
+            name = models.CharField(max_length=100)
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+
+        with self.assertRaisesMessage(ValueError, 'Wrapped class must subclass TranslationOptions.'):
+            @register(TestModel8)
+            class TestModelTranslationOptions(object):
+                fields = ('name', )
