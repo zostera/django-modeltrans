@@ -29,7 +29,8 @@ class BlogTable(tables.Table):
             'title_nl',
             'title_de',
             'title_fr',
-            'category'
+            'category',
+            'i18n'
         )
 
 
