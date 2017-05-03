@@ -1,11 +1,15 @@
 {% extends "index.html" %}
 {% load render_table from django_tables2 %}
-
+{% load sqlformat %}
 
 {% block body %}
 {% render_table table 'django_tables2/bootstrap.html' %}
 
-<code>
-{{ table.data.data.query }}
-</code>
+
+<pre><code>{{ table.data.data.query | sqlformat }}</pre></code>
+<link rel="stylesheet" href="https://unpkg.com/highlightjs@9.10.0/styles/default.css">
+<script src="https://unpkg.com/highlightjs@9.10.0/highlight.pack.min.js"></script>
+<script>
+    hljs.initHighlightingOnLoad();
+</script>
 {% endblock %}
