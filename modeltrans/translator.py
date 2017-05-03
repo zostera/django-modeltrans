@@ -169,6 +169,7 @@ def add_translation_field(model, opts):
             original_field=field_name,
             blank=True,
             null=True,
+            editable=False,
             language=settings.DEFAULT_LANGUAGE
         )
         raise_if_field_exists(model, field.get_field_name())
@@ -176,6 +177,7 @@ def add_translation_field(model, opts):
 
         # now, for each language, add a virtual field to get the tranlation for
         # that specific langauge
+        # <original_field>_<language>
         for language in list(settings.AVAILABLE_LANGUAGES):
             blank_allowed = language not in opts.required_languages
             field = TranslatedVirtualField(
