@@ -3,10 +3,12 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 
-from modeltrans.manager import split_translated_fieldname
+from modeltrans.manager import split_translated_fieldname, transform_translatable_fields
+
+from app.models import Blog
 
 
-class TranslatedFieldTest(TestCase):
+class UtilsTest(TestCase):
     def test_split_translated_fieldname(self):
 
         self.assertEquals(
@@ -17,4 +19,15 @@ class TranslatedFieldTest(TestCase):
         self.assertEquals(
             split_translated_fieldname('full_name_nl'),
             ('full_name', 'nl')
+        )
+
+    def test_transform_translatable_fields(self):
+        self.assertEquals(
+            transform_translatable_fields(Blog, {'title': 'bar', 'title_nl': 'foo'}),
+            {
+                'i18n': {
+                    'title_nl': 'foo'
+                },
+                'title': 'bar'
+            }
         )

@@ -22,17 +22,14 @@ def split_translated_fieldname(field_name):
     return (field_name[0:_pos], field_name[_pos + 1:])
 
 
-def is_valid_translated_field(model, field):
-    if '_' not in field:
-        return
-    original_field, lang = split_translated_fieldname(field)
-    return original_field in get_translatable_fields_for_model(model)
-
-
 def transform_translatable_fields(model, fields):
     '''
     Transform the kwargs for a <Model>.objects.create() or <Model>()
     to allow passing translated field names.
+
+    Arguments:
+        fields (dict): kwargs to a model __init__ or Model.objects.create() method
+            for which the field names need to be translated to values in the i18n field
     '''
     ret = {
         'i18n': fields.get('i18n', {})
@@ -57,17 +54,20 @@ class MultilingualQuerySet(models.query.QuerySet):
 
     def add_i18n_annotation(self, original_field, field_name, fallback=True):
         '''
-        Add an annotation to the query to extract the translated verion of a field
+        Add an annotation to the query to extract the translated version of a field
         from the jsonb field to allow filtering and ordering.
 
         Arguments:
             original_field (str): name of the original, untranslated field.
             field_name (str): name of the translated field to add the
                 annotation for. For example `title_nl` will result in adding
-                someting like `i18n->>title_nl AS title_nl` to the Query.
+                something like `i18n->>title_nl AS title_nl_annotation` to the Query.
             fallback (bool): If `True`, `COALESCE` will be used to get the value
                 of the original field if the requested translation is not
                 available.
+
+        Returns:
+            the name of the annotation.
         '''
         assert field_name.startswith(original_field)
 
@@ -80,7 +80,10 @@ class MultilingualQuerySet(models.query.QuerySet):
         else:
             field = Cast(RawSQL('i18n->>%s', (field_name, )), TextField())
 
-        self.query.add_annotation(field, field_name)
+        annotation_field_name = '{}_annotation'.format(field_name)
+        self.query.add_annotation(field, annotation_field_name)
+
+        return annotation_field_name
 
     def create(self, **kwargs):
         '''
@@ -96,28 +99,32 @@ class MultilingualQuerySet(models.query.QuerySet):
         Annotate translated fields before sorting
         sorting on `-title_nl` will add an annotation for `title_nl`
         '''
+        # TODO: handle sort on <field>_i18n
+        new_field_names = []
 
         for field in field_names:
             if '_' not in field:
+                new_field_names.append(field)
                 continue
 
             # remove descending prefix, not relevant for the annotation
             if field[0] == '-':
                 field = field[1:]
+                descending = True
+            else:
+                descending = False
 
-            _pos = field.rfind('_')
-            original_field = field[0:_pos]
-            #
-            # lang = field[_pos:]
-            # if lang == 'i18n':
-            #     # add annotation for current language.
-            #     lang = get_language()
-            #     if lang == DEFAULT_LANGUAGE:
-            #
+            original_field, language = split_translated_fieldname(field)
 
-            self.add_i18n_annotation(original_field, field, fallback=True)
+            sort_field_name = self.add_i18n_annotation(original_field, field, fallback=True)
 
-        return super(MultilingualQuerySet, self).order_by(*field_names)
+            # re-add the descending prefix to the annotated field name
+            if descending:
+                sort_field_name = '-' + sort_field_name
+
+            new_field_names.append(sort_field_name)
+
+        return super(MultilingualQuerySet, self).order_by(*new_field_names)
 
     def _filter_or_exclude(self, negate, *args, **kwargs):
         '''
@@ -126,19 +133,30 @@ class MultilingualQuerySet(models.query.QuerySet):
         title_nl__contains='foo' should add an annotation for title_nl
         title_nl='bar' should add an annotation for title_nl
         '''
-        for field in kwargs.keys():
-            for translatable in self.get_translatable_fields():
-                # strip the query type
-                if '__' in field:
-                    field = field[0:field.rfind('__')]
+        new_kwargs = {}
+        for field, value in kwargs.items():
+            requested_field_name = field
+            query_type = ''
+            # strip the query type
+            if '__' in field:
+                field = field[0:field.rfind('__')]
+                query_type = requested_field_name[len(field):]
 
-                if field.startswith(translatable) and '_' in field:
-                    original_field = field[0:field.rfind('_')]
-                    self.add_i18n_annotation(original_field, field, fallback=False)
+            original_field, language = split_translated_fieldname(field)
+            if original_field in self.get_translatable_fields():
+                filter_field_name = self.add_i18n_annotation(original_field, field, fallback=False)
+
+                # re-add query type
+                filter_field_name += query_type
+
+                new_kwargs[filter_field_name] = value
+            else:
+                new_kwargs[requested_field_name] = value
 
         # TODO: handle args to translate the Q objects
+        # TODO: handle i18n field names
 
-        return super(MultilingualQuerySet, self)._filter_or_exclude(negate, *args, **kwargs)
+        return super(MultilingualQuerySet, self)._filter_or_exclude(negate, *args, **new_kwargs)
 
 
 def multilingual_queryset_factory(old_cls, instantiate=True):
