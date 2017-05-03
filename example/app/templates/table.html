@@ -3,13 +3,20 @@
 {% load sqlformat %}
 
 {% block body %}
+
+<pre><code>{{ table.data.data.query | sqlformat }}</pre></code>
 {% render_table table 'django_tables2/bootstrap.html' %}
 
 
-<pre><code>{{ table.data.data.query | sqlformat }}</pre></code>
+
 <link rel="stylesheet" href="https://unpkg.com/highlightjs@9.10.0/styles/default.css">
 <script src="https://unpkg.com/highlightjs@9.10.0/highlight.pack.min.js"></script>
 <script>
     hljs.initHighlightingOnLoad();
 </script>
+<style>
+td.i18n pre {
+    font-size: 10px;
+}
+</style>
 {% endblock %}

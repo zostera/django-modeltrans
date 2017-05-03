@@ -25,6 +25,7 @@
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
                     <li><a href="{% url 'admin:index' %}">admin</a></li>
+                    <li><a href="{% url 'fixtures' %}">re-create fixtures</a></li>
                 </ul>
                 <form method="post" action="{% url 'set_language' %}" class="navbar-form navbar-left">
                     {% csrf_token %}

@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import json
 
 import django_tables2 as tables
-from django.shortcuts import render
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView
 from django.views.generic.edit import UpdateView
@@ -62,6 +62,4 @@ def fixtures(request):
         for item in data:
             Blog.objects.create(title=item['title'], i18n=item.get('i18n', None))
 
-    return render(request, 'table.html', {
-        'table': BlogTable(Blog.objects.all())
-    })
+    return redirect('blogs')
