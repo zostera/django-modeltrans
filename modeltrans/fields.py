@@ -57,7 +57,9 @@ class TranslatedVirtualField(models.CharField):
         return None
 
     def __get__(self, instance, instance_type=None):
-        if self.get_language() == DEFAULT_LANGUAGE:
+
+        language = self.get_language()
+        if language == DEFAULT_LANGUAGE:
             return getattr(instance, self.original_field)
 
         # Make sure we test for containment in a dict, not in None
@@ -65,7 +67,7 @@ class TranslatedVirtualField(models.CharField):
             instance.i18n = {}
 
         # fallback (only for <original_field>_i18n fields)
-        field_name = build_localized_fieldname(self.original_field, self.get_language())
+        field_name = build_localized_fieldname(self.original_field, language)
         if self.language is None and field_name not in instance.i18n:
             return getattr(instance, self.original_field)
 
@@ -75,11 +77,15 @@ class TranslatedVirtualField(models.CharField):
         if instance.i18n is None:
             instance.i18n = {}
 
-        # print('get_language', self.get_language())
-        if self.get_language() == DEFAULT_LANGUAGE:
+        if value is None:
+            return
+
+        language = self.get_language()
+
+        if language == DEFAULT_LANGUAGE:
             setattr(instance, self.original_field, value)
         else:
-            field_name = build_localized_fieldname(self.original_field, self.get_language())
+            field_name = build_localized_fieldname(self.original_field, language)
             instance.i18n[field_name] = value
 
     def get_field_name(self):
