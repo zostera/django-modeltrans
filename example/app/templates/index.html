@@ -8,25 +8,45 @@
 </head>
 
 <body>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">Django modeltrans</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li><a href="{% url 'admin:index' %}">admin</a></li>
+                </ul>
+                <form method="post" action="{% url 'set_language' %}" class="navbar-form navbar-left">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <select name="language">
+                            {% get_current_language as LANGUAGE_CODE %}
+                            {% get_available_languages as LANGUAGES %}
+                            {% get_language_info_list for LANGUAGES as languages %}
+                            {% for language in languages %}
+                                <option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
+                                    {{ language.name_local }} ({{ language.code }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <input type="submit" value="set language" class="btn btn-default" />
+                 </form>
+            </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+    </nav>
+
     <div class="container">
-        <h1>Django modeltrans <small><a href="{% url 'admin:index' %}">admin</a></small></h1>
-        <p>
-            Active language: {% get_current_language as LANGUAGE %} {{ LANGUAGE }}
-            <form method="post" action="{% url 'set_language' %}">
-                {% csrf_token %}
-                <select name="language">
-                    {% get_current_language as LANGUAGE_CODE %}
-                    {% get_available_languages as LANGUAGES %}
-                    {% get_language_info_list for LANGUAGES as languages %}
-                    {% for language in languages %}
-                        <option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
-                            {{ language.name_local }} ({{ language.code }})
-                        </option>
-                    {% endfor %}
-                </select>
-                <input type="submit" value="set language"/>
-            </form>
-        </p>
         {% block body %}
         {% endblock %}
     </div>
