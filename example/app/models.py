@@ -16,9 +16,9 @@ class Category(models.Model):
 
 class Blog(models.Model):
     title = models.CharField(max_length=255)
-    body = models.TextField(null=True)
+    body = models.TextField(null=True, blank=True)
 
-    category = models.ForeignKey(Category, null=True)
+    category = models.ForeignKey(Category, null=True, blank=True)
 
     def __str__(self):
         return self.title

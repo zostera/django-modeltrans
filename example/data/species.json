@@ -6,5 +6,5 @@
     {"title": "Dragonfly", "i18n": {"title_nl": "Libellen"}},
     {"title": "Crayfish"},
     {"title": "Cod", "i18n": {"title_de": "Kabeljau", "title_fr": "Morue"}},
-    {"title": "Dolphin", "i18n": {"title_nl": "Dolfijn"}}
+    {"title": "Dolphin", "i18n": {"title_nl": "Dolfijn", "title_de": "Delfine"}}
 ]

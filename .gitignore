@@ -11,3 +11,6 @@ reports
 
 .coverage
 __pycache__
+
+
+.idea
