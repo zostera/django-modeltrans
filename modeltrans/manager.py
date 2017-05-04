@@ -7,6 +7,7 @@ from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
 
 from . import settings
+from .utils import build_localized_fieldname, get_language
 
 
 def get_translatable_fields_for_model(model):
@@ -96,10 +97,15 @@ class MultilingualQuerySet(models.query.QuerySet):
 
     def order_by(self, *field_names):
         '''
-        Annotate translated fields before sorting
-        sorting on `-title_nl` will add an annotation for `title_nl`
+        Annotate translated fields before sorting.
+
+        Examples:
+         - sort on `-title_nl` will add an annotation for `title_nl`
+         - sort on `title_i18n` will add an annotation for the current language
+
+        The field names pointing to translated fields in the `field_names`
+        argument will be replaced by their annotated versions.
         '''
-        # TODO: handle sort on <field>_i18n
         new_field_names = []
 
         for field in field_names:
@@ -116,6 +122,10 @@ class MultilingualQuerySet(models.query.QuerySet):
 
             original_field, language = split_translated_fieldname(field)
 
+            # sort by current language if <original_field>_i18n is requested
+            if language == 'i18n':
+                field = build_localized_fieldname(original_field, get_language())
+
             sort_field_name = self.add_i18n_annotation(original_field, field, fallback=True)
 
             # re-add the descending prefix to the annotated field name
@@ -130,13 +140,22 @@ class MultilingualQuerySet(models.query.QuerySet):
         '''
         Annotate filter/exclude fields before filtering.
 
-        title_nl__contains='foo' should add an annotation for title_nl
-        title_nl='bar' should add an annotation for title_nl
+        Examples:
+            - `title_nl__contains='foo'` will add an annotaion for `title_nl`
+            - `title_nl='bar'` will add an annotation for `title_nl`
+            - `title_i18n='foo'` will add an annotation for `title_<language>`
+              where `<language>` is the current active language.
+
+        In all cases, the field part of the field lookup will be changed to use
+        the annotated verion.
         '''
+        # TODO: handle `*args` to translate the Q objects
+
         new_kwargs = {}
         for field, value in kwargs.items():
             requested_field_name = field
             query_type = ''
+
             # strip the query type
             if '__' in field:
                 field = field[0:field.rfind('__')]
@@ -144,17 +163,22 @@ class MultilingualQuerySet(models.query.QuerySet):
 
             original_field, language = split_translated_fieldname(field)
             if original_field in self.get_translatable_fields():
-                filter_field_name = self.add_i18n_annotation(original_field, field, fallback=False)
+                if language == 'i18n':
+                    # search for current language, including fallback to
+                    # settings.DEFAULT_LANGUAGE
+                    field = build_localized_fieldname(original_field, get_language())
+                    fallback = True
+                else:
+                    fallback = False
+                filter_field_name = self.add_i18n_annotation(original_field, field, fallback=fallback)
 
                 # re-add query type
                 filter_field_name += query_type
 
                 new_kwargs[filter_field_name] = value
             else:
+                # not translatable, do not change the field lookup
                 new_kwargs[requested_field_name] = value
-
-        # TODO: handle args to translate the Q objects
-        # TODO: handle i18n field names
 
         return super(MultilingualQuerySet, self)._filter_or_exclude(negate, *args, **new_kwargs)
 

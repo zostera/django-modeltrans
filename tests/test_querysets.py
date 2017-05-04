@@ -73,6 +73,18 @@ class FilterTest(TestCase):
         qs = Blog.objects.exclude(title_nl__contains='o')
         self.assertEquals({m.title for m in qs}, {'Falcon', 'Frog', 'Toad', 'Duck'})
 
+    def test_filter_i18n(self):
+        Blog.objects.create(title='Cod')
+
+        with override('nl'):
+            # should fallback to english
+            qs = Blog.objects.filter(title_i18n='Cod')
+            self.assertEquals({m.title for m in qs}, {'Cod'})
+
+            # should not fallback
+            qs = Blog.objects.filter(title_nl='Cod')
+            self.assertEquals({m.title for m in qs}, set())
+
     def test_get(self):
         '''get() is just a special case of filter()'''
         b = Blog.objects.get(title_nl='Valk')

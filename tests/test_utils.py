@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 
-from modeltrans.manager import split_translated_fieldname, transform_translatable_fields
-
-from app.models import Blog
+from modeltrans.manager import (split_translated_fieldname,
+                                transform_translatable_fields)
+from modeltrans.utils import build_localized_fieldname
+from tests.app.models import Blog
 
 
 class UtilsTest(TestCase):
@@ -30,4 +31,14 @@ class UtilsTest(TestCase):
                 },
                 'title': 'bar'
             }
+        )
+
+    def test_build_localized_fieldname(self):
+        self.assertEquals(
+            build_localized_fieldname('title', 'nl'),
+            'title_nl'
+        )
+        self.assertEquals(
+            build_localized_fieldname('category__name', 'nl'),
+            'category__name_nl'
         )
