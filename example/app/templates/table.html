@@ -1,5 +1,6 @@
 {% extends "index.html" %}
 {% load render_table from django_tables2 %}
+{% load bootstrap3 %}
 {% load sqlformat %}
 
 {% block body %}
@@ -7,9 +8,9 @@
 <pre><code>{{ table.data.data.query | sqlformat }}</pre></code>
 
 {% if filter %}
-    <form action="" method="get">
-        {{ filter.form.as_p }}
-        <input type="submit" />
+    <form action="" method="get" class="form form-inline">
+        {% bootstrap_form filter.form layout='inline' %}
+        {% bootstrap_button 'submit' %}
     </form>
 {% endif %}
 {% render_table table 'django_tables2/bootstrap.html' %}
