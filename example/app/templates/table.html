@@ -5,6 +5,13 @@
 {% block body %}
 
 <pre><code>{{ table.data.data.query | sqlformat }}</pre></code>
+
+{% if filter %}
+    <form action="" method="get">
+        {{ filter.form.as_p }}
+        <input type="submit" />
+    </form>
+{% endif %}
 {% render_table table 'django_tables2/bootstrap.html' %}
 
 

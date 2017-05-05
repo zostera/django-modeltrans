@@ -4,12 +4,14 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.views import static
 
-from app.views import BlogListView, BlogUpdateView, BlogView, fixtures
+from app.views import (BlogListView, BlogUpdateView, BlogView,
+                       FilteredBlogListView, fixtures)
 
 admin.autodiscover()
 
 urlpatterns = [
     url(r'^blogs/', BlogListView.as_view(), name='blogs'),
+    url(r'^blogs-filter/', FilteredBlogListView.as_view(), name='blogs'),
     url(r'^blog/(?P<pk>\d+)/edit/', BlogUpdateView.as_view(), name='blog-edit'),
     url(r'^blog/(?P<pk>\d+)/', BlogView.as_view(), name='blog'),
 

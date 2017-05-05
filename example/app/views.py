@@ -8,12 +8,13 @@ from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView
 from django.views.generic.edit import UpdateView
+from django_filters import FilterSet
+from django_filters.views import FilterView
 
 from .models import Blog
 
 
 class BlogTable(tables.Table):
-
     edit = tables.TemplateColumn(
         template_code='''<a href="{% url 'blog-edit' pk=record.pk %}" class="btn btn-small">edit</a>''',
         empty_values=(),
@@ -34,10 +35,27 @@ class BlogTable(tables.Table):
         )
 
 
+class BlogFilter(FilterSet):
+    class Meta:
+        model = Blog
+        fields = ['title_nl', 'category']
+
+
 class BlogListView(tables.SingleTableView):
     table_class = BlogTable
     model = Blog
     template_name = 'table.html'
+
+
+class FilteredBlogListView(FilterView, tables.SingleTableView):
+    table_class = BlogTable
+    model = Blog
+    template_name = 'table.html'
+
+    filterset_class = BlogFilter
+
+    def get_table_data(self):
+        return self.object_list
 
 
 class BlogView(DetailView):
