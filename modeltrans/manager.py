@@ -32,6 +32,7 @@ def transform_translatable_fields(model, fields):
         fields (dict): kwargs to a model __init__ or Model.objects.create() method
             for which the field names need to be translated to values in the i18n field
     '''
+
     ret = {
         'i18n': fields.get('i18n', {})
     }
@@ -40,6 +41,11 @@ def transform_translatable_fields(model, fields):
         original_field, lang = split_translated_fieldname(field)
 
         if lang == settings.DEFAULT_LANGUAGE:
+            if original_field in fields:
+                raise ValueError(
+                    'Attempted override of "{}" with "{}". '
+                    'Only one of the two is allowed.'.format(original_field, field)
+                )
             ret[original_field] = value
         elif original_field in get_translatable_fields_for_model(model):
             ret['i18n'][field] = value
