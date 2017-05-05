@@ -8,4 +8,7 @@ register = template.Library()
 
 @register.filter
 def sqlformat(sql):
-    return sqlparse.format(str(sql), reindent=True)
+    '''
+    Format SQL queries.
+    '''
+    return sqlparse.format(str(sql), reindent=True, wrap_after=120)
