@@ -130,9 +130,13 @@ class MultilingualQuerySet(models.query.QuerySet):
 
             # sort by current language if <original_field>_i18n is requested
             if language == 'i18n':
-                field = build_localized_fieldname(original_field, get_language())
+                language = get_language()
+                field = build_localized_fieldname(original_field, language)
 
-            sort_field_name = self.add_i18n_annotation(original_field, field, fallback=True)
+            if language == settings.DEFAULT_LANGUAGE:
+                sort_field_name = original_field
+            else:
+                sort_field_name = self.add_i18n_annotation(original_field, field, fallback=True)
 
             # re-add the descending prefix to the annotated field name
             if descending:
@@ -172,11 +176,16 @@ class MultilingualQuerySet(models.query.QuerySet):
                 if language == 'i18n':
                     # search for current language, including fallback to
                     # settings.DEFAULT_LANGUAGE
-                    field = build_localized_fieldname(original_field, get_language())
+                    language = get_language()
+                    field = build_localized_fieldname(original_field, language)
                     fallback = True
                 else:
                     fallback = False
-                filter_field_name = self.add_i18n_annotation(original_field, field, fallback=fallback)
+
+                if language == settings.DEFAULT_LANGUAGE:
+                    filter_field_name = original_field
+                else:
+                    filter_field_name = self.add_i18n_annotation(original_field, field, fallback=fallback)
 
                 # re-add query type
                 filter_field_name += query_type

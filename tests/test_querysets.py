@@ -85,6 +85,11 @@ class FilterTest(TestCase):
             qs = Blog.objects.filter(title_nl='Cod')
             self.assertEquals({m.title for m in qs}, set())
 
+    def test_filter_by_default_language(self):
+        qs = Blog.objects.filter(title_en__contains='al')
+        self.assertEquals({m.title for m in qs}, {'Falcon'})
+        self.assertTrue('annotation' not in str(qs.query))
+
     def test_get(self):
         '''get() is just a special case of filter()'''
         b = Blog.objects.get(title_nl='Valk')
@@ -130,3 +135,39 @@ class OrderByTest(TestCase):
 
         qs = Blog.objects.all().order_by('-title')
         self.assertEquals(key(qs, 'title'), sorted(self.EN, reverse=True))
+
+    def test_order_by_i18n(self):
+        Blog.objects.create(title='H')
+        with override('nl'):
+            qs = Blog.objects.all().order_by('title_i18n')
+
+            self.assertEquals(key(qs, 'title_i18n'), ['A', 'B', 'C', 'D', 'H', 'X', 'Y', 'Z'])
+
+
+class FilteredOrderByTest(TestCase):
+
+    def test_filtered_order_by(self):
+        Blog.objects.bulk_create([
+            Blog(title='Falcon', title_nl='Valk'),
+            Blog(title='Frog', title_nl='Kikker'),
+            Blog(title='Fox', title_nl='Vos'),
+            Blog(title='Gecko'),
+            Blog(title='Gerbil'),
+            Blog(title='Vulture', title_nl='Gier')
+        ])
+
+        qs = Blog.objects.filter(title_en__contains='F').order_by('title_nl')
+        self.assertEquals(key(qs, 'title_nl'), ['Kikker', 'Valk', 'Vos'])
+
+        qs = Blog.objects.filter(title_en__contains='G').order_by('title_en')
+        self.assertEquals(key(qs, 'title'), ['Gecko', 'Gerbil'])
+
+        with override('nl'):
+            qs = Blog.objects.filter(title_i18n__contains='G').order_by('title_i18n')
+            self.assertEquals(key(qs, 'title_i18n'), ['Gecko', 'Gerbil', 'Gier'])
+
+        with override('en'):
+            qs = Blog.objects.filter(title_i18n__contains='G').order_by('-title_i18n')
+
+            self.assertEquals(key(qs, 'title_i18n'), ['Gerbil', 'Gecko'])
+            self.assertTrue('annotation' not in str(qs.query))
