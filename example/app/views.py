@@ -38,7 +38,10 @@ class BlogTable(tables.Table):
 class BlogFilter(FilterSet):
     class Meta:
         model = Blog
-        fields = ['title_nl', 'category']
+        fields = {
+            'title_i18n': ['exact', 'contains'],
+            'category': ['exact']
+        }
 
 
 class BlogListView(tables.SingleTableView):
