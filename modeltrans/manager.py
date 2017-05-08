@@ -83,7 +83,7 @@ class MultilingualQuerySet(models.query.QuerySet):
 
         if fallback:
             # fallback to the original untranslated field
-            field = Coalesce(RawSQL('i18n->>%s', (field_name, )), original_field, output_field=CharField())
+            field = Coalesce(RawSQL('i18n->>%s', (field_name, )), original_field, output_field=TextField())
         else:
             field = Cast(RawSQL('i18n->>%s', (field_name, )), TextField())
 
@@ -146,56 +146,75 @@ class MultilingualQuerySet(models.query.QuerySet):
 
         return super(MultilingualQuerySet, self).order_by(*new_field_names)
 
+    def rewrite_expression(self, lookup, value):
+        requested_field_name = lookup
+        query_type = ''
+
+        # strip the query type
+        if '__' in lookup:
+            lookup = lookup[0:lookup.rfind('__')]
+            query_type = requested_field_name[len(lookup):]
+
+        original_field, language = split_translated_fieldname(lookup)
+        if original_field not in self.get_translatable_fields():
+            return requested_field_name, value
+
+        if language == 'i18n':
+            # search for current language, including fallback to
+            # settings.DEFAULT_LANGUAGE
+            language = get_language()
+            lookup = build_localized_fieldname(original_field, language)
+            fallback = True
+        else:
+            fallback = False
+
+        if language == settings.DEFAULT_LANGUAGE:
+            filter_field_name = original_field
+        else:
+            filter_field_name = self.add_i18n_annotation(original_field, lookup, fallback=fallback)
+
+        # re-add query type
+        filter_field_name += query_type
+
+        return filter_field_name, value
+
+    def rewrite_Q(self, q):
+        if isinstance(q, models.Q):
+            return models.Q._new_instance(
+                list(self.rewrite_Q(child) for child in q.children),
+                connector=q.connector,
+                negated=q.negated
+            )
+        if isinstance(q, (list, tuple)):
+            return self.rewrite_expression(*q)
+
     def _filter_or_exclude(self, negate, *args, **kwargs):
         '''
         Annotate filter/exclude fields before filtering.
 
         Examples:
-            - `title_nl__contains='foo'` will add an annotaion for `title_nl`
+            - `title_nl__contains='foo'` will add an annotation for `title_nl`
             - `title_nl='bar'` will add an annotation for `title_nl`
             - `title_i18n='foo'` will add an annotation for `title_<language>`
               where `<language>` is the current active language.
+            - `Q(title_nl__contains='foo') will add an annotation for `title_nl`
 
         In all cases, the field part of the field lookup will be changed to use
         the annotated verion.
         '''
-        # TODO: handle `*args` to translate the Q objects
+        # TODO: handle F expressions in the righthand (value) side of filters
 
+        # handle Q expressions
+        new_args = []
+        for arg in args:
+            new_args.append(self.rewrite_Q(arg))
+
+        # handle the kwargs
         new_kwargs = {}
         for field, value in kwargs.items():
-            requested_field_name = field
-            query_type = ''
+            new_kwargs.update(dict((self.rewrite_expression(field, value), )))
 
-            # strip the query type
-            if '__' in field:
-                field = field[0:field.rfind('__')]
-                query_type = requested_field_name[len(field):]
-
-            original_field, language = split_translated_fieldname(field)
-            if original_field in self.get_translatable_fields():
-                if language == 'i18n':
-                    # search for current language, including fallback to
-                    # settings.DEFAULT_LANGUAGE
-                    language = get_language()
-                    field = build_localized_fieldname(original_field, language)
-                    fallback = True
-                else:
-                    fallback = False
-
-                if language == settings.DEFAULT_LANGUAGE:
-                    filter_field_name = original_field
-                else:
-                    filter_field_name = self.add_i18n_annotation(original_field, field, fallback=fallback)
-
-                # re-add query type
-                filter_field_name += query_type
-
-                new_kwargs[filter_field_name] = value
-            else:
-                # not translatable, do not change the field lookup
-                new_kwargs[requested_field_name] = value
-
-        return super(MultilingualQuerySet, self)._filter_or_exclude(negate, *args, **new_kwargs)
+        return super(MultilingualQuerySet, self)._filter_or_exclude(negate, *new_args, **new_kwargs)
 
 
 def multilingual_queryset_factory(old_cls, instantiate=True):

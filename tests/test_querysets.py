@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from unittest import skip
 
 from django.core.exceptions import FieldError
+from django.db.models import F, Q
 from django.test import TestCase
 from django.utils.translation import override
 
@@ -98,6 +99,29 @@ class FilterTest(TestCase):
 
         with self.assertRaisesMessage(Blog.DoesNotExist, 'Blog matching query does not exist.'):
             Blog.objects.get(title_fr='Boo')
+
+    def test_filter_Q_object(self):
+        b = Blog.objects.get(Q(title_nl__contains='al'))
+        self.assertEquals(b.title, 'Falcon')
+
+        qs = Blog.objects.filter(Q(title_nl__contains='al') | Q(title_en__contains='Fro'))
+        self.assertEquals({m.title for m in qs}, {'Falcon', 'Frog'})
+
+        b = Blog.objects.get(Q(title_nl__contains='al'), Q(title_en__contains='al'))
+        self.assertEquals(b.title, 'Falcon')
+
+        with override('nl'):
+            b = Blog.objects.get(Q(title_i18n='Kikker'))
+            self.assertEquals(b.title, 'Frog')
+
+    @skip('Not yet implemented')
+    def test_filter_F_expression(self):
+        Blog.objects.create(title='foo', title_nl=20, title_fr=10)
+        Blog.objects.create(title='bar', title_nl=20, title_fr=30)
+
+        qs = Blog.objects.filter(title_nl_gt=F('title_fr'))
+
+        self.assertEquals({m.title for m in qs}, {'foo'})
 
     @skip('Not yet implemented')
     def test_filter_spanning_relation(self):
