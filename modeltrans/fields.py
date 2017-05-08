@@ -23,17 +23,6 @@ class TranslatedVirtualField(models.CharField):
 
         super(TranslatedVirtualField, self).__init__(*args, **kwargs)
 
-    def deconstruct(self):
-        name, path, args, kwargs = super(TranslationJSONField, self).deconstruct()
-
-        del kwargs['max_length']
-
-        if self.model is not None:
-            kwargs['original_field'] = self.original_field
-            kwargs['language'] = self.language
-
-        return name, path, args, kwargs
-
     concrete = False
 
     def contribute_to_class(self, cls, name):
@@ -77,16 +66,18 @@ class TranslatedVirtualField(models.CharField):
         if instance.i18n is None:
             instance.i18n = {}
 
-        if value is None:
-            return
-
         language = self.get_language()
 
         if language == DEFAULT_LANGUAGE:
             setattr(instance, self.original_field, value)
         else:
             field_name = build_localized_fieldname(self.original_field, language)
-            instance.i18n[field_name] = value
+
+            # if value is None, remove field from `i18n`.
+            if value is None:
+                instance.i18n.pop(field_name, None)
+            else:
+                instance.i18n[field_name] = value
 
     def get_field_name(self):
         '''

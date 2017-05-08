@@ -70,6 +70,22 @@ class TranslatedFieldTest(TestCase):
 
         self.assertEquals(m.title, 'Toad')
 
+    def test_set_None_doesnt_result_in_null_keys(self):
+        m = Blog.objects.create(title='Couch')
+        m.title_nl = None
+        m.save()
+
+        m = Blog.objects.get(title='Couch')
+        self.assertEquals(m.i18n, {})
+
+        m.title_nl = 'Bank'
+        m.save()
+        self.assertEquals(m.i18n, {'title_nl': 'Bank'})
+
+        m.title_nl = None
+        m.save()
+        self.assertEquals(m.i18n, {})
+
     def test_fallback_getting(self):
         m = Blog.objects.create(title='Falcon')
 
