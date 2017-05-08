@@ -32,7 +32,7 @@
     - [*] inject `__getattr__` to allow access to the translated fields
   - [ ] Tests
     - [*] Test suite runnable using `tox`.
-    - [ ] Test suite runnable in travisci
+    - [*] Test suite runnable in travisci
   - [*] ModelForm integration
   - [*] Django admin integration
   - [ ] Migration from django-model-translation
