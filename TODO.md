@@ -33,8 +33,8 @@
   - [ ] Tests
     - [*] Test suite runnable using `tox`.
     - [ ] Test suite runnable in travisci
-  - [ ] ModelForm integration
-  - [ ] Django admin integration
+  - [*] ModelForm integration
+  - [*] Django admin integration
   - [ ] Migration from django-model-translation
       - [ ] copy values from existing fields into the `i18n` field
       - [ ] remove the `<original_field>_<lang>` fields
@@ -45,7 +45,8 @@
 
 - [*] have a `title_i18n` field to get the translated version for the current language including fallback
 - [*] when requesting the language which is the language of untranslated fields, return the original field. (`Blog.objects.filter(title_i18n='foo')` with `en` as active language.)
-- [ ] order by `title_i18n` to automagically order by the active language.
+- [*] order by `title_i18n` to automagically order by the active language (with fallback).
+- [*] filter by `title_i18n` to automagically filter by the active language (with fallback).
 
 
 # After this is fully functional and there is 3rd party interest such features

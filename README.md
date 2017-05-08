@@ -1,10 +1,10 @@
 # django-modeltrans
 
-Translates Django models in a `JSONField` using a registration approach.
+Translates Django model fields in a `JSONField` using a registration approach.
 
-# Features
+# Features/requirements
 
-- Use one `django.contrib.postgres.JSONField` (PostgreSQL jsonb field) for every record, rather than one field per language per translatable field.
+- Uses one `django.contrib.postgres.JSONField` (PostgreSQL jsonb field) for every record.
 - Django 1.9, 1.10, 1.11 for now
 - PostgreSQL >= 9.4 and Psycopg2 >= 2.5.4.
 
@@ -76,7 +76,7 @@ None
 
 `tox`
 
-Running the tests only for the current envirionment, use `make test`
+Running the tests only for the current environment, use `make test`
 
 
 # Attribution
