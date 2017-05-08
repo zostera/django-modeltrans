@@ -1,5 +1,7 @@
 # django-modeltrans
 
+[![Travis CI](https://travis-ci.org/zostera/django-modeltrans.svg?branch=master)](https://travis-ci.org/zostera/django-modeltrans)
+
 Translates Django model fields in a `JSONField` using a registration approach.
 
 # Features/requirements
