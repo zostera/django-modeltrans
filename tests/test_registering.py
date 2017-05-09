@@ -163,3 +163,24 @@ class ReRegisterTest(TestCase):
             @register(TestModel8)
             class TestModelTranslationOptions(object):
                 fields = ('name', )
+
+    def test_register_without_virtual_fields(self):
+        translator.disable_create_virtual_fields()
+
+        class TestModel9(models.Model):
+            name = models.CharField(max_length=100)
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+
+        @register(TestModel9)
+        class TestModelTranslationOptions(TranslationOptions):
+            fields = ('name', )
+
+        m = TestModel9(name='foo')
+        self.assertTrue(hasattr(m, 'i18n'))
+        self.assertFalse(hasattr(m, 'name_i18n'))
+        self.assertFalse(hasattr(m, 'name_en'))
+
+        with self.assertRaisesMessage(TypeError, "'name_nl' is an invalid keyword argument for this function"):
+            TestModel9(name='bar', name_nl='foo')

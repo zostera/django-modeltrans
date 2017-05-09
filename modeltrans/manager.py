@@ -2,7 +2,7 @@
 
 from django.core.exceptions import FieldError
 from django.db import models
-from django.db.models import CharField, TextField
+from django.db.models import TextField
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
 

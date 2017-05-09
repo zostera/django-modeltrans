@@ -140,15 +140,19 @@ def raise_if_field_exists(model, field_name):
                 )
 
 
-def add_translation_field(model, opts):
+def add_translation_field(model):
     '''
     Monkey patches the original model class to provide the `i18n` field.
-
-    Adds newly created translation fields to the given translation options.
     '''
     # field to store the translations in
+    raise_if_field_exists(model, 'i18n')
     model.add_to_class('i18n', TranslationJSONField())
 
+
+def add_virtual_fields(model, opts):
+    '''
+    Adds newly created translation fields to the given translation options.
+    '''
     # proxy fields to assign and get values from.
     for field_name in opts.local_fields.keys():
         # first, add a `<original_field>_i18n` virtual field to get the currently
@@ -262,9 +266,14 @@ class Translator(object):
     A Translator object encapsulates an instance of a translator. Models are
     registered with the Translator using the register() method.
     '''
+    create_virtual_fields = True
+
     def __init__(self):
         # All seen models (model class -> ``TranslationOptions`` instance).
         self._registry = {}
+
+    def disable_create_virtual_fields(self):
+        self.create_virtual_fields = False
 
     def register(self, model_or_iterable, opts_class=None, **options):
         '''
@@ -318,13 +327,17 @@ class Translator(object):
 
         # Add translation fields to the model.
         if not model._meta.proxy:
-            add_translation_field(model, opts)
+            add_translation_field(model)
 
-        # Set MultilingualManager
-        add_manager(model)
+            if self.create_virtual_fields:
+                add_virtual_fields(model, opts)
 
-        # Patch __init__ to rewrite fields
-        patch_constructor(model)
+        if self.create_virtual_fields:
+            # Set MultilingualManager
+            add_manager(model)
+
+            # Patch __init__ to rewrite fields
+            patch_constructor(model)
 
     def unregister(self, model_or_iterable):
         '''
