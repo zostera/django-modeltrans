@@ -7,7 +7,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 class RegistrationConfig(AppConfig):
     name = 'modeltrans'
-    verbose = 'Django modeltrans using a registry.'
+    verbose_name = 'Django modeltrans using a registry.'
 
     def ready(self):
         from modeltrans.models import handle_translation_registrations
@@ -22,9 +22,13 @@ class MigrationConfig(AppConfig):
     This is how it is supposed to work:
     1. Make sure you have a recent backup available!
     2. Add `modeltrans.apps.MigrationConfig` to your `INSTALLED_APPS`
-    3. Run `./manage.py migrate`. This will create two migrations:
-        - adding the`i18n`-fields required by django-modeltrans
-        - copy the values of the translated fields into the newly created `i18n`-field.
+    3. Run `./manage.py makemigrations add_i18n_field`. This will create the
+       migration adding the`i18n`-fields required by django-modeltrans. Run them
+       with `./manage.py migrate`
+    4. Now we need to create a migration to copy the values of the translated
+       fields into the newly created `i18n`-field. django-modeltrans provides
+       some has some utility functions to do that.
+
     4. Remove `modeltranslation` from your `INSTALLED_APPS`. This will remove the
        translated fields from your registered models.
     5. Update your code to work according to the API of django-modeltrans:
@@ -34,8 +38,8 @@ class MigrationConfig(AppConfig):
           with django-modeltranslation
 
     '''
-    name = 'modeltrans-migration'
-    verbose = 'Migration from django-modeltranslation to django-modeltrans'
+    name = 'modeltrans'
+    verbose_name = 'Migration from django-modeltranslation to django-modeltrans'
 
     def ready(self):
         from django.conf import settings
