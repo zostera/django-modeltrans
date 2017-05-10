@@ -47,6 +47,7 @@ def get_translated_fields(Model):
 def copy_translations(Model, fields):
     for m in Model.objects.all():
         for field in fields:
+            # TODO: copy <original_field>_<DEFAULT_LANGUAGE> to <original_field>
             m.i18n[field] = getattr(m, field)
 
         m.save()
