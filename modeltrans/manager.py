@@ -10,10 +10,10 @@ from . import settings
 from .utils import build_localized_fieldname, get_language
 
 
-def get_translatable_fields_for_model(model):
+def get_translatable_fields_for_model(Model):
     from modeltrans.translator import NotRegistered, translator
     try:
-        return translator.get_options_for_model(model).get_field_names()
+        return translator.get_options_for_model(Model).get_field_names()
     except NotRegistered:
         return None
 
