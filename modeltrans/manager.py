@@ -7,7 +7,8 @@ from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
 
 from . import settings
-from .utils import build_localized_fieldname, get_language
+from .utils import (build_localized_fieldname, get_language,
+                    split_translated_fieldname)
 
 
 def get_translatable_fields_for_model(Model):
@@ -16,11 +17,6 @@ def get_translatable_fields_for_model(Model):
         return translator.get_options_for_model(Model).get_field_names()
     except NotRegistered:
         return None
-
-
-def split_translated_fieldname(field_name):
-    _pos = field_name.rfind('_')
-    return (field_name[0:_pos], field_name[_pos + 1:])
 
 
 def transform_translatable_fields(model, fields):

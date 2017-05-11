@@ -28,6 +28,11 @@ def get_translation_fields(field):
     return [build_localized_fieldname(field, l) for l in settings.AVAILABLE_LANGUAGES]
 
 
+def split_translated_fieldname(field_name):
+    _pos = field_name.rfind('_')
+    return (field_name[0:_pos], field_name[_pos + 1:])
+
+
 def build_localized_fieldname(field_name, lang):
     if lang == 'id':
         # The 2-letter Indonesian language code is problematic with the
