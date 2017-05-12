@@ -25,7 +25,6 @@
   - [x] clean() and requiredness of translated fields.
   - [ ] values()
   - [ ] values_list()
-  - [ ] select_related()
   - [x] Getting translated fields on a Model instance (if not annotated) (inject a __getattr__ on a Model?)
   - [x] Registration of translatable models and fields
     - [x] Remove the need of manually adding the `Manager` to the objects attribute
@@ -36,10 +35,10 @@
     - [x] Test suite runnable in travisci
   - [x] ModelForm integration
   - [x] Django admin integration
-  - [ ] Migration from django-model-translation
-      - [ ] copy values from existing fields into the `i18n` field
-      - [ ] move the value of `<original_field>_<DEFAULT_LANG>` to `<original_field>`
-      - [ ] remove the `<original_field>_<lang>` fields
+  - [x] Migration from django-model-translation
+      - [x] copy values from existing fields into the `i18n` field
+      - [x] move the value of `<original_field>_<DEFAULT_LANG>` to `<original_field>`
+      - [x] remove the `<original_field>_<lang>` fields
   - [ ] Documentation
 
 # usage of managers/models in code
