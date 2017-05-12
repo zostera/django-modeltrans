@@ -225,12 +225,14 @@ class ValuesTest(TestCase):
             )
 
     def test_queryset_values_list(self):
+        # doesn't make sense to add a much tests for values_list() specifically,
+        # as the underlying function for value() is axactly the same.
         self.assertEquals(
             list(Blog.objects.all().order_by('title_nl').values_list('title_nl')),
             [(None, ), ('Kikker', ), ('Valk', )]
         )
 
         self.assertEquals(
+            list(Blog.objects.all().order_by('title_en').values_list('title_en')),
             list(Blog.objects.all().order_by('title').values_list('title')),
-            [('Falcon', ), ('Frog', ), ('Gecko', )]
         )
