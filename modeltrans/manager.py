@@ -55,7 +55,7 @@ class MultilingualQuerySet(models.query.QuerySet):
     def get_translatable_fields(self):
         return get_translatable_fields_for_model(self.model)
 
-    def add_i18n_annotation(self, original_field, field_name, fallback=True):
+    def add_i18n_annotation(self, original_field, field_name, annotation_field_name=None, fallback=True):
         '''
         Add an annotation to the query to extract the translated version of a field
         from the jsonb field to allow filtering and ordering.
@@ -65,6 +65,8 @@ class MultilingualQuerySet(models.query.QuerySet):
             field_name (str): name of the translated field to add the
                 annotation for. For example `title_nl` will result in adding
                 something like `i18n->>title_nl AS title_nl_annotation` to the Query.
+            annotation_field_name (str): name of the annotation, if None (by default),
+                `<original_field>_<lang>_annotation` will be used.
             fallback (bool): If `True`, `COALESCE` will be used to get the value
                 of the original field if the requested translation is not
                 available.
@@ -83,7 +85,8 @@ class MultilingualQuerySet(models.query.QuerySet):
         else:
             field = Cast(RawSQL('i18n->>%s', (field_name, )), TextField())
 
-        annotation_field_name = '{}_annotation'.format(field_name)
+        if annotation_field_name is None:
+            annotation_field_name = '{}_annotation'.format(field_name)
         self.query.add_annotation(field, annotation_field_name)
 
         return annotation_field_name
@@ -186,7 +189,7 @@ class MultilingualQuerySet(models.query.QuerySet):
 
     def _filter_or_exclude(self, negate, *args, **kwargs):
         '''
-        Annotate filter/exclude fields before filtering.
+        Annotate lookups for `filter()` and `exclude()`.
 
         Examples:
             - `title_nl__contains='foo'` will add an annotation for `title_nl`
@@ -211,6 +214,38 @@ class MultilingualQuerySet(models.query.QuerySet):
             new_kwargs.update(dict((self.rewrite_expression(field, value), )))
 
         return super(MultilingualQuerySet, self)._filter_or_exclude(negate, *new_args, **new_kwargs)
+
+    def _values(self, *fields, **expressions):
+        '''
+        Annotate lookups for `values()` and `values_list()`
+
+        It must be possible to use `Blogs.objects.all().values_list('title_i18n', 'title_nl', 'title_en')`
+        '''
+        _fields = fields + tuple(expressions)
+
+        for field in _fields:
+            if '_' not in field:
+                continue
+
+            # remove descending prefix, not relevant for the annotation
+            if field[0] == '-':
+                field = field[1:]
+
+            original_field, language = split_translated_fieldname(field)
+
+            # sort by current language if <original_field>_i18n is requested
+            if language == 'i18n':
+                language = get_language()
+                field = build_localized_fieldname(original_field, language)
+
+            if language == settings.DEFAULT_LANGUAGE:
+                # sort_field_name = original_field
+                pass
+            else:
+                self.add_i18n_annotation(original_field, field,
+                                         annotation_field_name=field, fallback=True)
+
+        return super(MultilingualQuerySet, self)._values(*fields, **expressions)
 
 
 def multilingual_queryset_factory(old_cls, instantiate=True):

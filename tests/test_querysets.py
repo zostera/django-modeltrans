@@ -195,3 +195,23 @@ class FilteredOrderByTest(TestCase):
 
             self.assertEquals(key(qs, 'title_i18n'), ['Gerbil', 'Gecko'])
             self.assertTrue('annotation' not in str(qs.query))
+
+
+class ValuesTest(TestCase):
+    def setUp(self):
+        Blog.objects.bulk_create([
+            Blog(title='Falcon', title_nl='Valk'),
+            Blog(title='Frog', title_nl='Kikker'),
+        ])
+
+    def test_queryset_values(self):
+        self.assertEquals(
+            list(Blog.objects.all().order_by('title_nl').values('title_nl')),
+            [{'title_nl': 'Kikker'}, {'title_nl': 'Valk'}]
+        )
+
+    def test_queryset_values_list(self):
+        self.assertEquals(
+            list(Blog.objects.all().order_by('title_nl').values_list('title_nl')),
+            [('Kikker', ), ('Valk', )]
+        )

@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import StringIO
-
 from django.test import SimpleTestCase
 
 from modeltrans.migration import I18nMigration
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 
 class I18nMigrationTest(SimpleTestCase):
@@ -14,7 +17,7 @@ class I18nMigrationTest(SimpleTestCase):
         m.add_model('Blog', ('title_nl', 'title_fr', 'body_nl', 'body_fr'))
         m.add_model('Category', ('name_nl', 'name_fr'))
 
-        output = StringIO.StringIO()
+        output = StringIO()
         m.write(output)
         output = output.getvalue()
 
