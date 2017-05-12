@@ -57,9 +57,6 @@ class FilteredBlogListView(FilterView, tables.SingleTableView):
 
     filterset_class = BlogFilter
 
-    def get_table_data(self):
-        return self.object_list
-
 
 class BlogView(DetailView):
     model = Blog
