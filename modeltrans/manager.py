@@ -227,23 +227,26 @@ class MultilingualQuerySet(models.query.QuerySet):
             if '_' not in field:
                 continue
 
-            # remove descending prefix, not relevant for the annotation
-            if field[0] == '-':
-                field = field[1:]
-
             original_field, language = split_translated_fieldname(field)
 
-            # sort by current language if <original_field>_i18n is requested
+            annotation_field_name = field
+            fallback = False
+            # current language if <original_field>_i18n is requested
             if language == 'i18n':
                 language = get_language()
                 field = build_localized_fieldname(original_field, language)
+                fallback = True
 
             if language == settings.DEFAULT_LANGUAGE:
-                # sort_field_name = original_field
-                pass
+                # TODO: see if we can just do this with add_i18n_annotation()
+                self.query.add_annotation(Cast(original_field, TextField()), field)
             else:
-                self.add_i18n_annotation(original_field, field,
-                                         annotation_field_name=field, fallback=True)
+                self.add_i18n_annotation(
+                    original_field,
+                    field,
+                    annotation_field_name=annotation_field_name,
+                    fallback=fallback
+                )
 
         return super(MultilingualQuerySet, self)._values(*fields, **expressions)
 

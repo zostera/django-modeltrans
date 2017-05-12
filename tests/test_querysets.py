@@ -202,16 +202,35 @@ class ValuesTest(TestCase):
         Blog.objects.bulk_create([
             Blog(title='Falcon', title_nl='Valk'),
             Blog(title='Frog', title_nl='Kikker'),
+            Blog(title='Gecko'),
         ])
 
-    def test_queryset_values(self):
+    def test_queryset_values_basic(self):
         self.assertEquals(
             list(Blog.objects.all().order_by('title_nl').values('title_nl')),
-            [{'title_nl': 'Kikker'}, {'title_nl': 'Valk'}]
+            [{'title_nl': None}, {'title_nl': 'Kikker'}, {'title_nl': 'Valk'}]
         )
+
+    def test_queryset_values_default_language(self):
+        self.assertEquals(
+            list(Blog.objects.all().order_by('title_en').values('title_en')),
+            [{'title_en': 'Falcon'}, {'title_en': 'Frog'}, {'title_en': 'Gecko'}]
+        )
+
+    def test_queryset_values_i18n(self):
+        with override('nl'):
+            self.assertEquals(
+                list(Blog.objects.all().order_by('title_i18n').values('title_i18n')),
+                [{'title_i18n': 'Gecko'}, {'title_i18n': 'Kikker'}, {'title_i18n': 'Valk'}]
+            )
 
     def test_queryset_values_list(self):
         self.assertEquals(
             list(Blog.objects.all().order_by('title_nl').values_list('title_nl')),
-            [('Kikker', ), ('Valk', )]
+            [(None, ), ('Kikker', ), ('Valk', )]
+        )
+
+        self.assertEquals(
+            list(Blog.objects.all().order_by('title').values_list('title')),
+            [('Falcon', ), ('Frog', ), ('Gecko', )]
         )
