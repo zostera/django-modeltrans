@@ -74,6 +74,65 @@ None
 'Falk'
 ```
 
+# Migrating from django-modeltranslation
+
+This is how to migrate from django-modeltranslation (version 0.12.1) to
+django-modeltrans:
+
+1. Make sure you have a recent backup available!
+2. Add `modeltrans` to your `INSTALLED_APPS`
+3. Copy the django-modeltranslation registrations to use django-modeltrans
+   alongside it, while disabling the virtual fields for now:
+```python
+
+# if this whas your configuration:
+from modeltranslation.translator import translator, TranslationOptions
+from .models import Blog
+
+class BlogTranslationOptions(TranslationOptions):
+    fields = ('name', 'title', )
+
+translator.register(Blog, BlogTranslationOptions)
+
+# this is what you add:
+def i18n_migrate():
+    from modeltrans import translator, TranslationOptions
+
+    translator.disable_create_virtual_fields()
+
+
+    class BlogTranslationOptions(TranslationOptions):
+        fields = ('name', 'title', )
+
+    translator.register(Blog, BlogTranslationOptions)
+
+
+# and make sure it gets executed
+i18n_migrate()
+```
+3. Run `./manage.py makemigrations <apps>`. This will create the
+   migration adding the`i18n`-fields required by django-modeltrans. Apply
+   them with `./manage.py migrate`
+4. We need to create a migration to copy the values of the translated
+   fields into the newly created `i18n`-field. django-modeltrans provides
+   a management command to do that:
+     `./manage.py i18n_makemmigrations <apps>`
+5. Now, remove django-modeltranslation by:
+    - Removing the translation registrations for `modeltranslation` from your
+      `translation.py`'s. Also remove the function around the new registrations.
+    - Remove the use of `modeltranslation.admin.TranslationAdmin` in your `admin.py`'s
+
+   Run `./manage.py makemigrations <apps>`. This will remove the translated
+   fields from your registered models. You can now safely remove the line
+   `translator.disable_create_virtual_fields()` and let django-modeltrans add
+   the virtual fields to your models.
+5. Update your code and cleanup:
+    - Remove `modeltranslation` from `INSTALLED_APPS`.
+    - Use `<field>_i18n` field names for places where you would use `<field>`
+      with django-modeltranslation. Less magic, but
+      [explicit is better than implicit](https://www.python.org/dev/peps/pep-0020/)!
+
+'''
 # Running the tests
 
 `tox`

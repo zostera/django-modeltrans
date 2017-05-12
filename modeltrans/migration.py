@@ -136,7 +136,7 @@ class Migration(migrations.Migration):
         # The copying of values is (sort of) reversable by a no-op:
         #  - values are copied into i18n (which is not used by anything but django-modeltrans)
         #  - the default language is copied to the orignal field, which was not used
-             with django-modeltrans.
+        #    with django-modeltrans.
         migrations.RunPython(forwards, migrations.RunPython.noop)
     ]
 '''
