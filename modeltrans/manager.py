@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from django.core.exceptions import FieldError
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import TextField
-from django.db.models.expressions import RawSQL
-from django.db.models.functions import Cast, Coalesce
+from django.db.models.constants import LOOKUP_SEP
+from django.db.models.functions import Cast
 
 from . import settings
-from .utils import (build_localized_fieldname, get_language,
-                    split_translated_fieldname)
+from .fields import TranslatedVirtualField
+from .utils import split_translated_fieldname
 
 
 def get_translatable_fields_for_model(Model):
@@ -55,17 +55,14 @@ class MultilingualQuerySet(models.query.QuerySet):
     def get_translatable_fields(self):
         return get_translatable_fields_for_model(self.model)
 
-    def add_i18n_annotation(self, original_field, field_name, annotation_field_name=None, fallback=True):
+    def add_i18n_annotation(self, field, annotation_name=None, fallback=True):
         '''
         Add an annotation to the query to extract the translated version of a field
         from the jsonb field to allow filtering and ordering.
 
         Arguments:
-            original_field (str): name of the original, untranslated field.
-            field_name (str): name of the translated field to add the
-                annotation for. For example `title_nl` will result in adding
-                something like `i18n->>title_nl AS title_nl_annotation` to the Query.
-            annotation_field_name (str): name of the annotation, if None (by default),
+            field (str): the virtual field to create an annotation for.
+            annotation_name (str): name of the annotation, if None (by default),
                 `<original_field>_<lang>_annotation` will be used.
             fallback (bool): If `True`, `COALESCE` will be used to get the value
                 of the original field if the requested translation is not
@@ -74,22 +71,23 @@ class MultilingualQuerySet(models.query.QuerySet):
         Returns:
             the name of the annotation.
         '''
-        assert field_name.startswith(original_field)
+        # print('add_i18n_annotation', field, annotation_name)
 
-        if original_field not in self.get_translatable_fields():
-            raise FieldError('Field ({}) is not defined as translatable'.format(original_field))
+        if annotation_name is None:
+            annotation_name = '{}_annotation'.format(field.name)
 
-        if fallback:
-            # fallback to the original untranslated field
-            field = Coalesce(RawSQL('i18n->>%s', (field_name, )), original_field, output_field=TextField())
-        else:
-            field = Cast(RawSQL('i18n->>%s', (field_name, )), TextField())
+        annotation = field.sql_lookup(fallback)
+        if isinstance(annotation, str):
+            return annotation
 
-        if annotation_field_name is None:
-            annotation_field_name = '{}_annotation'.format(field_name)
-        self.query.add_annotation(field, annotation_field_name)
+        if field.model is not self.model:
+            # this is not exactly what we want (FROM a, b)
+            # what we want is FROM a LEFT OUTER JOIN b ON (a.fk = b.pk)
+            self.query.add_extra(select=None, select_params=None, where=None, params=None, tables=[field.model._meta.db_table], order_by=None)
+            print('different')
 
-        return annotation_field_name
+        self.query.add_annotation(annotation, annotation_name)
+        return annotation_name
 
     def create(self, **kwargs):
         '''
@@ -113,35 +111,25 @@ class MultilingualQuerySet(models.query.QuerySet):
         '''
         new_field_names = []
 
-        for field in field_names:
-            if '_' not in field:
-                new_field_names.append(field)
+        for field_name in field_names:
+            if '_' not in field_name:
+                new_field_names.append(field_name)
                 continue
 
             # remove descending prefix, not relevant for the annotation
-            if field[0] == '-':
-                field = field[1:]
-                descending = True
-            else:
-                descending = False
+            sort_order = ''
+            if field_name[0] == '-':
+                field_name = field_name[1:]
+                sort_order = '-'
 
-            original_field, language = split_translated_fieldname(field)
+            field = self.model._meta.get_field(field_name)
+            if not isinstance(field, TranslatedVirtualField):
+                new_field_names.append(sort_order + field_name)
+                continue
 
-            # sort by current language if <original_field>_i18n is requested
-            if language == 'i18n':
-                language = get_language()
-                field = build_localized_fieldname(original_field, language)
+            sort_field_name = self.add_i18n_annotation(field, fallback=True)
 
-            if language == settings.DEFAULT_LANGUAGE:
-                sort_field_name = original_field
-            else:
-                sort_field_name = self.add_i18n_annotation(original_field, field, fallback=True)
-
-            # re-add the descending prefix to the annotated field name
-            if descending:
-                sort_field_name = '-' + sort_field_name
-
-            new_field_names.append(sort_field_name)
+            new_field_names.append(sort_order + sort_field_name)
 
         return super(MultilingualQuerySet, self).order_by(*new_field_names)
 
@@ -154,23 +142,16 @@ class MultilingualQuerySet(models.query.QuerySet):
             lookup = lookup[0:lookup.rfind('__')]
             query_type = requested_field_name[len(lookup):]
 
-        original_field, language = split_translated_fieldname(lookup)
-        if original_field not in self.get_translatable_fields():
+        # special case for pk, because it is not a field.
+        if lookup == 'pk':
             return requested_field_name, value
 
-        if language == 'i18n':
-            # search for current language, including fallback to
-            # settings.DEFAULT_LANGUAGE
-            language = get_language()
-            lookup = build_localized_fieldname(original_field, language)
-            fallback = True
-        else:
-            fallback = False
+        field = self.model._meta.get_field(lookup)
+        if not isinstance(field, TranslatedVirtualField):
+            return requested_field_name, value
 
-        if language == settings.DEFAULT_LANGUAGE:
-            filter_field_name = original_field
-        else:
-            filter_field_name = self.add_i18n_annotation(original_field, lookup, fallback=fallback)
+        fallback = field.language is None
+        filter_field_name = self.add_i18n_annotation(field, fallback=fallback)
 
         # re-add query type
         filter_field_name += query_type
@@ -215,6 +196,22 @@ class MultilingualQuerySet(models.query.QuerySet):
 
         return super(MultilingualQuerySet, self)._filter_or_exclude(negate, *new_args, **new_kwargs)
 
+    def _get_field(self, lookup):
+        model = self.model
+
+        field = None
+        for part in lookup.split(LOOKUP_SEP):
+            try:
+                field = model._meta.get_field(part)
+            except FieldDoesNotExist:
+                break
+
+            if hasattr(field, 'remote_field'):
+                rel = getattr(field, 'remote_field', None)
+                model = getattr(rel, 'model', model)
+
+        return field
+
     def _values(self, *fields, **expressions):
         '''
         Annotate lookups for `values()` and `values_list()`
@@ -223,28 +220,20 @@ class MultilingualQuerySet(models.query.QuerySet):
         '''
         _fields = fields + tuple(expressions)
 
-        for field in _fields:
-            if '_' not in field:
+        for field_name in _fields:
+            field = self._get_field(field_name)
+            if not isinstance(field, TranslatedVirtualField):
                 continue
 
-            original_field, language = split_translated_fieldname(field)
+            fallback = field.language is None
 
-            annotation_field_name = field
-            fallback = False
-            # current language if <original_field>_i18n is requested
-            if language == 'i18n':
-                language = get_language()
-                field = build_localized_fieldname(original_field, language)
-                fallback = True
-
-            if language == settings.DEFAULT_LANGUAGE:
+            if field.get_language() == settings.DEFAULT_LANGUAGE:
                 # TODO: see if we can just do this with add_i18n_annotation()
-                self.query.add_annotation(Cast(original_field, TextField()), field)
+                self.query.add_annotation(Cast(field.original_field, TextField()), field_name)
             else:
                 self.add_i18n_annotation(
-                    original_field,
                     field,
-                    annotation_field_name=annotation_field_name,
+                    annotation_name=field_name,
                     fallback=fallback
                 )
 

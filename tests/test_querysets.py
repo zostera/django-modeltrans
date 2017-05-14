@@ -3,22 +3,15 @@ from __future__ import unicode_literals
 
 from unittest import skip
 
-from django.core.exceptions import FieldError
 from django.db.models import F, Q
 from django.test import TestCase
 from django.utils.translation import override
 
-from tests.app.models import Blog, Site
+from tests.app.models import Blog, Category, Site
 
 
 def key(queryset, key):
     return list([getattr(model, key) for model in queryset])
-
-
-class AddAnnotationTest(TestCase):
-    def test_non_translatable_field_raises(self):
-        with self.assertRaisesMessage(FieldError, 'Field (foo) is not defined as translatable'):
-            Blog.objects.all().add_i18n_annotation('foo', 'foo_nl')
 
 
 class FilterTest(TestCase):
@@ -199,10 +192,14 @@ class FilteredOrderByTest(TestCase):
 
 class ValuesTest(TestCase):
     def setUp(self):
+        birds = Category.objects.create(name='Birds', name_nl='Vogels')
+        amphibians = Category.objects.create(name='Amphibians', name_nl='Amfibiën')
+        reptiles = Category.objects.create(name='Reptiles')
+
         Blog.objects.bulk_create([
-            Blog(title='Falcon', title_nl='Valk'),
-            Blog(title='Frog', title_nl='Kikker'),
-            Blog(title='Gecko'),
+            Blog(title='Falcon', title_nl='Valk', category=birds),
+            Blog(title='Frog', title_nl='Kikker', category=amphibians),
+            Blog(title='Gecko', category=reptiles),
         ])
 
     def test_queryset_values_basic(self):
@@ -227,11 +224,10 @@ class ValuesTest(TestCase):
     def test_queryset_values_list(self):
         # doesn't make sense to add a much tests for values_list() specifically,
         # as the underlying function for value() is axactly the same.
-        self.assertEquals(
-            list(Blog.objects.all().order_by('title_nl').values_list('title_nl')),
-            [(None, ), ('Kikker', ), ('Valk', )]
-        )
+        qs = Blog.objects.all().order_by('title_nl').values_list('title_nl')
+        self.assertEquals(list(qs), [(None, ), ('Kikker', ), ('Valk', )])
 
+    def test_queryset_values_list_default_language(self):
         self.assertEquals(
             list(Blog.objects.all().order_by('title_en').values_list('title_en')),
             list(Blog.objects.all().order_by('title').values_list('title')),

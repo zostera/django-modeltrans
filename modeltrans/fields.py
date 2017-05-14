@@ -2,6 +2,9 @@
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from django.db.models import TextField
+from django.db.models.expressions import RawSQL
+from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import ugettext as _
 
 from .settings import DEFAULT_LANGUAGE
@@ -96,6 +99,25 @@ class TranslatedVirtualField(models.CharField):
 
     def get_language(self):
         return self.language if self.language is not None else get_language()
+
+    def sql_lookup(self, fallback=True):
+        '''
+        Compose the sql lookup to get the value for this virtual field in a query.
+        '''
+
+        language = self.get_language()
+        if language == DEFAULT_LANGUAGE:
+            return self.original_field
+
+        name = build_localized_fieldname(self.original_field, language)
+
+        i18n_lookup = RawSQL('{}.i18n->>%s'.format(self.model._meta.db_table), (name, ))
+        # i18n_lookup = RawSQL('i18n->>%s', (name, ))
+
+        if fallback:
+            return Coalesce(i18n_lookup, self.original_field, output_field=TextField())
+        else:
+            return Cast(i18n_lookup, TextField())
 
 
 class TranslationJSONField(JSONField):
