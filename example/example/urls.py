@@ -4,8 +4,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.views import static
 
-from app.views import (BlogListView, BlogUpdateView, BlogView,
-                       FilteredBlogListView, fixtures)
+from app.views import BlogListView, BlogUpdateView, BlogView, FilteredBlogListView, fixtures
 
 admin.autodiscover()
 

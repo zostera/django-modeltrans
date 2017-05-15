@@ -8,6 +8,7 @@ from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView
 from django.views.generic.edit import UpdateView
+
 from django_filters import FilterSet
 from django_filters.views import FilterView
 

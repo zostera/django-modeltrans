@@ -2,13 +2,9 @@
 from __future__ import unicode_literals
 
 from django.test import SimpleTestCase
+from django.utils.six import StringIO
 
 from modeltrans.migration import I18nMigration
-
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 
 
 class I18nMigrationTest(SimpleTestCase):

@@ -7,8 +7,7 @@ from django.test import TestCase
 
 from modeltrans.decorators import register
 from modeltrans.exceptions import AlreadyRegistered
-from modeltrans.manager import (MultilingualManager, MultilingualQuerySet,
-                                get_translatable_fields_for_model)
+from modeltrans.manager import MultilingualManager, MultilingualQuerySet, get_translatable_fields_for_model
 from modeltrans.translator import TranslationOptions, translator
 from tests.app.models import Blog
 
