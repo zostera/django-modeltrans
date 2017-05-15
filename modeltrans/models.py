@@ -1,6 +1,6 @@
 
 
-def autodiscover(create_virtual_fields=True):
+def autodiscover():
     '''
     Auto-discover INSTALLED_APPS translation.py modules and fail silently when
     not present. This forces an import on them to register.
@@ -11,9 +11,6 @@ def autodiscover(create_virtual_fields=True):
     import copy
     from django.utils.module_loading import module_has_submodule
     from modeltrans.translator import translator
-
-    if not create_virtual_fields:
-        translator.disable_create_virtual_fields()
 
     from importlib import import_module
     from django.conf import settings
@@ -52,7 +49,7 @@ def autodiscover(create_virtual_fields=True):
             pass
 
 
-def handle_translation_registrations(create_virtual_fields=True):
+def handle_translation_registrations():
     '''
     Ensures that any configuration of the TranslationOption(s) are handled when
     importing modeltranslation.
@@ -70,4 +67,4 @@ def handle_translation_registrations(create_virtual_fields=True):
 
     # Trigger autodiscover, causing any TranslationOption initialization
     # code to execute.
-    autodiscover(create_virtual_fields)
+    autodiscover()
