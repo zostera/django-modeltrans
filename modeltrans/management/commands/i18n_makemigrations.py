@@ -23,7 +23,11 @@ class Command(BaseCommand):
             apps[model._meta.app_label].append(model)
 
         for app in options['apps']:
-            print('Create migration for app: ', app)
+            print('Create migration for app:', app)
+
+            if len(apps[app]) == 0:
+                print('No models registered for translation with django-modeltranslation')
+                return
             migration = I18nMigration(app)
 
             for Model in apps[app]:
@@ -33,6 +37,6 @@ class Command(BaseCommand):
                     Model.__name__,
                     str(translatable_fields)
                 ))
-                migration.add_model(Model.__name__, translatable_fields)
+                migration.add_model(Model, translatable_fields)
 
             migration.write()

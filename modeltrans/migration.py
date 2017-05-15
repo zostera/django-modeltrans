@@ -79,9 +79,9 @@ class I18nMigration(object):
         for fn in self.helper_functions:
             yield inspect.getsource(fn)
 
-    def add_model(self, model_name, fields):
+    def add_model(self, Model, fields):
         self.models.append(
-            (model_name, fields)
+            (Model, fields)
         )
 
     def write(self, out=None):
@@ -90,16 +90,27 @@ class I18nMigration(object):
 
         from modeltrans import settings
 
+        indexes = '\n'.join(
+            [CREATE_INDEX_TEMPLATE.format(table=Model._meta.db_table) for Model, fields in self.models]
+        )
+
         out.write(MIGRATION_TEMPLATE.format(
             version=VERSION,
             DEFAULT_LANGUAGE=settings.DEFAULT_LANGUAGE,
             timestamp=now().strftime('%Y-%m-%d %H:%M'),
             helpers='\n\n'.join(self.get_helper_functions()),
-            todo=',\n        '.join([str(item) for item in self.models]),
+            todo=',\n        '.join([str((Model.__name__, fields)) for Model, fields in self.models]),
             app=self.app,
-            last_migration='# TODO: actually fetch this from somewhere'
+            last_migration='# TODO: actually fetch this from somewhere',
+            indexes=indexes
         ))
 
+
+CREATE_INDEX_TEMPLATE = '''
+        migrations.RunSQL(
+            [("CREATE INDEX IF NOT EXISTS {table}_i18n_gin ON {table} USING gin (i18n jsonb_path_ops);", None)],
+            [('DROP INDEX {table}_i18n_gin;', None)],
+        ),'''
 
 MIGRATION_TEMPLATE = '''
 # -*- coding: utf-8 -*-
@@ -137,6 +148,7 @@ class Migration(migrations.Migration):
         #  - values are copied into i18n (which is not used by anything but django-modeltrans)
         #  - the default language is copied to the orignal field, which was not used
         #    with django-modeltrans.
-        migrations.RunPython(forwards, migrations.RunPython.noop)
+        migrations.RunPython(forwards, migrations.RunPython.noop),
+        {indexes}
     ]
 '''
