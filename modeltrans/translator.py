@@ -7,7 +7,7 @@ from django.utils.six import with_metaclass
 
 from . import settings
 from .exceptions import AlreadyRegistered, DescendantRegistered, NotRegistered
-from .fields import TranslatedVirtualField, TranslationJSONField
+from .fields import TranslationJSONField, translated_field_factory
 from .manager import MultilingualManager, transform_translatable_fields
 
 
@@ -140,58 +140,60 @@ def raise_if_field_exists(model, field_name):
                 )
 
 
-def add_translation_field(model):
+def add_translation_field(Model):
     '''
     Monkey patches the original model class to provide the `i18n` field.
     '''
     # field to store the translations in
-    raise_if_field_exists(model, 'i18n')
-    model.add_to_class('i18n', TranslationJSONField())
+    raise_if_field_exists(Model, 'i18n')
+    Model.add_to_class('i18n', TranslationJSONField())
 
 
-def add_virtual_fields(model, opts):
+def add_virtual_fields(Model, opts):
     '''
     Adds newly created translation fields to the given translation options.
     '''
     # proxy fields to assign and get values from.
     for field_name in opts.local_fields.keys():
-        # first, add a `<original_field>_i18n` virtual field to get the currently
+        original_field = Model._meta.get_field(field_name)
+
+        # first, add a `<original_field_name>_i18n` virtual field to get the currently
         # active translation for a field
-        field = TranslatedVirtualField(
-            original_field=field_name,
+        field = translated_field_factory(
+            original_field=original_field,
             blank=True,
             null=True,
             editable=False  # disable in admin
         )
 
-        raise_if_field_exists(model, field.get_field_name())
-        field.contribute_to_class(model, field.get_field_name())
+        raise_if_field_exists(Model, field.get_field_name())
+        field.contribute_to_class(Model, field.get_field_name())
 
         # add a virtual field pointing to the original field with name
-        # <orignal_field>_<DEFAULT_LANGUAGE>
-        field = TranslatedVirtualField(
-            original_field=field_name,
+        # <original_field_name>_<DEFAULT_LANGUAGE>
+        field = translated_field_factory(
+            original_field=original_field,
+            language=settings.DEFAULT_LANGUAGE,
             blank=True,
             null=True,
             editable=False,
-            language=settings.DEFAULT_LANGUAGE
         )
-        raise_if_field_exists(model, field.get_field_name())
-        field.contribute_to_class(model, field.get_field_name())
+        raise_if_field_exists(Model, field.get_field_name())
+        field.contribute_to_class(Model, field.get_field_name())
 
         # now, for each language, add a virtual field to get the tranlation for
         # that specific langauge
-        # <original_field>_<language>
+        # <original_field_name>_<language>
         for language in list(settings.AVAILABLE_LANGUAGES):
             blank_allowed = language not in opts.required_languages
-            field = TranslatedVirtualField(
-                original_field=field_name,
+            field = translated_field_factory(
+                original_field=original_field,
                 language=language,
                 blank=blank_allowed,
                 null=blank_allowed
             )
-            raise_if_field_exists(model, field.get_field_name())
-            field.contribute_to_class(model, field.get_field_name())
+            raise_if_field_exists(Model, field.get_field_name())
+            field.contribute_to_class(Model, field.get_field_name())
 
 
 def has_custom_queryset(manager):

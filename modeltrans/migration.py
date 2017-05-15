@@ -55,13 +55,18 @@ def get_translated_fields(Model):
             yield translated.name
 
 
-def copy_translations(model, fields):
+def copy_translations(Model, fields):
     '''
-    Copy translations from a model with translations managed by django-modeltranslation
-    into a json field `i18n` managed by django-modeltrans.
+    Copy translations for all items in the database for a Model with
+    translations managed by django-modeltranslation into a json field `i18n`
+    managed by django-modeltrans.
     Values for the default language will be copied to the original field.
+
+    Arguments:
+        Model: A (historical) Model from the migraton's app registry
+        fields(iterable): list of fields to copy into their new places.
     '''
-    for m in model.objects.all():
+    for m in Model.objects.all():
         m.i18n = {}
         for field in fields:
             value = getattr(m, field)

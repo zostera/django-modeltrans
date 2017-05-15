@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from django.contrib.postgres.fields import JSONField
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models
-from django.db.models import TextField
+from django.db.models import fields
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import ugettext as _
@@ -10,23 +11,48 @@ from django.utils.translation import ugettext as _
 from .settings import DEFAULT_LANGUAGE
 from .utils import build_localized_fieldname, get_language
 
+SUPPORTED_FIELDS = (
+    fields.CharField,
+    fields.TextField,
+)
 
-class TranslatedVirtualField(models.CharField):
+
+def translated_field_factory(original_field, language=None, *args, **kwargs):
+    if not isinstance(original_field, SUPPORTED_FIELDS):
+        raise ImproperlyConfigured(
+            '{} is not supported by django-modeltrans.'.format(original_field.__class__.__name__)
+        )
+
+    class Specific(TranslatedVirtualField, original_field.__class__):
+        pass
+
+    Specific.__name__ = 'Translation{}'.format(original_field.__class__.__name__)
+
+    return Specific(original_field, language, *args, **kwargs)
+
+
+class TranslatedVirtualField(object):
     '''
     Implementation inspired by HStoreVirtualMixin from:
     https://github.com/djangonauts/django-hstore/blob/master/django_hstore/virtual.py
     '''
 
     def __init__(self, original_field, language=None, *args, **kwargs):
-        # the name of the original field
+        # TODO: this feels like a big hack.
+        self.__dict__.update(original_field.__dict__)
+
         self.original_field = original_field
         self.language = language
 
-        kwargs['max_length'] = 255
+        self.blank = kwargs['blank']
+        self.null = kwargs['null']
+        self.editable = kwargs.get('editable', True)
 
-        super(TranslatedVirtualField, self).__init__(*args, **kwargs)
+        self.concrete = False
 
-    concrete = False
+    @property
+    def original_name(self):
+        return self.original_field.name
 
     def contribute_to_class(self, cls, name):
         self.model = cls
@@ -36,8 +62,7 @@ class TranslatedVirtualField(models.CharField):
         self.column = None
 
         # Use a translated verbose name:
-        original_field = cls._meta.get_field(self.original_field)
-        translated_field_name = _(original_field.verbose_name)
+        translated_field_name = _(self.original_field.verbose_name)
         if self.language is not None:
             translated_field_name += ' ({})'.format(self.language.upper())
         self.verbose_name = translated_field_name
@@ -49,19 +74,18 @@ class TranslatedVirtualField(models.CharField):
         return None
 
     def __get__(self, instance, instance_type=None):
-
         language = self.get_language()
         if language == DEFAULT_LANGUAGE:
-            return getattr(instance, self.original_field)
+            return getattr(instance, self.original_name)
 
         # Make sure we test for containment in a dict, not in None
         if instance.i18n is None:
             instance.i18n = {}
 
         # fallback (only for <original_field>_i18n fields)
-        field_name = build_localized_fieldname(self.original_field, language)
+        field_name = build_localized_fieldname(self.original_name, language)
         if self.language is None and field_name not in instance.i18n:
-            return getattr(instance, self.original_field)
+            return getattr(instance, self.original_name)
 
         return instance.i18n.get(field_name)
 
@@ -72,9 +96,9 @@ class TranslatedVirtualField(models.CharField):
         language = self.get_language()
 
         if language == DEFAULT_LANGUAGE:
-            setattr(instance, self.original_field, value)
+            setattr(instance, self.original_name, value)
         else:
-            field_name = build_localized_fieldname(self.original_field, language)
+            field_name = build_localized_fieldname(self.original_name, language)
 
             # if value is None, remove field from `i18n`.
             if value is None:
@@ -87,18 +111,25 @@ class TranslatedVirtualField(models.CharField):
         Returns the field name for this virtual field.
 
         Two options:
-            - <original_field>_i18n for the current active language
-            - <original_field>_<language> for the specific translation
+            - <original_field_name>_i18n for the current active language
+            - <original_field_name>_<language> for the specific translation
         '''
         if self.language is None:
             lang = 'i18n'
         else:
             lang = self.get_language()
 
-        return build_localized_fieldname(self.original_field, lang)
+        return build_localized_fieldname(self.original_name, lang)
 
     def get_language(self):
         return self.language if self.language is not None else get_language()
+
+    def output_field(self):
+        Field = self.original_field.__class__
+        if isinstance(self.original_field, fields.CharField):
+            return Field(max_length=self.original_field.max_length)
+
+        return Field()
 
     def sql_lookup(self, fallback=True):
         '''
@@ -107,16 +138,16 @@ class TranslatedVirtualField(models.CharField):
 
         language = self.get_language()
         if language == DEFAULT_LANGUAGE:
-            return self.original_field
+            return self.original_name
 
-        name = build_localized_fieldname(self.original_field, language)
+        name = build_localized_fieldname(self.original_name, language)
 
         i18n_lookup = RawSQL('{}.i18n->>%s'.format(self.model._meta.db_table), (name, ))
 
         if fallback:
-            return Coalesce(i18n_lookup, self.original_field, output_field=TextField())
+            return Coalesce(i18n_lookup, self.original_name, output_field=self.output_field())
         else:
-            return Cast(i18n_lookup, TextField())
+            return Cast(i18n_lookup, self.output_field())
 
 
 class TranslationJSONField(JSONField):

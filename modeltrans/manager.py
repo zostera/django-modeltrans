@@ -81,7 +81,7 @@ class MultilingualQuerySet(models.query.QuerySet):
             # for placeholder=Cast('category__name').
             # This has the side-effect that Django properly joins the tables,
             # but in case of values(), it is not added to the final query.
-            lookup_with_original_field = annotation_name[:annotation_name.rfind(field.name)] + field.original_field
+            lookup_with_original_field = annotation_name[:annotation_name.rfind(field.name)] + field.original_name
             self.query.add_annotation(
                 Cast(lookup_with_original_field, TextField()), 'related_annotation_helper'
             )
@@ -245,7 +245,7 @@ class MultilingualQuerySet(models.query.QuerySet):
 
             if field.get_language() == settings.DEFAULT_LANGUAGE:
                 # TODO: see if we can just do this with add_i18n_annotation()
-                self.query.add_annotation(Cast(field.original_field, TextField()), field_name)
+                self.query.add_annotation(Cast(field.original_name, field.output_field()), field_name)
             else:
                 self.add_i18n_annotation(
                     field,
