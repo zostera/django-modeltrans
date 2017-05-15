@@ -142,7 +142,7 @@ class I18nMigration(object):
             helpers='\n\n'.join(self.get_helper_functions()),
             todo=',\n        '.join([str((Model.__name__, fields)) for Model, fields in self.models]),
             app=self.app,
-            last_migration=get_latest_migration(self.app),
+            last_migration=get_latest_migration(self.app) or '# TODO: manually insert latest migration here',
             indexes=indexes
         ))
 
