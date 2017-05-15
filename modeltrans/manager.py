@@ -71,20 +71,23 @@ class MultilingualQuerySet(models.query.QuerySet):
         Returns:
             the name of the annotation.
         '''
-        # print('add_i18n_annotation', field, annotation_name)
-
-        if annotation_name is None:
-            annotation_name = '{}_annotation'.format(field.name)
-
         annotation = field.sql_lookup(fallback)
         if isinstance(annotation, str):
             return annotation
 
-        if field.model is not self.model:
-            # this is not exactly what we want (FROM a, b)
-            # what we want is FROM a LEFT OUTER JOIN b ON (a.fk = b.pk)
-            self.query.add_extra(select=None, select_params=None, where=None, params=None, tables=[field.model._meta.db_table], order_by=None)
-            print('different')
+        if field.model is not self.model and annotation_name is not None:
+            # strip the language to make sure Django properly joins the tables.
+            # ie: when the lookup is `category__name_nl`, we add an annotation
+            # for placeholder=Cast('category__name').
+            # This has the side-effect that Django properly joins the tables,
+            # but in case of values(), it is not added to the final query.
+            lookup_with_original_field = annotation_name[:annotation_name.rfind(field.name)] + field.original_field
+            self.query.add_annotation(
+                Cast(lookup_with_original_field, TextField()), 'related_annotation_helper'
+            )
+
+        if annotation_name is None:
+            annotation_name = '{}_annotation'.format(field.name)
 
         self.query.add_annotation(annotation, annotation_name)
         return annotation_name

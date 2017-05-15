@@ -27,9 +27,6 @@ class FilterTest(TestCase):
         for title, title_nl in self.data:
             Blog.objects.create(title=title, i18n={'title_nl': title_nl})
 
-    def test_has_language(self):
-        '''Check if a certain field is translated in a certain language'''
-
     def test_filter_contains(self):
         '''
         We want to do a text contains in translated value lookup
@@ -231,4 +228,13 @@ class ValuesTest(TestCase):
         self.assertEquals(
             list(Blog.objects.all().order_by('title_en').values_list('title_en')),
             list(Blog.objects.all().order_by('title').values_list('title')),
+        )
+
+    def test_values_spanning_relation(self):
+        qs = Blog.objects.all().order_by('title_nl') \
+            .values_list('title_nl', 'category__name_nl')
+
+        self.assertEquals(
+            list(qs),
+            [(None, None), ('Kikker', 'Amfibiën'), ('Valk', 'Vogels')]
         )

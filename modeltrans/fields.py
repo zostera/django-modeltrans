@@ -112,7 +112,6 @@ class TranslatedVirtualField(models.CharField):
         name = build_localized_fieldname(self.original_field, language)
 
         i18n_lookup = RawSQL('{}.i18n->>%s'.format(self.model._meta.db_table), (name, ))
-        # i18n_lookup = RawSQL('i18n->>%s', (name, ))
 
         if fallback:
             return Coalesce(i18n_lookup, self.original_field, output_field=TextField())
