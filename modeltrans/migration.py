@@ -29,6 +29,7 @@ def _raise_if_not_django_modeltranslation():
             'the modeltranslation -> modeltrans migrations.'
         )
 
+
 def get_translatable_models():
     '''
     Get the translatable models according to django-modeltranslation
@@ -105,6 +106,7 @@ def get_latest_migration(app_name, connection=None):
                 shown.add(plan_node)
 
     return last
+
 
 class I18nMigration(object):
     helper_functions = (

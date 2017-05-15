@@ -2,7 +2,7 @@
 
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
-from django.db.models import TextField
+from django.db.models import F, TextField
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.functions import Cast
 
@@ -140,7 +140,12 @@ class MultilingualQuerySet(models.query.QuerySet):
         requested_field_name = lookup
         query_type = ''
 
+        value = self.rewrite_F(value)
+
         # strip the query type
+        # TODO: this is going wrong if a related lookup is used.
+        # ie category__name.
+        # probably fixable by looking at the
         if '__' in lookup:
             lookup = lookup[0:lookup.rfind('__')]
             query_type = requested_field_name[len(lookup):]
@@ -160,6 +165,14 @@ class MultilingualQuerySet(models.query.QuerySet):
         filter_field_name += query_type
 
         return filter_field_name, value
+
+    def rewrite_F(self, f):
+        if not isinstance(f, F):
+            return f
+        field = self._get_field(f.name)
+        rewritten = self.add_i18n_annotation(field, fallback=False)
+
+        return F(rewritten)
 
     def rewrite_Q(self, q):
         if isinstance(q, models.Q):

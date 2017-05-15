@@ -104,17 +104,28 @@ class FilterTest(TestCase):
             b = Blog.objects.get(Q(title_i18n='Kikker'))
             self.assertEquals(b.title, 'Frog')
 
-    @skip('Not yet implemented')
     def test_filter_F_expression(self):
         Blog.objects.create(title='foo', title_nl=20, title_fr=10)
         Blog.objects.create(title='bar', title_nl=20, title_fr=30)
+        Blog.objects.create(title='baz', title_nl=20, title_fr=40)
 
-        qs = Blog.objects.filter(title_nl_gt=F('title_fr'))
-
+        qs = Blog.objects.filter(title_nl__gt=F('title_fr'))
         self.assertEquals({m.title for m in qs}, {'foo'})
+
+        qs = Blog.objects.filter(title_nl__lt=F('title_fr'))
+        self.assertEquals({m.title for m in qs}, {'bar', 'baz'})
 
     @skip('Not yet implemented')
     def test_filter_spanning_relation(self):
+        falcon = Blog.objects.get(title='Falcon')
+        falcon.category = Category.objects.create(name='Birds', name_nl='Vogels')
+        falcon.save()
+
+        qs = Blog.objects.filter(category__name_nl='Vogels')
+        self.assertEquals({m.title for m in qs}, {'Falcon'})
+
+    @skip('Not yet implemented')
+    def test_filter_spanning_relation_from_non_translatable(self):
         '''
         Not sure if we should support this, but it requires having
         `MultilingualManager` on non-translated models too.
