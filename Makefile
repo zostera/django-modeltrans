@@ -1,6 +1,6 @@
 
 test: pyclean
-	PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.app.settings django-admin test --no-input
+	./manage.py test --no-input
 	flake8
 
 pyclean:

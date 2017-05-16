@@ -274,8 +274,8 @@ class Translator(object):
         # All seen models (model class -> ``TranslationOptions`` instance).
         self._registry = {}
 
-    def disable_create_virtual_fields(self):
-        self.create_virtual_fields = False
+    def set_create_virtual_fields(self, state=False):
+        self.create_virtual_fields = state
 
     def register(self, model_or_iterable, opts_class=None, **options):
         '''

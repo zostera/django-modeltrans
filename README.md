@@ -98,7 +98,7 @@ translator.register(Blog, BlogTranslationOptions)
 def i18n_migrate():
     from modeltrans import translator, TranslationOptions
 
-    translator.disable_create_virtual_fields()
+    translator.set_create_virtual_fields(False)
 
 
     class BlogTranslationOptions(TranslationOptions):
@@ -124,7 +124,7 @@ i18n_migrate()
 
    Run `./manage.py makemigrations <apps>`. This will remove the translated
    fields from your registered models. You can now safely remove the line
-   `translator.disable_create_virtual_fields()` and let django-modeltrans add
+   `translator.set_create_virtual_fields(False)` and let django-modeltrans add
    the virtual fields to your models.
 5. Update your code and cleanup:
     - Remove `modeltranslation` from `INSTALLED_APPS`.

@@ -164,7 +164,7 @@ class ReRegisterTest(TestCase):
                 fields = ('name', )
 
     def test_register_without_virtual_fields(self):
-        translator.disable_create_virtual_fields()
+        translator.set_create_virtual_fields(False)
 
         class TestModel9(models.Model):
             name = models.CharField(max_length=100)
@@ -183,3 +183,5 @@ class ReRegisterTest(TestCase):
 
         with self.assertRaisesMessage(TypeError, "'name_nl' is an invalid keyword argument for this function"):
             TestModel9(name='bar', name_nl='foo')
+
+        translator.set_create_virtual_fields(True)
