@@ -1,4 +1,3 @@
-
 from modeltranslation.translator import TranslationOptions, translator
 
 from .models import Blog, Category

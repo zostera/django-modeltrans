@@ -82,6 +82,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'modeltrans-migration',
+        'TEST_NAME': 'modeltrans-migration',
         'USER': 'postgres',
         'PASSWORD': 'test1234',
         'HOST': 'localhost',
@@ -92,6 +93,7 @@ DATABASES = {
 if 'TRAVIS' in os.environ:
     DATABASES['default'].update({
         'NAME': 'travisci',
+        'TEST_NAME': 'travisci',
         'USER': 'postgres',
         'PASSWORD': '',
         'HOST': 'localhost',
