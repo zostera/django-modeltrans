@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.test import TestCase
 
@@ -185,3 +185,35 @@ class ReRegisterTest(TestCase):
             TestModel9(name='bar', name_nl='foo')
 
         translator.set_create_virtual_fields(True)
+
+    def test_field_gets_original_validators(self):
+        def validator(value):
+            if value in (None, ''):
+                return
+
+            if int(value) < 20:
+                raise ValidationError('must be equal to or greater than 20.')
+
+        class TestModel10(models.Model):
+            name = models.CharField(max_length=100, validators=[validator, ])
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+
+        @register(TestModel10)
+        class TestModelTranslationOptions(TranslationOptions):
+            fields = ('name', )
+
+        field = TestModel10._meta.get_field('name')
+        self.assertTrue(validator in field.validators)
+
+        field = TestModel10._meta.get_field('name_nl')
+        self.assertTrue(validator in field.validators)
+
+        m = TestModel10(name='22', name_nl='10')
+        with self.assertRaises(ValidationError) as e:
+            m.full_clean()
+
+        self.assertEquals(list(e.exception), [
+            ('name_nl', ['must be equal to or greater than 20.']),
+        ])

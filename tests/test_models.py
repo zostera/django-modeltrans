@@ -2,10 +2,11 @@
 from __future__ import unicode_literals
 
 from django.core.exceptions import ValidationError
+from django.db import DataError, transaction
 from django.test import TestCase
 from django.utils.translation import override
 
-from tests.app.models import Blog
+from tests.app.models import Blog, TextModel
 
 
 class TranslatedFieldTest(TestCase):
@@ -121,6 +122,43 @@ class TranslatedFieldTest(TestCase):
         # With an added `title_nl`, it should validate.
         m.title_nl = 'Paard'
         m.full_clean()
+
+    def test_textfield(self):
+        '''
+        Constrains on the original field should also be enforced on the
+        translated virtual fields (except for null/blank).
+
+        Note that the database contraints are not enforced on the virtual fields,
+        because those are ignored by Django.
+        '''
+
+        expected_message = 'value too long for type character varying(50)'
+
+        short_str = 'bla bla'
+        long_str = 'bla' * 40
+
+        with transaction.atomic():
+            with self.assertRaisesMessage(DataError, expected_message):
+                TextModel.objects.create(title=long_str)
+
+        with self.assertRaises(ValidationError) as e:
+            b = TextModel.objects.create(title=short_str, title_nl=long_str)
+            b.full_clean()
+
+        self.assertEquals(sorted(list(e.exception), key=lambda v: v[0]), [
+            ('description', ['This field cannot be blank.']),
+            ('title_nl', ['Ensure this value has at most 50 characters (it has 120).']),
+        ])
+
+        TextModel.objects.create(title=short_str, description=long_str)
+
+        m = TextModel.objects.create(
+            title=short_str,
+            description=short_str,
+            description_nl=long_str,
+            description_de=long_str
+        )
+        self.assertEquals(m.description_nl, long_str)
 
 
 class RefreshFromDbTest(TestCase):

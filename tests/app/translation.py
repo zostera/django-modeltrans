@@ -1,6 +1,6 @@
 from modeltrans.translator import TranslationOptions, translator
 
-from .models import Blog, Category, Person
+from .models import Blog, Category, Person, TextModel
 
 
 # Models can be registered for translation like this.
@@ -19,6 +19,11 @@ class PersonTranslationOptions(TranslationOptions):
     required_languages = ('en', 'nl')
 
 
+class TextModelTranslationOptions(TranslationOptions):
+    fields = ('title', 'description', )
+
+
 translator.register(Blog, BlogTranslationOptions)
 translator.register(Category, CategoryTranslationOptions)
 translator.register(Person, PersonTranslationOptions)
+translator.register(TextModel, TextModelTranslationOptions)

@@ -34,3 +34,11 @@ class Person(models.Model):
     last_name = models.CharField(max_length=255)
 
     occupation = models.CharField(max_length=255)
+
+
+class TextModel(models.Model):
+    title = models.CharField(max_length=50)
+    description = models.TextField()
+
+    def __str__(self):
+        return self.title
