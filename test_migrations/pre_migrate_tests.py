@@ -5,7 +5,6 @@ from migrate_test.app.models import Blog
 
 
 class PreMigrateTest(TestCase):
-    fixtures = ['data.json', ]
 
     def test_model_fields(self):
         self.assertEquals(

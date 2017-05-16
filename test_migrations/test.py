@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import os
 import re
+import sys
 from subprocess import check_output
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -10,7 +11,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def cmd(c):
     print('\033[92m Running command: \033[0m', c)
-    return check_output(c.split())
+    return check_output(c, shell=True)
 
 
 def manage(c):
@@ -24,21 +25,24 @@ def run_test(test_module):
 
 
 def indent(s, amount=4):
-    return '\n'.join([(' ' * 4) + line for line in s.splitlines()])
+    return '\n'.join([(' ' * 4) + line if len(line) > 0 else '' for line in s.splitlines()])
 
 
 MODELTRANS_TEMPLATE = '''
 
-#-#
+# - #
 {old}
-#-#
+# | #
+
 
 def modeltrans_migration_registration():
-    from modeltrans import TranslationOptions, translator
+{imports}
 
-    #-#
-    translator.set_create_virtual_fiels(False)
-    #-#
+    # - #
+    translator.set_create_virtual_fields(False)
+    # | #
+
+
 {classes}
 
 {registrations}
@@ -47,9 +51,12 @@ def modeltrans_migration_registration():
 modeltrans_migration_registration()
 '''
 
-# setup the Django project:
+# setup the Django project with a clean db:
 cmd('pip install -r requirements.txt')
-manage('flush --noinput')
+cmd("echo 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' | ./manage.py dbshell")
+
+# manage('flush --noinput')
+# manage('migrate app zero')
 manage('migrate')
 manage('loaddata data.json')
 
@@ -58,37 +65,45 @@ run_test('pre_migrate_tests')
 # do the actual migration.
 
 # 1. install django-modeltrans and add to installed apps.
-cmd('pip install ..')
-cmd("sed -i 's/# \'modeltrans\'/\'modeltrans\'/g migrate_test/settings.py")
+cmd('pip install --upgrade ..')
+cmd('''sed -i "s/# 'modeltrans'/'modeltrans'/g" migrate_test/settings.py''')
 
 
 # 2. add registrations to translation.py
-IMPORTS = r"(^from [a-zA-Z\.]+ import [a-zA-Z,_ ]+$|import [a-zA-Z_]+)+"
+IMPORTS = r"(^from [a-zA-Z\.]+ import [a-zA-Z,_ ]+$|import [a-zA-Z_]+|\n+)+"
 TRANSLATION_OPTIONS_RE = r"(^class [A-Z]+[a-zA-Z]+\(TranslationOptions\):\n[\s\w=\(\)',]+\n)+$"
-TRANSLATION_REGISTRATION = r"(^translator\.register\([A-Za-z ,]+\))+$"
+TRANSLATION_REGISTRATION = r"(^translator\.register\([A-Za-z ,]+\)(\n)*)+"
 
-with open('migrate_test/app/translation.py', 'rw') as f:
+with open('migrate_test/app/translation.py', 'r+w') as f:
     contents = f.read()
 
-    imports = re.find(IMPORTS, contents, flats=re.MULTILINE)
-    classes = re.find(TRANSLATION_OPTIONS_RE, contents, flags=re.MULTILINE)
-    registrations = re.find(TRANSLATION_REGISTRATION, contents, flags=re.MULTILINE)
+    imports = re.search(IMPORTS, contents, flags=re.MULTILINE).group(0)
+    classes = re.search(TRANSLATION_OPTIONS_RE, contents, flags=re.MULTILINE).group(0)
+    registrations = re.search(TRANSLATION_REGISTRATION, contents, flags=re.MULTILINE).group(0)
 
+    f.seek(0)
     f.write(MODELTRANS_TEMPLATE.format(
         old='\n'.join([imports, classes, registrations]),
-        classes=indent('\n'.join(classes)),
-        registrations=indent(registrations)
+
+        imports=indent(imports.strip().replace('modeltranslation', 'modeltrans')),
+        classes=indent(classes.strip()),
+        registrations=indent(registrations.strip())
     ))
 
 # 3. make the migrations to add django-modeltrans json fields
 manage('makemigrations app')
 manage('migrate app')
-manage('i18n_makemigrations app > migrate_test/app/migrations/0004_i18n_data_migration.py')
+manage('i18n_makemigrations app')
 manage('migrate app')
 
 # remove django-modeltranslation
-cmd("sed -i 's/\'modeltranslation\',//g migrate_test/settings.py")
-cmd("sed -i 's/#-#.*#-#//g migrate_test/app/translation.py")
+cmd('''sed -i "s/'modeltranslation',//g" migrate_test/settings.py''')
+cmd('''sed -i "s/# - #.*# | #//gm" migrate_test/app/translation.py''')
+
+# once more to remove django-modeltranslation's fields
+manage('makemigrations app')
+manage('migrate app')
+
 
 run_test('post_migrate_tests')
 #

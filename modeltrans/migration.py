@@ -123,6 +123,8 @@ class I18nMigration(object):
         self.models = []
         self.app = app
 
+        self.migration_filename = get_latest_migration(self.app) or '# TODO: manually insert latest migration here'
+
     def get_helper_functions(self):
         for fn in self.helper_functions:
             yield inspect.getsource(fn)
@@ -149,7 +151,7 @@ class I18nMigration(object):
             helpers='\n\n'.join(self.get_helper_functions()),
             todo=',\n        '.join([str((Model.__name__, fields)) for Model, fields in self.models]),
             app=self.app,
-            last_migration=get_latest_migration(self.app) or '# TODO: manually insert latest migration here',
+            last_migration=self.migration_filename,
             indexes=indexes
         ))
 

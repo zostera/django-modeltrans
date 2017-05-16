@@ -11,5 +11,6 @@ class PostMigrateTest(TestCase):
     def test_model_fields(self):
 
         print('Post migrate tests')
+        print(Blog.objects.all())
         print Blog.objects.get(title='Falcon').i18n
         assert False
