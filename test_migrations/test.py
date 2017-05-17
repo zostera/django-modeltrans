@@ -3,15 +3,14 @@ from __future__ import print_function
 
 import os
 import re
-import sys
-from subprocess import check_output
+from subprocess import STDOUT, check_output
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 def cmd(c):
     print('\033[92m Running command: \033[0m', c)
-    return check_output(c, shell=True)
+    return check_output(c, shell=True, stderr=STDOUT)
 
 
 def manage(c):
@@ -96,15 +95,16 @@ manage('migrate app')
 manage('i18n_makemigrations app')
 manage('migrate app')
 
-# remove django-modeltranslation
+# 4. remove django-modeltranslation
 cmd('''sed -i "s/'modeltranslation',//g" migrate_test/settings.py''')
-cmd('''sed -i "s/# - #.*# | #//gm" migrate_test/app/translation.py''')
+cmd('''sed -i "s/(# - #(.|\n)*# \| #)//gm" migrate_test/app/translation.py''')
 
-# once more to remove django-modeltranslation's fields
+# 5. migrate once more to remove django-modeltranslation's fields
 manage('makemigrations app')
 manage('migrate app')
 
 
+# 6. run the post-migration tests
 run_test('post_migrate_tests')
 #
 # # cleanup changed sourcecode files.
