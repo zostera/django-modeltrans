@@ -83,12 +83,14 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'modeltrans-migration',
-        'TEST_NAME': 'modeltrans-migration',
         'USER': 'postgres',
         'PASSWORD': 'test1234',
         'HOST': 'localhost',
         'PORT': 5432,
         'CONN_MAX_AGE': 600,
+        'TEST': {
+            'NAME': 'modeltrans-migration',
+        },
     }
 }
 if 'TRAVIS' in os.environ:
