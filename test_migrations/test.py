@@ -3,14 +3,20 @@ from __future__ import print_function
 
 import os
 import re
-from subprocess import STDOUT, check_output
+import sys
+from subprocess import STDOUT, CalledProcessError, check_output
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 def cmd(c):
     print('\033[92m Running command: \033[0m', c)
-    return check_output(c, shell=True, stderr=STDOUT)
+    try:
+        return check_output(c, shell=True, stderr=STDOUT)
+    except CalledProcessError as e:
+        print('\033[31m Process errored: \033[0m, code: {}'.format(e.returncode))
+        print(e.output)
+        sys.exit(1)
 
 
 def manage(c):
@@ -27,19 +33,22 @@ def indent(s, amount=4):
     return '\n'.join([(' ' * 4) + line if len(line) > 0 else '' for line in s.splitlines()])
 
 
+TRANSLATIONS_PY = 'migrate_test/app/translation.py'
+
+# template to generate the new translation.py.
 MODELTRANS_TEMPLATE = '''
 
-# - #
+# start
 {old}
-# | #
+# end
 
 
 def modeltrans_migration_registration():
 {imports}
 
-    # - #
+    # start
     translator.set_create_virtual_fields(False)
-    # | #
+    # end
 
 
 {classes}
@@ -64,7 +73,8 @@ run_test('pre_migrate_tests')
 # do the actual migration.
 
 # 1. install django-modeltrans and add to installed apps.
-cmd('pip install --upgrade ..')
+cmd('pip install ..')
+
 cmd('''sed -i "s/# 'modeltrans'/'modeltrans'/g" migrate_test/settings.py''')
 
 
@@ -73,14 +83,14 @@ IMPORTS = r"(^from [a-zA-Z\.]+ import [a-zA-Z,_ ]+$|import [a-zA-Z_]+|\n+)+"
 TRANSLATION_OPTIONS_RE = r"(^class [A-Z]+[a-zA-Z]+\(TranslationOptions\):\n[\s\w=\(\)',]+\n)+$"
 TRANSLATION_REGISTRATION = r"(^translator\.register\([A-Za-z ,]+\)(\n)*)+"
 
-with open('migrate_test/app/translation.py', 'r+w') as f:
+with open(TRANSLATIONS_PY, 'r') as f:
     contents = f.read()
 
     imports = re.search(IMPORTS, contents, flags=re.MULTILINE).group(0)
     classes = re.search(TRANSLATION_OPTIONS_RE, contents, flags=re.MULTILINE).group(0)
     registrations = re.search(TRANSLATION_REGISTRATION, contents, flags=re.MULTILINE).group(0)
 
-    f.seek(0)
+with open(TRANSLATIONS_PY, 'w') as f:
     f.write(MODELTRANS_TEMPLATE.format(
         old='\n'.join([imports, classes, registrations]),
 
@@ -97,12 +107,21 @@ manage('migrate app')
 
 # 4. remove django-modeltranslation
 cmd('''sed -i "s/'modeltranslation',//g" migrate_test/settings.py''')
-cmd('''sed -i "s/(# - #(.|\n)*# \| #)//gm" migrate_test/app/translation.py''')
+
+COMMENT_RE = r'(# start(.|\n)*?# end)'
+with open(TRANSLATIONS_PY, 'r') as f:
+    contents = f.read()
+    print('---\n{}\n\n---\n'.format(contents))
+    contents = re.sub(COMMENT_RE, '', contents, flags=re.MULTILINE)
+    print(contents)
+
+with open(TRANSLATIONS_PY, 'w') as f:
+    f.write(contents)
+
 
 # 5. migrate once more to remove django-modeltranslation's fields
 manage('makemigrations app')
 manage('migrate app')
-
 
 # 6. run the post-migration tests
 run_test('post_migrate_tests')
