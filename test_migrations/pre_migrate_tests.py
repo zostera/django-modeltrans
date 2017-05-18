@@ -5,6 +5,11 @@ from migrate_test.app.models import Blog
 
 
 class PreMigrateTest(TestCase):
+    def test_verify_installed_apps(self):
+        from django.conf import settings
+
+        self.assertNotIn('modeltrans', settings.INSTALLED_APPS)
+        self.assertIn('modeltranslation', settings.INSTALLED_APPS)
 
     def test_model_fields(self):
         self.assertEquals(

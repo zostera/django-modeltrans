@@ -2,8 +2,11 @@
 from __future__ import unicode_literals
 
 import inspect
+import os
 import sys
 
+from django.apps import apps
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db import DEFAULT_DB_ALIAS, connections
 from django.db.migrations.loader import MigrationLoader
@@ -111,6 +114,17 @@ def get_latest_migration(app_name, connection=None):
                 shown.add(plan_node)
 
     return last
+
+
+def get_next_migration_filename(app_name, connection=None):
+    '''
+    Return name (including the absolute path) of the next migration to insert for this app
+    '''
+    latest_migration_name = get_latest_migration(app_name)
+    next_migration_name = '{0:04d}_i18n_data_migration.py'.format(int(latest_migration_name[0:4]) + 1)
+    app_path = os.path.join(*apps.get_app_config(app_name).name.split('.'))
+
+    return os.path.join(settings.BASE_DIR, app_path, 'migrations', next_migration_name)
 
 
 class I18nMigration(object):
