@@ -67,12 +67,12 @@ class MultilingualQuerySet(models.query.QuerySet):
         from the jsonb field to allow filtering and ordering.
 
         Arguments:
-            fieldFieldDoesNotExist (str): the virtual field to create an annotation for.
+            field (TranslatedVirtualField): the virtual field to create an annotation for.
             annotation_name (str): name of the annotation, if None (by default),
                 `<original_field>_<lang>_annotation` will be used.
             fallback (bool): If `True`, `COALESCE` will be used to get the value
-                of the original field if the requested translation is not
-                available.
+                of the original field if the requested translation is not in the
+                `i18n` dict.
 
         Returns:
             the name of the annotation.

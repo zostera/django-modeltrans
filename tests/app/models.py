@@ -51,6 +51,9 @@ class Attribute(models.Model):
     slug = models.SlugField(verbose_name=_('slug'), unique=True)
     name = models.CharField(_('name'), max_length=100, db_index=True)
 
+    def __str__(self):
+        return self.name_i18n
+
 
 class Choice(models.Model):
     attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
