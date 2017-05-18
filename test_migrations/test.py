@@ -16,6 +16,8 @@ def main():
     `post_migrate_tests` run after the migration to django-modeltrans
     '''
 
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
     # clean up the test projects directory
     cmd('git clean migrate_test/ -f')
     cmd('git checkout -- migrate_test/')
@@ -55,9 +57,6 @@ def main():
 
     # 6. run the post-migration tests
     run_test('post_migrate_tests')
-
-
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 def cmd(c):
