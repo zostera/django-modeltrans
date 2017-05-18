@@ -7,7 +7,7 @@ from django.db.models.constants import LOOKUP_SEP
 from django.db.models.functions import Cast
 
 from . import settings
-from .fields import TranslatedVirtualField
+from .fields import TranslatedVirtualField, TranslationJSONField
 from .utils import split_translated_fieldname
 
 
@@ -32,21 +32,27 @@ def transform_translatable_fields(model, fields):
     ret = {
         'i18n': fields.get('i18n', {})
     }
+    for field_name, value in fields.items():
+        try:
+            field = model._meta.get_field(field_name)
+        except FieldDoesNotExist:
+            ret[field_name] = value
+            continue
+        if isinstance(field, TranslationJSONField):
+            continue
 
-    for field, value in fields.items():
-        original_field, lang = split_translated_fieldname(field)
-
-        if lang == settings.DEFAULT_LANGUAGE:
-            if original_field in fields:
-                raise ValueError(
-                    'Attempted override of "{}" with "{}". '
-                    'Only one of the two is allowed.'.format(original_field, field)
-                )
-            ret[original_field] = value
-        elif original_field in get_translatable_fields_for_model(model):
-            ret['i18n'][field] = value
+        if isinstance(field, TranslatedVirtualField):
+            if field.get_language() == settings.DEFAULT_LANGUAGE:
+                if field.original_name in fields:
+                    raise ValueError(
+                        'Attempted override of "{}" with "{}". '
+                        'Only one of the two is allowed.'.format(field.original_name, field_name)
+                    )
+                ret[field.original_name] = value
+            else:
+                ret['i18n'][field.name] = value
         else:
-            ret[field] = value
+            ret[field_name] = value
 
     return ret
 
@@ -61,7 +67,7 @@ class MultilingualQuerySet(models.query.QuerySet):
         from the jsonb field to allow filtering and ordering.
 
         Arguments:
-            field (str): the virtual field to create an annotation for.
+            fieldFieldDoesNotExist (str): the virtual field to create an annotation for.
             annotation_name (str): name of the annotation, if None (by default),
                 `<original_field>_<lang>_annotation` will be used.
             fallback (bool): If `True`, `COALESCE` will be used to get the value
@@ -154,7 +160,11 @@ class MultilingualQuerySet(models.query.QuerySet):
         if lookup == 'pk':
             return requested_field_name, value
 
-        field = self.model._meta.get_field(lookup)
+        try:
+            field = self.model._meta.get_field(lookup)
+        except FieldDoesNotExist:
+            return requested_field_name, value
+
         if not isinstance(field, TranslatedVirtualField):
             return requested_field_name, value
 

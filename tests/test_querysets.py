@@ -7,7 +7,7 @@ from django.db.models import F, Q
 from django.test import TestCase
 from django.utils.translation import override
 
-from tests.app.models import Blog, Category, Site
+from tests.app.models import Attribute, Blog, BlogAttr, Category, Choice, Site
 
 
 def key(queryset, key):
@@ -123,6 +123,23 @@ class FilterTest(TestCase):
 
         qs = Blog.objects.filter(category__name_nl='Vogels')
         self.assertEquals({m.title for m in qs}, {'Falcon'})
+
+    def test_filter_relations(self):
+        mass = Attribute.objects.create(slug='mass', name='Mean Mass')
+        length = Attribute.objects.create(slug='length', name='Lengh', name_nl='Lengte')
+
+        dog = Blog.objects.create(title='Australian Kelpie Dog')
+        whale = Blog.objects.create(title='Blue Whale', title_nl='Blauwe vinvis')
+
+        BlogAttr.objects.create(object=dog, attribute=mass, value=17)
+        BlogAttr.objects.create(object=dog, attribute=length, value=.50)
+        BlogAttr.objects.create(object=whale, attribute=mass, value=181000)
+        BlogAttr.objects.create(object=whale, attribute=length, value=28)
+
+        # this raises:
+        # FieldDoesNotExist: Attribute has no field named 'blogattr__object_id'
+        # but should just pass fine.
+        Attribute.objects.filter(blogattr__object_id__in=Blog.objects.filter(title__contains='al'))
 
     @skip('Not yet implemented')
     def test_filter_spanning_relation_from_non_translatable(self):

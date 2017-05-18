@@ -109,6 +109,20 @@ class TranslatedFieldTest(TestCase):
                 title_en='Bar'
             )
 
+    def test_creating_with_nonexisting_field(self):
+        '''
+        Blogs have titles, not names, so trying to add something with a name
+        should raise an eror.
+        '''
+        expected_message = "'name' is an invalid keyword argument for this function"
+
+        with self.assertRaisesMessage(TypeError, expected_message):
+            Blog.objects.create(name='Falcon')
+
+        expected_message = "'name_nl' is an invalid keyword argument for this function"
+        with self.assertRaisesMessage(TypeError, expected_message):
+            Blog.objects.create(title='Falcon', name_nl='Valk')
+
     def test_clean(self):
         m = Blog(title='Horse', body='Horses are nice')
 

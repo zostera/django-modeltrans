@@ -74,6 +74,12 @@ class TranslatedVirtualField(object):
         return None
 
     def __get__(self, instance, instance_type=None):
+        # this method is apparantly called with instance=None from django.
+        # django-hstor raises AttributeError here, but that doesn't solve
+        # our problem.
+        if instance is None:
+            return
+
         language = self.get_language()
         if language == DEFAULT_LANGUAGE:
             return getattr(instance, self.original_name)
