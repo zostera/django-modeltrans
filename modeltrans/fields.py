@@ -2,7 +2,6 @@
 
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ImproperlyConfigured
-from django.db import models
 from django.db.models import fields
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce

@@ -132,7 +132,7 @@ i18n_migrate()
       with django-modeltranslation. Less magic, but
       [explicit is better than implicit](https://www.python.org/dev/peps/pep-0020/)!
 
-'''
+
 # Running the tests
 
 `tox`
