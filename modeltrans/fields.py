@@ -155,21 +155,33 @@ class TranslatedVirtualField(object):
             return Cast(i18n_lookup, self.output_field())
 
 
-class TranslationJSONField(JSONField):
+class TranslationField(JSONField):
     '''
     This model fields is used to store the translations in the translated model.
     '''
     description = 'Translation storage for a model'
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, fields=None, required_languages=None, *args, **kwargs):
+        self.fields = fields or ()
+        self.required_languages = required_languages or ()
+
         kwargs['editable'] = False
         kwargs['null'] = True
-        super(TranslationJSONField, self).__init__(*args, **kwargs)
+        super(TranslationField, self).__init__(*args, **kwargs)
 
     def deconstruct(self):
-        name, path, args, kwargs = super(TranslationJSONField, self).deconstruct()
+        name, path, args, kwargs = super(TranslationField, self).deconstruct()
 
         del kwargs['editable']
         del kwargs['null']
+        kwargs['fields'] = self.fields
+        kwargs['required_languages'] = self.required_languages
 
         return name, path, args, kwargs
+
+
+    def contribute_to_class(self, cls, name):
+        if name != 'i18n':
+            raise ImproperlyConfigured('{} must have name "i18n"'.format(self.__name__))
+
+        super(TranslationField, self).contribute_to_class(cls, name)

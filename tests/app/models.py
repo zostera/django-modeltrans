@@ -5,9 +5,12 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from modeltrans.fields import TranslationField
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
+
+    i18n = TranslationField(fields=('name', ))
 
     def __str__(self):
         return self.name
@@ -27,6 +30,11 @@ class Blog(models.Model):
     category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.CASCADE)
     site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.CASCADE)
 
+    i18n = TranslationField(
+        fields=('title', ),
+        required_languages=('nl', )
+    )
+
     def __str__(self):
         return self.title
 
@@ -37,6 +45,11 @@ class Person(models.Model):
 
     occupation = models.CharField(max_length=255)
 
+    i18n = TranslationField(
+        fields=('occupation', ),
+        required_languages=('en', 'nl')
+    )
+
 
 class TextModel(models.Model):
     title = models.CharField(max_length=50)
@@ -45,11 +58,15 @@ class TextModel(models.Model):
     def __str__(self):
         return self.title
 
+    i18n = TranslationField(fields=('title', 'description'))
+
 
 # copy of attributes in ringbase
 class Attribute(models.Model):
     slug = models.SlugField(verbose_name=_('slug'), unique=True)
     name = models.CharField(_('name'), max_length=100, db_index=True)
+
+    i18n = TranslationField(fields=('name', ))
 
     def __str__(self):
         return self.name_i18n
@@ -61,6 +78,8 @@ class Choice(models.Model):
     name = models.CharField(_('name'), max_length=100, blank=True, db_index=True)
     description = models.TextField(_('description'), blank=True)
     sort_order = models.IntegerField(_('sort order'), default=0, db_index=True)
+
+    i18n = TranslationField(fields=('name', 'description'))
 
 
 class AbstractBaseAttr(models.Model):

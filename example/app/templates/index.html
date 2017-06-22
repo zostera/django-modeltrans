@@ -30,7 +30,7 @@
                 <form method="post" action="{% url 'set_language' %}" class="navbar-form navbar-left">
                     {% csrf_token %}
                     <div class="form-group">
-                        <select name="language">
+                        <select name="language" class="form-control">
                             {% get_current_language as LANGUAGE_CODE %}
                             {% get_available_languages as LANGUAGES %}
                             {% get_language_info_list for LANGUAGES as languages %}

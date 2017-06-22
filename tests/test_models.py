@@ -124,6 +124,10 @@ class TranslatedFieldTest(TestCase):
             Blog.objects.create(title='Falcon', name_nl='Valk')
 
     def test_clean(self):
+        '''
+        Blog has required_languages=('nl', ), so this should raise an error
+        if `title_nl` is not set.
+        '''
         m = Blog(title='Horse', body='Horses are nice')
 
         with self.assertRaises(ValidationError) as e:

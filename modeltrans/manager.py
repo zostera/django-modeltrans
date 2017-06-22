@@ -7,7 +7,7 @@ from django.db.models.constants import LOOKUP_SEP
 from django.db.models.functions import Cast
 
 from . import settings
-from .fields import TranslatedVirtualField, TranslationJSONField
+from .fields import TranslatedVirtualField, TranslationField
 from .utils import split_translated_fieldname
 
 
@@ -38,7 +38,7 @@ def transform_translatable_fields(model, fields):
         except FieldDoesNotExist:
             ret[field_name] = value
             continue
-        if isinstance(field, TranslationJSONField):
+        if isinstance(field, TranslationField):
             continue
 
         if isinstance(field, TranslatedVirtualField):
