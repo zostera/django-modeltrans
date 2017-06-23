@@ -24,7 +24,7 @@ def main():
 
     cmd('pip install -r requirements.txt')
 
-    # empty db
+    # start with an empty db
     cmd("echo 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' | ./manage.py dbshell")
 
     manage('migrate')
@@ -38,8 +38,9 @@ def main():
     cmd('pip install -U ..')
     cmd('''sed -i "s/# 'modeltrans'/'modeltrans'/g" migrate_test/settings.py''')
 
-    # 2. add registrations to translation.py
-    add_modeltrans_registration()
+    # 2. Uncomment modeltrans i18n-field in models.py
+    cmd('''sed -i "s/# from/from/g" migrate_test/app/models.py''')
+    cmd('''sed -i "s/# i18n/i18n/g" migrate_test/app/models.py''')
 
     # 3. make the migrations to add django-modeltrans json fields
     manage('makemigrations app')
@@ -49,7 +50,7 @@ def main():
 
     # 4. remove django-modeltranslation
     cmd('''sed -i "s/'modeltranslation',//g" migrate_test/settings.py''')
-    remove_original_modeltranslation_registrations()
+    cmd('''rm -r migrate_test/app/translation.py''')
 
     # 5. migrate once more to remove django-modeltranslation's fields
     manage('makemigrations app')
@@ -77,69 +78,6 @@ def run_test(test_module):
     assert not test_module.endswith('.py')
 
     manage('test --keepdb {}'.format(test_module))
-
-
-def indent(s, amount=4):
-    return '\n'.join([(' ' * 4) + line if len(line) > 0 else '' for line in s.splitlines()])
-
-
-TRANSLATIONS_PY = 'migrate_test/app/translation.py'
-
-# template to generate the new translation.py.
-MODELTRANS_TEMPLATE = '''
-
-# start
-{old}
-# end
-
-
-def modeltrans_migration_registration():
-{imports}
-
-    # start
-    translator.set_create_virtual_fields(False)
-    # end
-
-
-{classes}
-
-{registrations}
-
-
-modeltrans_migration_registration()
-'''
-
-
-def add_modeltrans_registration():
-    IMPORTS = r"(^from [a-zA-Z\.]+ import [a-zA-Z,_ ]+$|import [a-zA-Z_]+|\n+)+"
-    TRANSLATION_OPTIONS_RE = r"(^class [A-Z]+[a-zA-Z]+\(TranslationOptions\):\n[\s\w=\(\)',]+\n)+$"
-    TRANSLATION_REGISTRATION = r"(^translator\.register\([A-Za-z ,]+\)(\n)*)+"
-
-    with open(TRANSLATIONS_PY, 'r') as f:
-        contents = f.read()
-
-        imports = re.search(IMPORTS, contents, flags=re.MULTILINE).group(0)
-        classes = re.search(TRANSLATION_OPTIONS_RE, contents, flags=re.MULTILINE).group(0)
-        registrations = re.search(TRANSLATION_REGISTRATION, contents, flags=re.MULTILINE).group(0)
-
-    with open(TRANSLATIONS_PY, 'w') as f:
-        f.write(MODELTRANS_TEMPLATE.format(
-            old='\n'.join([imports, classes, registrations]),
-
-            imports=indent(imports.strip().replace('modeltranslation', 'modeltrans')),
-            classes=indent(classes.strip()),
-            registrations=indent(registrations.strip())
-        ))
-
-
-def remove_original_modeltranslation_registrations():
-    COMMENT_RE = r'(# start(.|\n)*?# end)'
-    with open(TRANSLATIONS_PY, 'r') as f:
-        contents = f.read()
-        contents = re.sub(COMMENT_RE, '', contents, flags=re.MULTILINE)
-
-    with open(TRANSLATIONS_PY, 'w') as f:
-        f.write(contents)
 
 
 if __name__ == '__main__':
