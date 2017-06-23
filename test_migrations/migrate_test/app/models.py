@@ -8,7 +8,7 @@ from django.db import models
 class Category(models.Model):
     name = models.CharField(max_length=255)
 
-    # i18n = TranslationField(fields=('name', ))
+    # i18n = TranslationField(fields=('name', ), virtual_fields=False)
 
     class Meta:
         verbose_name_plural = 'categories'
@@ -23,7 +23,7 @@ class Blog(models.Model):
 
     category = models.ForeignKey(Category, null=True, blank=True)
 
-    # i18n = TranslationField(fields=('title', 'body'))
+    # i18n = TranslationField(fields=('title', 'body'), virtual_fields=False)
 
     def __str__(self):
         return self.title
