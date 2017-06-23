@@ -46,7 +46,7 @@ def main():
     # 3. make the migrations to add django-modeltrans json fields
     manage('makemigrations app')
     manage('migrate app')
-    manage('i18n_makemigrations app')
+    manage('i18n_makemigrations app', prefix='coverage run')
     manage('migrate app')
 
     # 4. remove django-modeltranslation
@@ -72,14 +72,14 @@ def cmd(c):
         sys.exit(1)
 
 
-def manage(c):
-    print(cmd('./manage.py {}'.format(c)))
+def manage(c, prefix=''):
+    print(cmd('{} ./manage.py {}'.format(prefix, c)))
 
 
 def run_test(test_module):
     assert not test_module.endswith('.py')
 
-    manage('test --keepdb {}'.format(test_module))
+    manage('test --keepdb {}'.format(test_module), prefix='coverage run')
 
 
 if __name__ == '__main__':
