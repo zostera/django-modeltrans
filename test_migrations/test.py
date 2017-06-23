@@ -19,6 +19,8 @@ def main():
 
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+    print('Current working directory:', os.getcwd())
+
     # clean up the test projects directory
     cmd('git clean migrate_test/ -f')
     cmd('git checkout -- migrate_test/')
