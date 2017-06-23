@@ -14,6 +14,9 @@ before_script:
 script:
   - tox
 
+env:
+  - TRAVIS=true
+
 matrix:
   include:
     # - { python: 2.7, env: TOXENV=py27-1.10 }
