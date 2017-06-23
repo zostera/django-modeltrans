@@ -67,7 +67,7 @@ def main():
 def cmd(c):
     print('\033[92m Running command: \033[0m', c)
     try:
-        return check_output(c, shell=True, stderr=STDOUT)
+        return check_output(c, shell=True, stderr=STDOUT, env=os.environ)
     except CalledProcessError as e:
         print('\033[31m Process errored: \033[0m, code: {}'.format(e.returncode))
         print(e.output)
