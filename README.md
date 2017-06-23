@@ -15,32 +15,26 @@ Translates Django model fields in a `JSONField` using a registration approach.
  - Add `'modeltrans'` your list of `INSTALLED_APPS`.
  - Add a list of available languages to your `settings.py`:
    `AVAILABLE_LANGUAGES = ('en', 'nl', 'de', 'fr')`
- - Add a `translation.py` in each app you want to translate models for.
- - For each model you want to translate, create a `TransltionOptions` object and register the model using that object:
+ - Add a `modeltrans.fields.TranslationField` to your models and specify the fields you
+   want to translate.
 ```python
 # models.py
 from django.db import models
+from modeltrans.fields import TranslationField
 
 
 class Blog(models.Model):
     title = models.CharField(max_length=255)
     body = models.TextField(null=True)
 
-# translation.py
-from modeltrans.translator import TranslationOptions, translator
-
-from .models import Blog, Category
-
-
-class BlogTranslationOptions(TranslationOptions):
-    fields = ('title', 'body')
-
-translator.register(Blog, BlogTranslationOptions)
+    i18n = TranslationField(fields=('title', 'body'))
 ```
  - Run `./manage.py makemigrations` to add the `i18n` JSONField to each model containing
    translations.
  - Each method now has some extra virtual fields. In the example above:
+   - `title` allow getting/setting the default language
    - `title_nl`, `title_de`, ... allow getting/setting the specific languages
+   - If `DEFAULT_LANGUAGE == 'en'`, `title_en` is mapped to `title`.
    - `title_i18n` follows the currently active translation in Django, and falls
      back to the default language:
 
@@ -84,8 +78,19 @@ django-modeltrans:
 3. Copy the django-modeltranslation registrations to use django-modeltrans
    alongside it, while disabling the virtual fields for now:
 ```python
+# models.py
+from django.db import models
+from modeltrans.fields import TranslationField
 
-# if this whas your configuration:
+class Blog(models.Model):
+    title = models.CharField(max_length=255)
+    body = models.TextField(null=True)
+
+    # add this field, containing the TranslationOptions attributes as arguments:
+    i18n = TranslationField(fields=('title', 'body'))
+
+
+# translation.py
 from modeltranslation.translator import translator, TranslationOptions
 from .models import Blog
 
@@ -94,21 +99,6 @@ class BlogTranslationOptions(TranslationOptions):
 
 translator.register(Blog, BlogTranslationOptions)
 
-# this is what you add:
-def i18n_migrate():
-    from modeltrans import translator, TranslationOptions
-
-    translator.set_create_virtual_fields(False)
-
-
-    class BlogTranslationOptions(TranslationOptions):
-        fields = ('name', 'title', )
-
-    translator.register(Blog, BlogTranslationOptions)
-
-
-# and make sure it gets executed
-i18n_migrate()
 ```
 3. Run `./manage.py makemigrations <apps>`. This will create the
    migration adding the`i18n`-fields required by django-modeltrans. Apply
@@ -116,21 +106,17 @@ i18n_migrate()
 4. We need to create a migration to copy the values of the translated
    fields into the newly created `i18n`-field. django-modeltrans provides
    a management command to do that:
-     `./manage.py i18n_makemmigrations <apps>`
+     `./manage.py i18n_makemigrations <apps>`
 5. Now, remove django-modeltranslation by:
-    - Removing the translation registrations for `modeltranslation` from your
-      `translation.py`'s. Also remove the function around the new registrations.
+    - Remove `modeltranslation` from `INSTALLED_APPS`.
+    - Remove all `translation.py` files from your apps.
     - Remove the use of `modeltranslation.admin.TranslationAdmin` in your `admin.py`'s
 
-   Run `./manage.py makemigrations <apps>`. This will remove the translated
-   fields from your registered models. You can now safely remove the line
-   `translator.set_create_virtual_fields(False)` and let django-modeltrans add
-   the virtual fields to your models.
-5. Update your code and cleanup:
-    - Remove `modeltranslation` from `INSTALLED_APPS`.
-    - Use `<field>_i18n` field names for places where you would use `<field>`
-      with django-modeltranslation. Less magic, but
-      [explicit is better than implicit](https://www.python.org/dev/peps/pep-0020/)!
+6. Run `./manage.py makemigrations <apps>`. This will remove the translated
+   fields from your registered models.
+7. Update your code: use  the `<field>_i18n` field in places where you would use `<field>`
+   with django-modeltranslation. Less magic, but
+   [explicit is better than implicit](https://www.python.org/dev/peps/pep-0020/)!
 
 
 # Running the tests
@@ -145,9 +131,9 @@ Some concepts and code from https://github.com/deschler/django-modeltranslation,
 which is in turn inspired by https://github.com/zmathew/django-linguo
 
 We started this solution at Zostera because we did not like:
-- The way django-modeltranslation adds one field per language (and thus requires a migration
+ - The way django-modeltranslation adds one field per language (and thus requires a migration
 when adding language)
-- The unpredictability of the original field.
+ - The unpredictability of the original field.
 
 Since JSONB is supported by Postgres now, we developed this approach.
 
