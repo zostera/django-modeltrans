@@ -161,9 +161,10 @@ class TranslationField(JSONField):
     '''
     description = 'Translation storage for a model'
 
-    def __init__(self, fields=None, required_languages=None, *args, **kwargs):
+    def __init__(self, fields=None, required_languages=None, virtual_fields=True, *args, **kwargs):
         self.fields = fields or ()
         self.required_languages = required_languages or ()
+        self.virtual_fields = virtual_fields
 
         kwargs['editable'] = False
         kwargs['null'] = True
@@ -176,9 +177,9 @@ class TranslationField(JSONField):
         del kwargs['null']
         kwargs['fields'] = self.fields
         kwargs['required_languages'] = self.required_languages
+        kwargs['virtual_fields'] = self.virtual_fields
 
         return name, path, args, kwargs
-
 
     def contribute_to_class(self, cls, name):
         if name != 'i18n':

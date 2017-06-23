@@ -48,21 +48,21 @@ def validate(Model):
                     )
 
 
-def raise_if_field_exists(model, field_name):
-    if not hasattr(model, field_name):
+def raise_if_field_exists(Model, field_name):
+    if not hasattr(Model, field_name):
         return
 
-    # Check if are not dealing with abstract field inherited.
-    for cls in model.__mro__:
-        if hasattr(cls, '_meta') and cls.__dict__.get(field_name, None):
-            cls_opts = translator._get_options_for_model(cls)
-            if not cls._meta.abstract or field_name not in cls_opts.local_fields:
-                raise ValueError(
-                    'Error adding translation field. Model "{}" already contains '
-                    'a field named "{}".'.format(
-                        model._meta.object_name, field_name
-                    )
-                )
+    try:
+        Model._meta.get_field(field_name)
+    except FieldDoesNotExist:
+        return
+
+    raise ValueError(
+        'Error adding translation field. Model "{}" already contains '
+        'a field named "{}".'.format(
+            Model._meta.object_name, field_name
+        )
+    )
 
 
 def add_virtual_fields(Model, fields, required_languages):

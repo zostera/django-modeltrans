@@ -16,14 +16,20 @@ class RegistrationConfig(AppConfig):
 
         for Model in django.apps.apps.get_models():
             try:
-                field = Model._meta.get_field('i18n')
+                i18n_field = Model._meta.get_field('i18n')
             except FieldDoesNotExist:
                 continue
 
-            if not isinstance(field, TranslationField):
+            if not isinstance(i18n_field, TranslationField):
                 # TODO: warning?
                 continue
 
+            if not i18n_field.virtual_fields:
+                # This mode is required for the migration process:
+                # It needs to have a stage where we do have the TranslationField,
+                # but not the virtual fields, to be able to copy the original values.
+                continue
+
             add_manager(Model)
-            add_virtual_fields(Model, field.fields, field.required_languages)
+            add_virtual_fields(Model, i18n_field.fields, i18n_field.required_languages)
             patch_constructor(Model)

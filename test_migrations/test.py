@@ -2,9 +2,10 @@
 from __future__ import print_function
 
 import os
-import re
 import sys
 from subprocess import STDOUT, CalledProcessError, check_output
+
+MODELS_PY = 'migrate_test/app/models.py'
 
 
 def main():
@@ -39,8 +40,8 @@ def main():
     cmd('''sed -i "s/# 'modeltrans'/'modeltrans'/g" migrate_test/settings.py''')
 
     # 2. Uncomment modeltrans i18n-field in models.py
-    cmd('''sed -i "s/# from/from/g" migrate_test/app/models.py''')
-    cmd('''sed -i "s/# i18n/i18n/g" migrate_test/app/models.py''')
+    cmd('sed -i "s/# from/from/g" {}'.format(MODELS_PY))
+    cmd('sed -i "s/# i18n/i18n/g" {}'.format(MODELS_PY))
 
     # 3. make the migrations to add django-modeltrans json fields
     manage('makemigrations app')
@@ -50,7 +51,8 @@ def main():
 
     # 4. remove django-modeltranslation
     cmd('''sed -i "s/'modeltranslation',//g" migrate_test/settings.py''')
-    cmd('''rm -r migrate_test/app/translation.py''')
+    cmd('rm -r migrate_test/app/translation.py')
+    cmd('sed -i "s/, virtual_fields=False//g" {}'.format(MODELS_PY))
 
     # 5. migrate once more to remove django-modeltranslation's fields
     manage('makemigrations app')
