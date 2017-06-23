@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from modeltrans.fields import TranslationField
 
+
 class Category(models.Model):
     name = models.CharField(max_length=255)
 
