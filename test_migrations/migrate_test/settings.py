@@ -100,7 +100,10 @@ if 'TRAVIS' in os.environ:
         'USER': 'postgres',
         'PASSWORD': '',
         'HOST': 'localhost',
-        'PORT': ''
+        'PORT': '',
+        'TEST': {
+            'NAME': 'travisci',
+        },
     })
 
 # Password validation

@@ -5,7 +5,7 @@ import sys
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "migrate_test.settings")
     for key, val in os.environ.items():
-        print(key, val)
+        print('{}: {}'.format(key, val))
 
     try:
         from django.core.management import execute_from_command_line
