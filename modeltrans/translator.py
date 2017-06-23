@@ -4,8 +4,30 @@ from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.db.models import Manager
 
 from . import settings
-from .fields import translated_field_factory
+from .fields import translated_field_factory, TranslationField
 from .manager import MultilingualManager, transform_translatable_fields
+
+
+def translate_model(Model):
+    try:
+        i18n_field = Model._meta.get_field('i18n')
+    except FieldDoesNotExist:
+        return
+
+    if not isinstance(i18n_field, TranslationField):
+        return
+
+    if not i18n_field.virtual_fields:
+        # This mode is required for the migration process:
+        # It needs to have a stage where we do have the TranslationField,
+        # but not the virtual fields, to be able to copy the original values.
+        return
+
+    validate(Model)
+
+    add_manager(Model)
+    add_virtual_fields(Model, i18n_field.fields, i18n_field.required_languages)
+    patch_constructor(Model)
 
 
 def check_languages(languages, model):
@@ -28,24 +50,22 @@ def validate(Model):
             Model._meta.get_field(field)
         except FieldDoesNotExist:
             raise ImproperlyConfigured(
-                'Fields argument to TranslationField contains an item "{}", '
+                'Argument "fields" to TranslationField contains an item "{}", '
                 'which is not a field (missing a comma?).'.format(field)
             )
 
-    # TODO: apply more validation to the options
     if i18n_field.required_languages:
         if isinstance(i18n_field.required_languages, (tuple, list)):
             check_languages(i18n_field.required_languages, Model)
         else:
             check_languages(i18n_field.required_languages.keys(), Model)
 
-        for fieldnames in i18n_field.required_languages.values():
-            for field in fieldnames:
-                if field not in i18n_field.fields:
-                    raise ImproperlyConfigured(
-                        'Fieldname "{}" in required_languages which is not '
-                        'defined as translatable for Model "{}".'.format(field, Model.__name__)
-                    )
+        for fieldnames in i18n_field.required_languages:
+            if field not in i18n_field.fields:
+                raise ImproperlyConfigured(
+                    'Fieldname "{}" in required_languages which is not '
+                    'defined as translatable for Model "{}".'.format(field, Model.__name__)
+                )
 
 
 def raise_if_field_exists(Model, field_name):
@@ -57,7 +77,7 @@ def raise_if_field_exists(Model, field_name):
     except FieldDoesNotExist:
         return
 
-    raise ValueError(
+    raise ImproperlyConfigured(
         'Error adding translation field. Model "{}" already contains '
         'a field named "{}".'.format(
             Model._meta.object_name, field_name
