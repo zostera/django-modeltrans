@@ -48,7 +48,7 @@ def main():
     # 3. make the migrations to add django-modeltrans json fields
     manage('makemigrations app')
     manage('migrate app')
-    manage('i18n_makemigrations app', prefix='coverage run')
+    manage('i18n_makemigrations app')
     manage('migrate app')
 
     # 4. remove django-modeltranslation
@@ -66,22 +66,27 @@ def main():
 
 def cmd(c):
     print('\033[92m Running command: \033[0m', c)
+    env = os.environ.copy()
+
+    # for key, val in env.items():
+    #     print('{}: {}'.format(key, val))
+
     try:
-        return check_output(c, shell=True, stderr=STDOUT, env=os.environ)
+        return check_output(c, shell=True, stderr=STDOUT, env=env)
     except CalledProcessError as e:
         print('\033[31m Process errored: \033[0m, code: {}'.format(e.returncode))
         print(e.output)
         sys.exit(1)
 
 
-def manage(c, prefix=''):
-    print(cmd('{} ./manage.py {}'.format(prefix, c)))
+def manage(c):
+    print(cmd('./manage.py {}'.format(c)))
 
 
 def run_test(test_module):
     assert not test_module.endswith('.py')
 
-    manage('test --keepdb {}'.format(test_module), prefix='coverage run')
+    manage('test --keepdb {}'.format(test_module))
 
 
 if __name__ == '__main__':
