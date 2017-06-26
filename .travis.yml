@@ -37,4 +37,5 @@ matrix:
       - env: TOXENV=py36-master
 
 after_success:
+    coverage combine
     coveralls

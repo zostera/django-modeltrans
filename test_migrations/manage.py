@@ -5,6 +5,7 @@ import sys
 if __name__ == "__main__":
     BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     coverage_config = os.path.join(BASE_PATH, '.coveragerc')
+
     os.environ.setdefault("COVERAGE_PROCESS_START", coverage_config)
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "migrate_test.settings")
 
