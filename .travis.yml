@@ -1,8 +1,9 @@
 language: python
-services:
-    - postgresql
+sudo: required
+dist: precise
 addons:
-    postgresql: "9.4"
+    postgresql: "9.5"
+services: postgresql
 
 before_install:
   - psql --version
@@ -26,7 +27,8 @@ matrix:
     - { python: 3.5, env: TOXENV=py35-master }
     - { python: 3.6, env: TOXENV=py36-master }
     - { python: 2.7, env: TOXENV=flake8 }
-#   - { python: 2.7, env: TOXENV=docs }
+    - { python: 2.7, env: TOXENV=migrate }
+    # - { python: 2.7, env: TOXENV=docs }
 
   # we allow failures for versions which are not yet released:
   allow_failures:
@@ -35,4 +37,5 @@ matrix:
       - env: TOXENV=py36-master
 
 after_success:
+    coverage combine
     coveralls

@@ -1,7 +1,6 @@
 [run]
-source =
-    modeltrans
-
+source = modeltrans
+branch = true
 
 
 [html]
