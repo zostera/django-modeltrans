@@ -55,6 +55,7 @@ def main():
     cmd('''sed -i "s/'modeltranslation',//g" migrate_test/settings.py''')
     cmd('rm -r migrate_test/app/translation.py')
     cmd('sed -i "s/, virtual_fields=False//g" {}'.format(MODELS_PY))
+    cmd('pip uninstall django-modeltrans -f')
 
     # 5. migrate once more to remove django-modeltranslation's fields
     manage('makemigrations app')
@@ -66,13 +67,10 @@ def main():
 
 def cmd(c):
     print('\033[92m Running command: \033[0m', c)
-    env = os.environ.copy()
-
-    # for key, val in env.items():
-    #     print('{}: {}'.format(key, val))
 
     try:
-        return check_output(c, shell=True, stderr=STDOUT, env=env)
+        return check_output(c, shell=True, stderr=STDOUT, env=os.environ)
+
     except CalledProcessError as e:
         print('\033[31m Process errored: \033[0m, code: {}'.format(e.returncode))
         print(e.output)
@@ -80,7 +78,7 @@ def cmd(c):
 
 
 def manage(c):
-    print(cmd('./manage.py {}'.format(c)))
+    print(cmd('coverage run ./manage.py {}'.format(c)))
 
 
 def run_test(test_module):
