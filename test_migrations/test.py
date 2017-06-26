@@ -19,6 +19,8 @@ def main():
 
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+    print('Current working directory:', os.getcwd())
+
     # clean up the test projects directory
     cmd('git clean migrate_test/ -f')
     cmd('git checkout -- migrate_test/')
@@ -53,6 +55,7 @@ def main():
     cmd('''sed -i "s/'modeltranslation',//g" migrate_test/settings.py''')
     cmd('rm -r migrate_test/app/translation.py')
     cmd('sed -i "s/, virtual_fields=False//g" {}'.format(MODELS_PY))
+    cmd('pip uninstall django-modeltrans -f')
 
     # 5. migrate once more to remove django-modeltranslation's fields
     manage('makemigrations app')
@@ -64,8 +67,9 @@ def main():
 
 def cmd(c):
     print('\033[92m Running command: \033[0m', c)
+
     try:
-        return check_output(c, shell=True, stderr=STDOUT)
+        return check_output(c, shell=True, stderr=STDOUT, env=os.environ)
     except CalledProcessError as e:
         print('\033[31m Process errored: \033[0m, code: {}'.format(e.returncode))
         print(e.output)
@@ -73,7 +77,7 @@ def cmd(c):
 
 
 def manage(c):
-    print(cmd('./manage.py {}'.format(c)))
+    print(cmd('coverage run ./manage.py {}'.format(c)))
 
 
 def run_test(test_module):

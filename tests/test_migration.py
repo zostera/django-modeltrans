@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 from django.utils.six import StringIO
 
-from modeltrans.migration import I18nMigration
+from modeltrans.migration import I18nMigration, get_translatable_models
 
 from .app.models import Blog, Category
 
@@ -21,3 +22,8 @@ class I18nMigrationTest(TestCase):
 
         self.assertTrue('Blog' in output)
         self.assertTrue('app_category_i18n_gin' in output)
+
+    def test_get_translatable_models(self):
+
+        with self.assertRaises(ImproperlyConfigured):
+            get_translatable_models()
