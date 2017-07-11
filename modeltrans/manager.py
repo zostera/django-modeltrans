@@ -11,14 +11,6 @@ from .fields import TranslatedVirtualField, TranslationField
 from .utils import split_translated_fieldname
 
 
-def get_translatable_fields_for_model(Model):
-    from modeltrans.translator import NotRegistered, translator
-    try:
-        return translator.get_options_for_model(Model).get_field_names()
-    except NotRegistered:
-        return None
-
-
 def transform_translatable_fields(model, fields):
     '''
     Transform the kwargs for a <Model>.objects.create() or <Model>()
@@ -58,9 +50,6 @@ def transform_translatable_fields(model, fields):
 
 
 class MultilingualQuerySet(models.query.QuerySet):
-    def get_translatable_fields(self):
-        return get_translatable_fields_for_model(self.model)
-
     def add_i18n_annotation(self, field, annotation_name=None, fallback=True):
         '''
         Add an annotation to the query to extract the translated version of a field
