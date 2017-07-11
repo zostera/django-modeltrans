@@ -115,15 +115,6 @@ class FilterTest(TestCase):
         qs = Blog.objects.filter(title_nl__lt=F('title_fr'))
         self.assertEquals({m.title for m in qs}, {'bar', 'baz'})
 
-    @skip('Not yet implemented')
-    def test_filter_spanning_relation(self):
-        falcon = Blog.objects.get(title='Falcon')
-        falcon.category = Category.objects.create(name='Birds', name_nl='Vogels')
-        falcon.save()
-
-        qs = Blog.objects.filter(category__name_nl='Vogels')
-        self.assertEquals({m.title for m in qs}, {'Falcon'})
-
     def test_filter_relations(self):
         mass = Attribute.objects.create(slug='mass', name='Mean Mass')
         length = Attribute.objects.create(slug='length', name='Length', name_nl='Lengte')
@@ -140,11 +131,23 @@ class FilterTest(TestCase):
             Attribute.objects.filter(blogattr__object_id__in=Blog.objects.filter(title__contains='al'))
 
     @skip('Not yet implemented')
+    def test_filter_spanning_relation(self):
+        birds = Category.objects.create(name='Birds', name_nl='Vogels')
+        bird_blogs = Blog.objects.filter(title__in=('Duck', 'Falcon'))
+        bird_blogs.update(category=birds)
+
+        self.assertEquals(
+            {b.name for b in Blog.objects.filter(category__name_nl='Vogels')},
+            {b.name for b in bird_blogs}
+        )
+
+    @skip('Not yet implemented')
     def test_filter_spanning_relation_from_non_translatable(self):
         '''
         Not sure if we should support this, but it requires having
         `MultilingualManager` on non-translated models too.
         '''
+
         Site.objects.filter(blog__title_nl__contains='al')
 
 
@@ -185,7 +188,6 @@ class OrderByTest(TestCase):
 
 
 class FilteredOrderByTest(TestCase):
-
     def test_filtered_order_by(self):
         Blog.objects.bulk_create([
             Blog(title='Falcon', title_nl='Valk'),
