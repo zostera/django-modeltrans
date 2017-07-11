@@ -32,9 +32,15 @@ def translated_field_factory(original_field, language=None, *args, **kwargs):
 
 class TranslatedVirtualField(object):
     '''
-    Implementation inspired by HStoreVirtualMixin from:
-    https://github.com/djangonauts/django-hstore/blob/master/django_hstore/virtual.py
+    A field representing a single field translated to a specific language.
+
+    Arguments:
+        original_field: The original field to be translated
+        language: The lanuage to translate to, or `None` to track the current
+            active Django language.
     '''
+    # Implementation inspired by HStoreVirtualMixin from:
+    # https://github.com/djangonauts/django-hstore/blob/master/django_hstore/virtual.py
 
     def __init__(self, original_field, language=None, *args, **kwargs):
         # TODO: this feels like a big hack.
@@ -127,9 +133,18 @@ class TranslatedVirtualField(object):
         return build_localized_fieldname(self.original_name, lang)
 
     def get_language(self):
+        '''
+        Returns the language for this field.
+
+        In case of an explicit language (title_en), it returns 'en', in case of
+        `title_i18n`, it returns the currently active Django language.
+        '''
         return self.language if self.language is not None else get_language()
 
     def output_field(self):
+        '''
+        The type of field used to Cast/Coalesce to.
+        '''
         Field = self.original_field.__class__
         if isinstance(self.original_field, fields.CharField):
             return Field(max_length=self.original_field.max_length)
@@ -158,6 +173,14 @@ class TranslatedVirtualField(object):
 class TranslationField(JSONField):
     '''
     This model fields is used to store the translations in the translated model.
+
+    Arguments:
+        fields (iterable): List of column names to make translatable.
+        required_languages (iterable): List of languages required for the model.
+        virtual_fields (bool): If True, add virtual fields to access translated
+            values with. Used during migration from django-modeltranslation to
+            prevent collisions with it's database fields while having the `i18n`
+            field available.
     '''
     description = 'Translation storage for a model'
 
