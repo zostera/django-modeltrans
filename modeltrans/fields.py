@@ -144,6 +144,9 @@ class TranslatedVirtualField(object):
     def output_field(self):
         '''
         The type of field used to Cast/Coalesce to.
+
+        Mainly because a max_length argument is required for CharField
+        until this PR is merged: https://github.com/django/django/pull/8758
         '''
         Field = self.original_field.__class__
         if isinstance(self.original_field, fields.CharField):
