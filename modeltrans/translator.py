@@ -20,7 +20,9 @@ def translate_model(Model):
     if not i18n_field.virtual_fields:
         # This mode is required for the migration process:
         # It needs to have a stage where we do have the TranslationField,
-        # but not the virtual fields, to be able to copy the original values.
+        # but not the virtual fields (which would collide with the
+        # django-modeltranslation `<field>_<lang>`-fields), to be able to
+        # copy the values from the `<field>_<lang>`-fields into `i18n.<field>_<lang>`.
         return
 
     validate(Model)

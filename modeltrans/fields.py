@@ -119,11 +119,10 @@ class TranslatedVirtualField(object):
 
     def get_field_name(self):
         '''
-        Returns the field name for this virtual field.
+        Returns the field name for the current virtual field.
 
-        Two options:
-            - <original_field_name>_i18n for the current active language
-            - <original_field_name>_<language> for the specific translation
+        The field name is ``<original_field_name>_<language>`` in case of a specific
+        translation or ``<original_field_name>_i18n`` for the currently active language.
         '''
         if self.language is None:
             lang = 'i18n'
@@ -175,15 +174,15 @@ class TranslatedVirtualField(object):
 
 class TranslationField(JSONField):
     '''
-    This model fields is used to store the translations in the translated model.
+    This model field is used to store the translations in the translated model.
 
     Arguments:
         fields (iterable): List of column names to make translatable.
         required_languages (iterable): List of languages required for the model.
-        virtual_fields (bool): If True, add virtual fields to access translated
-            values with. Used during migration from django-modeltranslation to
-            prevent collisions with it's database fields while having the `i18n`
-            field available.
+        virtual_fields (bool): If False, do not add virtual fields to access
+            translated values with.
+            Set to `True` during migration from django-modeltranslation to prevent
+            collisions with it's database fields while having the `i18n` field available.
     '''
     description = 'Translation storage for a model'
 

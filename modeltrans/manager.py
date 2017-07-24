@@ -50,10 +50,23 @@ def transform_translatable_fields(model, fields):
 
 
 class MultilingualQuerySet(models.query.QuerySet):
+    '''
+    Extends `~django.db.models.query.Queryset` and makes the translated versions of fields
+    accessible through the normal queryset methods, analogous to the virtual fields added
+    to a translated model:
+
+     - `<field>` allow getting/setting the default language
+     - ``<field>_<lang>`` (for example, `<field>_de`) allows getting/setting a specific language.
+       Note that if `DEFAULT_LANGUAGE == 'en'`, `<field>_en` is mapped to `<field>`.
+     - `<field>_i18n` follows the currently active translation in Django, and falls back to the default language.
+
+    When adding the `modeltrans.fields.TranslationField` to a model, MultilingualManager is automatically
+    mixed in to the manager class of that model.
+    '''
     def add_i18n_annotation(self, field, annotation_name=None, fallback=True):
         '''
-        Add an annotation to the query to extract the translated version of a field
-        from the jsonb field to allow filtering and ordering.
+        Private method to add an annotation to the query to extract the translated
+        version of a field from the jsonb field to allow filtering and ordering.
 
         Arguments:
             field (TranslatedVirtualField): the virtual field to create an annotation for.
@@ -267,6 +280,10 @@ def multilingual_queryset_factory(old_cls, instantiate=True):
 
 
 class MultilingualManager(models.Manager):
+    '''
+    When adding the `modeltrans.fields.TranslationField` to a model, MultilingualManager is automatically
+    mixed in to the manager class of that model.
+    '''
     use_for_related_fields = True
 
     def _patch_queryset(self, qs):

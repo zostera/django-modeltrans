@@ -46,4 +46,4 @@ This is how to migrate from django-modeltranslation (version 0.12.1) to
    fields from your registered models.
 #. Update your code: use  the `<field>_i18n` field in places where you would use `<field>`
    with django-modeltranslation. Less magic, but
-   `explicit is better than implicit <https://www.python.org/dev/peps/pep-0020/>_!
+   `explicit is better than implicit <https://www.python.org/dev/peps/pep-0020/>`_!
