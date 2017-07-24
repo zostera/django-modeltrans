@@ -4,12 +4,9 @@
 django-modeltrans - Translates model fields using a `JSONField`
 ===============================================================
 
-# Features/requirements
-
 - Uses one `django.contrib.postgres.JSONField` (PostgreSQL jsonb field) for every record.
 - Django 1.9, 1.10, 1.11
 - PostgreSQL >= 9.4 and Psycopg2 >= 2.5.4.
-
 
 About the app:
 
@@ -24,14 +21,16 @@ Table of contents
 
 .. toctree::
     :maxdepth: 1
-    :caption: Getting started
+    :caption: Documentation
 
     pages/getting-started
 
+    pages/related-packages
 
 .. toctree::
     :maxdepth: 1
     :caption: Reference
 
     pages/reference
+    pages/migration
     pages/CHANGELOG.md

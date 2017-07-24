@@ -1,6 +1,8 @@
 # django-modeltrans
 
 [![Travis CI](https://travis-ci.org/zostera/django-modeltrans.svg?branch=master)](https://travis-ci.org/zostera/django-modeltrans)
+[![Documentation Status](https://readthedocs.org/projects/django-modeltrans/badge/?version=latest)](http://django-modeltrans.readthedocs.io/en/latest/?badge=latest)
+
 
 Translates Django model fields in a `JSONField` using a registration approach.
 
@@ -10,122 +12,13 @@ Translates Django model fields in a `JSONField` using a registration approach.
 - Django 1.9, 1.10, 1.11 for now
 - PostgreSQL >= 9.4 and Psycopg2 >= 2.5.4.
 - [Available on pypi](https://pypi.python.org/pypi/django-modeltrans)
-
-# Usage
-
- - Add `'modeltrans'` your list of `INSTALLED_APPS`.
- - Add a list of available languages to your `settings.py`:
-   `AVAILABLE_LANGUAGES = ('en', 'nl', 'de', 'fr')`
- - Add a `modeltrans.fields.TranslationField` to your models and specify the fields you
-   want to translate.
-```python
-# models.py
-from django.db import models
-from modeltrans.fields import TranslationField
-
-
-class Blog(models.Model):
-    title = models.CharField(max_length=255)
-    body = models.TextField(null=True)
-
-    i18n = TranslationField(fields=('title', 'body'))
-```
- - Run `./manage.py makemigrations` to add the `i18n` JSONField to each model containing
-   translations.
- - Each method now has some extra virtual fields. In the example above:
-   - `title` allow getting/setting the default language
-   - `title_nl`, `title_de`, ... allow getting/setting the specific languages
-   - If `DEFAULT_LANGUAGE == 'en'`, `title_en` is mapped to `title`.
-   - `title_i18n` follows the currently active translation in Django, and falls
-     back to the default language:
-
-```python
->>> b = Blog.objects.create(title='Falcon', title_nl='Valk')
->>> b.title
-'Falcon'
->>> b.title_nl
-'Valk'
->>> b.title_i18n
-'Falcon'
->>> from django.utils.translation import override
->>> with override('nl'):
-...   b.title_i18n
-...
-'Valk'
-# translations are stored in the field `i18n` in each model:
->>> b.i18n
-{u'title_nl': u'Valk'}
-# if a translation is not available, None is returned.
->>> print(b.title_de)
-None
-# fallback to the default language
->>> with override('de'):
-...     b.title_i18n
-'Falcon'
-# now, if we set the German tranlation, it it is returned from title_i18n:
->>> b.title_de = 'Falk'
->>> with override('de'):
-...     b.title_i18n
-'Falk'
-```
-
-# Migrating from django-modeltranslation
-
-This is how to migrate from django-modeltranslation (version 0.12.1) to
-django-modeltrans:
-
-1. Make sure you have a recent backup available!
-2. Add `modeltrans` to your `INSTALLED_APPS`
-3. Copy the django-modeltranslation registrations to use django-modeltrans
-   alongside it, while disabling the virtual fields for now:
-```python
-# models.py
-from django.db import models
-from modeltrans.fields import TranslationField
-
-class Blog(models.Model):
-    title = models.CharField(max_length=255)
-    body = models.TextField(null=True)
-
-    # add this field, containing the TranslationOptions attributes as arguments:
-    i18n = TranslationField(fields=('title', 'body'))
-
-
-# translation.py
-from modeltranslation.translator import translator, TranslationOptions
-from .models import Blog
-
-class BlogTranslationOptions(TranslationOptions):
-    fields = ('name', 'title', )
-
-translator.register(Blog, BlogTranslationOptions)
-
-```
-3. Run `./manage.py makemigrations <apps>`. This will create the
-   migration adding the`i18n`-fields required by django-modeltrans. Apply
-   them with `./manage.py migrate`
-4. We need to create a migration to copy the values of the translated
-   fields into the newly created `i18n`-field. django-modeltrans provides
-   a management command to do that:
-     `./manage.py i18n_makemigrations <apps>`
-5. Now, remove django-modeltranslation by:
-    - Remove `modeltranslation` from `INSTALLED_APPS`.
-    - Remove all `translation.py` files from your apps.
-    - Remove the use of `modeltranslation.admin.TranslationAdmin` in your `admin.py`'s
-
-6. Run `./manage.py makemigrations <apps>`. This will remove the translated
-   fields from your registered models.
-7. Update your code: use  the `<field>_i18n` field in places where you would use `<field>`
-   with django-modeltranslation. Less magic, but
-   [explicit is better than implicit](https://www.python.org/dev/peps/pep-0020/)!
-
+- [Documentation](http://django-modeltrans.readthedocs.io/en/latest/)
 
 # Running the tests
 
 `tox`
 
 Running the tests only for the current environment, use `make test`
-
 
 # Attribution
 Some concepts and code from https://github.com/deschler/django-modeltranslation,
@@ -137,12 +30,6 @@ when adding language)
  - The unpredictability of the original field.
 
 Since JSONB is supported by Postgres now, we developed this approach.
-
-# alternatives
-- [django-nence](https://github.com/tatterdemalion/django-nece/)
-  Also uses a `jsonb` PostgreSQL field, but has a bunch of custom `QuerySet` and `Model` methods to get translated values. It also requires one to inherit from a `TranslationModel`.
-- [django-i18nfield](https://github.com/raphaelm/django-i18nfield)
-  Stores JSON in a `TextField`, so does not allow lookup, searching or ordering by the translated fields.
 
 # relevant 3rd party documentation
 - [PostgreSQL jsonb functions](https://www.postgresql.org/docs/9.5/static/functions-json.html)
