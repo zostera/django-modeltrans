@@ -20,7 +20,7 @@ Getting started
 
  - Run `./manage.py makemigrations` to add the `i18n` JSONField to each model containing
    translations.
- - Each method now has some extra virtual fields. In the example above:
+ - Each Model now has some extra virtual fields. In the example above:
 
    - `title` allow getting/setting the default language
    - `title_nl`, `title_de`, ... allow getting/setting the specific languages
