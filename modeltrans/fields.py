@@ -25,7 +25,7 @@ def translated_field_factory(original_field, language=None, *args, **kwargs):
     class Specific(TranslatedVirtualField, original_field.__class__):
         pass
 
-    Specific.__name__ = 'Translation{}'.format(original_field.__class__.__name__)
+    Specific.__name__ = 'Translated{}'.format(original_field.__class__.__name__)
 
     return Specific(original_field, language, *args, **kwargs)
 

@@ -1,8 +1,8 @@
 .. default-domain:: py
 
-===============================================================
-django-modeltrans - Translates model fields using a `JSONField`
-===============================================================
+==============================================================
+django-modeltrans - Translate model fields using a `JSONField`
+==============================================================
 
 - Uses one `django.contrib.postgres.JSONField` (PostgreSQL jsonb field) for every record.
 - Django 1.9, 1.10, 1.11
@@ -24,7 +24,7 @@ Table of contents
     :caption: Documentation
 
     pages/getting-started
-
+    pages/inner-workings
     pages/related-packages
 
 .. toctree::
