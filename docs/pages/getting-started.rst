@@ -22,7 +22,7 @@ Getting started
    translations.
  - Each Model now has some extra virtual fields. In the example above:
 
-   - `title` allow getting/setting the default language
+   - `title` allows getting/setting the default language
    - `title_nl`, `title_de`, ... allow getting/setting the specific languages
    - If `DEFAULT_LANGUAGE == 'en'`, `title_en` is mapped to `title`.
    - `title_i18n` follows the currently active translation in Django, and falls back to the default language
