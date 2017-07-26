@@ -71,7 +71,7 @@ Each virtual field for an explicit language will only return a value if that
 language is defined::
 
     print(b.title_nl, b.title_fr)
-    # ('Valk', None)
+    # 'Valk', None
 
 The virtual field ``<field>_i18n`` returns the translated value for the current
 active language and falls back to the language in ``DEFAULT_LANGUAGE``::
