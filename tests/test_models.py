@@ -6,7 +6,7 @@ from django.db import DataError, transaction
 from django.test import TestCase
 from django.utils.translation import override
 
-from tests.app.models import Blog, TextModel
+from tests.app.models import Blog, NullableTextModel, TextModel
 
 
 class TranslatedFieldTest(TestCase):
@@ -100,8 +100,10 @@ class TranslatedFieldTest(TestCase):
         with override('fr'):
             self.assertEquals(m.description_i18n, DESCRIPTION)
 
-        self.assertEquals(m.description, DESCRIPTION)
-        self.assertEquals(m.description_fr, None)
+        m = NullableTextModel.objects.create(description=DESCRIPTION)
+
+        with override('fr'):
+            self.assertEquals(m.description_i18n, DESCRIPTION)
 
     def test_creating_using_virtual_default_language_field(self):
         m = Blog.objects.create(title_en='Falcon')

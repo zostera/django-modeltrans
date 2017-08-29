@@ -56,10 +56,19 @@ class TextModel(models.Model):
     title = models.CharField(max_length=50)
     description = models.TextField()
 
+    i18n = TranslationField(fields=('title', 'description'))
+
     def __str__(self):
         return self.title
 
-    i18n = TranslationField(fields=('title', 'description'))
+
+class NullableTextModel(models.Model):
+    description = models.TextField(null=True)
+
+    i18n = TranslationField(fields=('description', ))
+
+    def __str__(self):
+        return self.title
 
 
 # copy of attributes in ringbase
