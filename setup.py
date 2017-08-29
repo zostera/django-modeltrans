@@ -10,7 +10,8 @@ with open('modeltrans/__init__.py', 'rb') as f:
     VERSION = str(re.search('__version__ = \'(.+?)\'', f.read().decode('utf-8')).group(1))
 
 if sys.argv[-1] == 'publish':
-    os.system('python setup.py sdist upload')
+    os.system('python setup.py sdist')
+    os.system('twine upload dist/django-modeltrans-{}.tar.gz'.format(VERSION))
     message = '\nreleased [{version}](https://pypi.python.org/pypi/django-modeltrans/{version})'
     print(message.format(version=VERSION))
     sys.exit()
