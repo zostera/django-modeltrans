@@ -89,19 +89,31 @@ class TranslatedFieldTest(TestCase):
 
     def test_fallback_getting_CharField(self):
         m = Blog.objects.create(title='Falcon')
-
         with override('de'):
             self.assertEquals(m.title_i18n, 'Falcon')
+
+        # this empty string in title_fr might be the result of an admin edit
+        m = Blog.objects.create(title='Falcon', title_fr='')
+        with override('fr'):
+            self.assertEquals(m.title_i18n, 'Falcon')
+
+        # should also fallback if a value is None
+        m = Blog.objects.create(title='Falcon', title_fr=None)
+        with override('fr'):
+            self.assertEquals(m.title_i18n, 'Falcon')
+
+        # should not fallback with string 'False'
+        m = Blog.objects.create(title='Falcon', title_fr='False')
+        with override('fr'):
+            self.assertEquals(m.title_i18n, 'False')
 
     def test_fallback_getting_TextField(self):
         DESCRIPTION = 'Story about Falcon'
         m = TextModel(title='Falcon', description_en=DESCRIPTION)
-
         with override('fr'):
             self.assertEquals(m.description_i18n, DESCRIPTION)
 
         m = NullableTextModel.objects.create(description=DESCRIPTION, description_fr='')
-
         with override('fr'):
             self.assertEquals(m.description_i18n, DESCRIPTION)
 

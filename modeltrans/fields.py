@@ -96,7 +96,7 @@ class TranslatedVirtualField(object):
         field_name = build_localized_fieldname(self.original_name, language)
 
         # fallback if key does not exist, or contains the empty string (only for <original_field>_i18n fields)
-        if self.language is None and (field_name not in instance.i18n or instance.i18n[field_name] == ''):
+        if self.language is None and (field_name not in instance.i18n or not instance.i18n[field_name]):
             return getattr(instance, self.original_name)
 
         return instance.i18n.get(field_name)
