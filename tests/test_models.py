@@ -87,11 +87,21 @@ class TranslatedFieldTest(TestCase):
         m.save()
         self.assertEquals(m.i18n, {})
 
-    def test_fallback_getting(self):
+    def test_fallback_getting_CharField(self):
         m = Blog.objects.create(title='Falcon')
 
         with override('de'):
             self.assertEquals(m.title_i18n, 'Falcon')
+
+    def test_fallback_getting_TextField(self):
+        DESCRIPTION = 'Story about Falcon'
+        m = TextModel(title='Falcon', description_en=DESCRIPTION)
+
+        with override('fr'):
+            self.assertEquals(m.description_i18n, DESCRIPTION)
+
+        self.assertEquals(m.description, DESCRIPTION)
+        self.assertEquals(m.description_fr, None)
 
     def test_creating_using_virtual_default_language_field(self):
         m = Blog.objects.create(title_en='Falcon')
