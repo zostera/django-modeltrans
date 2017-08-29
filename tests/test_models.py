@@ -100,7 +100,7 @@ class TranslatedFieldTest(TestCase):
         with override('fr'):
             self.assertEquals(m.description_i18n, DESCRIPTION)
 
-        m = NullableTextModel.objects.create(description=DESCRIPTION)
+        m = NullableTextModel.objects.create(description=DESCRIPTION, description_fr='')
 
         with override('fr'):
             self.assertEquals(m.description_i18n, DESCRIPTION)
