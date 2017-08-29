@@ -1,5 +1,8 @@
 # django-modeltrans change log
 
+## 0.0.6 (2017-08-29)
+ - Also fall back to `DEFAULT_LANGUAGE` if the value for a key in the translations dict is falsy.
+
 ## 0.0.5 (2017-07-26)
  - Removed registration in favour of adding the `TranslationField` to a model you need to translated.
  - Created documentation.
