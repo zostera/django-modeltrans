@@ -7,13 +7,14 @@ from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import ugettext as _
 
-from .settings import DEFAULT_LANGUAGE
-from .utils import build_localized_fieldname, get_language
+from .utils import build_localized_fieldname, get_default_language, get_language
 
 SUPPORTED_FIELDS = (
     fields.CharField,
     fields.TextField,
 )
+
+DEFAULT_LANGUAGE = get_default_language()
 
 
 def translated_field_factory(original_field, language=None, *args, **kwargs):
