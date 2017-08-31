@@ -2,9 +2,9 @@
 from __future__ import unicode_literals
 
 from django.test import TestCase
-
 from modeltrans.manager import transform_translatable_fields
 from modeltrans.utils import build_localized_fieldname, split_translated_fieldname
+
 from tests.app.models import Blog
 
 

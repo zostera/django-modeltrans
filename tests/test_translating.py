@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models
 from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.db import models
 from django.test import TestCase
-
 from modeltrans.fields import TranslationField
 from modeltrans.manager import MultilingualManager, MultilingualQuerySet
 from modeltrans.translator import translate_model
