@@ -43,13 +43,6 @@ def get_available_languages(include_default=True):
         return settings.MODELTRANS_AVAILABLE_LANGUAGES
 
 
-def get_translation_fields(field):
-    '''
-    Returns a list of localized fieldnames for a given field.
-    '''
-    return [build_localized_fieldname(field, l) for l in settings.MODELTRANS_AVAILABLE_LANGUAGES]
-
-
 def split_translated_fieldname(field_name):
     _pos = field_name.rfind('_')
     return (field_name[0:_pos], field_name[_pos + 1:])
@@ -61,12 +54,3 @@ def build_localized_fieldname(field_name, lang):
         # current naming scheme as Django foreign keys also add "id" suffix.
         lang = 'ind'
     return str('{}_{}'.format(field_name, lang.replace('-', '_')))
-
-
-def _build_localized_verbose_name(verbose_name, lang):
-    if lang == 'id':
-        lang = 'ind'
-    return force_text('%s [%s]') % (force_text(verbose_name), lang)
-
-
-build_localized_verbose_name = lazy(_build_localized_verbose_name, six.text_type)
