@@ -4,7 +4,7 @@ from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.db.models import Manager
 
 from . import settings
-from .fields import translated_field_factory, TranslationField
+from .fields import TranslationField, translated_field_factory
 from .manager import MultilingualManager, transform_translatable_fields
 from .utils import get_available_languages, get_default_language
 
