@@ -1,5 +1,12 @@
 # django-modeltrans change log
 
+## unreleased/master
+ - Cleaned up the settings used by django-modeltrans [#19](https://github.com/zostera/django-modeltrans/pull/19).
+   This might be a breaking change, depending on your configuration.
+    * `AVAILABLE_LANGUAGES` is now renamed to `MODELTRANS_AVAILABLE_LANGUAGES` and defaults to the language codes in the
+      django `LANGUAGES` setting.
+    * `DEFAULT_LANGUAGE` is removed, instead, django-modeltrans uses the django `LANGUAGE_CODE` setting.
+
 ## 0.0.6 (2017-08-29)
  - Also fall back to `DEFAULT_LANGUAGE` if the value for a key in the translations dict is falsy.
 
