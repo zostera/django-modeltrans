@@ -21,15 +21,17 @@ Translates Django model fields in a `JSONField` using a registration approach.
 Running the tests only for the current environment, use `make test`
 
 # Attribution
-Some concepts and code from https://github.com/deschler/django-modeltranslation,
+
+Some concepts and code come from https://github.com/deschler/django-modeltranslation,
 which is in turn inspired by https://github.com/zmathew/django-linguo
 
 We started this solution at Zostera because we did not like:
  - The way django-modeltranslation adds one field per language (and thus requires a migration
-when adding language)
+when adding a language);
  - The unpredictability of the original field.
 
 Since JSONB is supported by Postgres now, we developed this approach.
 
-# relevant 3rd party documentation
+# Relevant 3rd party documentation
+
 - [PostgreSQL jsonb functions](https://www.postgresql.org/docs/9.5/static/functions-json.html)
