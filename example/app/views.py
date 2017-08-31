@@ -24,7 +24,7 @@ class BlogTable(tables.Table):
     class Meta:
         model = Blog
         fields = (
-            # this field should fallback to DEFAULT_LANGUAGE
+            # this field should fallback to LANGUAGE_CODE
             'title_i18n',
             'title_en',
             'title_nl',
