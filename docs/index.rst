@@ -32,5 +32,6 @@ Table of contents
     :caption: Reference
 
     pages/reference
+    pages/settings
     pages/migration
     pages/CHANGELOG.md

@@ -6,7 +6,7 @@ from django.db.models import Manager
 from . import settings
 from .fields import translated_field_factory, TranslationField
 from .manager import MultilingualManager, transform_translatable_fields
-from .utils import get_valid_languages
+from .utils import get_available_languages, get_default_language
 
 
 def translate_model(Model):
@@ -35,7 +35,7 @@ def translate_model(Model):
 
 def check_languages(languages, model):
     for l in languages:
-        if l not in get_valid_languages():
+        if l not in get_available_languages():
             raise ImproperlyConfigured(
                 'Language "{}" is in required_languages on Model "{}" but '
                 'not in settings.MODELTRANS_AVAILABLE_LANGUAGES.'.format(l, model.__name__)
@@ -108,10 +108,10 @@ def add_virtual_fields(Model, fields, required_languages):
         field.contribute_to_class(Model, field.get_field_name())
 
         # add a virtual field pointing to the original field with name
-        # <original_field_name>_<DEFAULT_LANGUAGE>
+        # <original_field_name>_<LANGUAGE_CODE>
         field = translated_field_factory(
             original_field=original_field,
-            language=settings.DEFAULT_LANGUAGE,
+            language=get_default_language(),
             blank=True,
             null=True,
             editable=False,
@@ -122,7 +122,7 @@ def add_virtual_fields(Model, fields, required_languages):
         # now, for each language, add a virtual field to get the tranlation for
         # that specific langauge
         # <original_field_name>_<language>
-        for language in list(settings.AVAILABLE_LANGUAGES):
+        for language in get_available_languages(include_default=False):
             blank_allowed = language not in required_languages
             field = translated_field_factory(
                 original_field=original_field,

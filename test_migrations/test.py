@@ -55,7 +55,6 @@ def main():
     cmd('''sed -i "s/'modeltranslation',//g" migrate_test/settings.py''')
     cmd('rm -r migrate_test/app/translation.py')
     cmd('sed -i "s/, virtual_fields=False//g" {}'.format(MODELS_PY))
-    cmd('pip uninstall django-modeltrans -f')
 
     # 5. migrate once more to remove django-modeltranslation's fields
     manage('makemigrations app')

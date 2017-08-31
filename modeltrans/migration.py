@@ -13,15 +13,15 @@ from django.db.migrations.loader import MigrationLoader
 from django.utils.timezone import now
 
 from modeltrans import __version__ as VERSION
-from modeltrans.utils import split_translated_fieldname
-
-from .settings import DEFAULT_LANGUAGE
+from modeltrans.utils import split_translated_fieldname, get_default_language
 
 try:
     from modeltranslation.translator import translator
     DJANGO_MODELTRANSLATION_AVAILABLE = True
 except ImportError:
     DJANGO_MODELTRANSLATION_AVAILABLE = False
+
+DEFAULT_LANGUAGE = get_default_language()
 
 
 def _raise_if_not_django_modeltranslation():
@@ -160,7 +160,7 @@ class I18nMigration(object):
 
         out.write(MIGRATION_TEMPLATE.format(
             version=VERSION,
-            DEFAULT_LANGUAGE=settings.DEFAULT_LANGUAGE,
+            DEFAULT_LANGUAGE=getattr(settings, 'MODELTRANSLATION_DEFAULT_LANGUAGE', get_default_language()),
             timestamp=now().strftime('%Y-%m-%d %H:%M'),
             helpers='\n\n'.join(self.get_helper_functions()),
             todo=',\n        '.join([str((Model.__name__, fields)) for Model, fields in self.models]),
