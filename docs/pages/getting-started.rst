@@ -2,8 +2,10 @@ Getting started
 ===============
 
  - Add `'modeltrans'` your list of `INSTALLED_APPS`.
- - Add a list of available languages to your `settings.py`:
-   `AVAILABLE_LANGUAGES = ('en', 'nl', 'de', 'fr')`
+ - Make sure the current data in your models is in the language defined in the `LANGUAGE_CODE` django setting.
+ - By default, django-modeltrans uses the languages in the `LANGUAGES` django setting. If you want
+   the list to be different, add a list of available languages to your `settings.py`:
+   `MODELTRANS_AVAILABLE_LANGUAGES = ('en', 'nl', 'de', 'fr')`.
  - Add a `modeltrans.fields.TranslationField` to your models and specify the fields you
    want to translate::
 
@@ -24,7 +26,7 @@ Getting started
 
    - `title` allows getting/setting the default language
    - `title_nl`, `title_de`, ... allow getting/setting the specific languages
-   - If `DEFAULT_LANGUAGE == 'en'`, `title_en` is mapped to `title`.
+   - If `LANGUAGE_CODE == 'en'`, `title_en` is mapped to `title`.
    - `title_i18n` follows the currently active translation in Django, and falls back to the default language
 
 The above could be used in a Django shell like this::

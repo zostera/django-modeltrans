@@ -4,8 +4,11 @@ Migrating from django-modeltranslation
 This is how to migrate from django-modeltranslation (version 0.12.1) to
 `django-modeltrans`:
 
-#. Make sure you have a recent backup available!
+#. Make sure you have a recent backup of your data available!
 #. Add `modeltrans` to your `INSTALLED_APPS`
+#. Make sure the default language for django-modeltranslation is equal to the
+   language in `LANGUAGE_CODE`, which django-modeltrans will use.
+#. Copy the setting `AVAILABLE_LANGUAGES` to `MODELTRANS_AVAILABLE_LANAGUES`.
 #. Add the TranslationField to the models you want to translate and keep the registrations
    for now. In order to prevent field name collisions, disable the virtual fields in django-modeltrans
    for now (`virtual_fields=False`)::
@@ -39,6 +42,7 @@ This is how to migrate from django-modeltranslation (version 0.12.1) to
    a management command to do that `./manage.py i18n_makemigrations <apps>`
 #. Now, remove django-modeltranslation by:
    - Remove `modeltranslation` from `INSTALLED_APPS`.
+   - Remove django-modeltranslation settings (`DEFAULT_LANGUAGE`, `AVAILABLE_LANGUAGES`) from your `settings.py`'s
    - Remove all `translation.py` files from your apps.
    - Remove the use of `modeltranslation.admin.TranslationAdmin` in your `admin.py`'s
 

@@ -22,7 +22,7 @@ class TranslateModelTest(TestCase):
 
         expected_message = (
             'Language "es" is in required_languages on '
-            'Model "A" but not in settings.AVAILABLE_LANGUAGES.'
+            'Model "A" but not in settings.MODELTRANS_AVAILABLE_LANGUAGES.'
         )
         with self.assertRaisesMessage(ImproperlyConfigured, expected_message):
             translate_model(A)
