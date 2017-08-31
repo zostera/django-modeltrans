@@ -57,7 +57,7 @@ class MultilingualQuerySet(models.query.QuerySet):
 
      - `<field>` allow getting/setting the default language
      - ``<field>_<lang>`` (for example, `<field>_de`) allows getting/setting a specific language.
-       Note that if `DEFAULT_LANGUAGE == 'en'`, `<field>_en` is mapped to `<field>`.
+       Note that if `LANGUAGE_CODE == 'en'`, `<field>_en` is mapped to `<field>`.
      - `<field>_i18n` follows the currently active translation in Django, and falls back to the default language.
 
     When adding the `modeltrans.fields.TranslationField` to a model, MultilingualManager is automatically
