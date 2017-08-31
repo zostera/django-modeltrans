@@ -6,6 +6,7 @@ from django.db.models import Manager
 from . import settings
 from .fields import translated_field_factory, TranslationField
 from .manager import MultilingualManager, transform_translatable_fields
+from .utils import get_valid_languages
 
 
 def translate_model(Model):
@@ -33,12 +34,11 @@ def translate_model(Model):
 
 
 def check_languages(languages, model):
-    valid_languages = list(settings.AVAILABLE_LANGUAGES) + list((settings.DEFAULT_LANGUAGE, ))
     for l in languages:
-        if l not in valid_languages:
+        if l not in get_valid_languages():
             raise ImproperlyConfigured(
                 'Language "{}" is in required_languages on Model "{}" but '
-                'not in settings.AVAILABLE_LANGUAGES.'.format(l, model.__name__)
+                'not in settings.MODELTRANS_AVAILABLE_LANGUAGES.'.format(l, model.__name__)
             )
 
 
