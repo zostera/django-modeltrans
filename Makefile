@@ -13,4 +13,7 @@ example:
 shell:
 	cd example && PYTHONPATH=.. ./manage.py shell_plus
 
+isort:
+	isort --recursive --diff --check modeltrans tests test_migrations example
+
 .PHONY: test example

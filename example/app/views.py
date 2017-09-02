@@ -3,11 +3,12 @@ from __future__ import unicode_literals
 
 import json
 
-import django_tables2 as tables
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView
 from django.views.generic.edit import UpdateView
+
+import django_tables2 as tables
 from django_filters import FilterSet
 from django_filters.views import FilterView
 
