@@ -7,7 +7,8 @@ from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import ugettext as _
 
-from .utils import build_localized_fieldname, get_default_language, get_language
+from .settings import get_default_language, get_fallback_chain
+from .utils import build_localized_fieldname, get_language
 
 SUPPORTED_FIELDS = (
     fields.CharField,
