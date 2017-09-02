@@ -3,10 +3,9 @@
 from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.db.models import Manager
 
-from . import settings
 from .fields import TranslationField, translated_field_factory
 from .manager import MultilingualManager, transform_translatable_fields
-from .utils import get_available_languages, get_default_language
+from .settings import get_available_languages, get_default_language
 
 
 def translate_model(Model):

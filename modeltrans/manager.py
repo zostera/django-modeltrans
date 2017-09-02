@@ -6,9 +6,9 @@ from django.db.models import F, TextField
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.functions import Cast
 
-from . import settings
 from .fields import TranslatedVirtualField, TranslationField
-from .utils import get_default_language, split_translated_fieldname
+from .settings import get_default_language
+from .utils import split_translated_fieldname
 
 
 def transform_translatable_fields(model, fields):
