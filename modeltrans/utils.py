@@ -2,6 +2,7 @@ from django.utils import six
 from django.utils.encoding import force_text
 from django.utils.functional import lazy
 from django.utils.translation import get_language as _get_language
+
 from modeltrans import settings
 
 

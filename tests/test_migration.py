@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 from django.utils.six import StringIO
+
 from modeltrans.migration import I18nMigration, get_translatable_models
 
 from .app.models import Blog, Category

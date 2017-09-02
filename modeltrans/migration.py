@@ -11,6 +11,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import DEFAULT_DB_ALIAS, connections
 from django.db.migrations.loader import MigrationLoader
 from django.utils.timezone import now
+
 from modeltrans import __version__ as VERSION
 from modeltrans.utils import get_default_language, split_translated_fieldname
 
