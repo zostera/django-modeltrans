@@ -63,6 +63,7 @@ class MultilingualQuerySet(models.query.QuerySet):
     When adding the `modeltrans.fields.TranslationField` to a model, MultilingualManager is automatically
     mixed in to the manager class of that model.
     '''
+
     def add_i18n_annotation(self, field, annotation_name=None, fallback=True):
         '''
         Private method to add an annotation to the query to extract the translated
@@ -203,8 +204,8 @@ class MultilingualQuerySet(models.query.QuerySet):
         Examples:
             - `title_nl__contains='foo'` will add an annotation for `title_nl`
             - `title_nl='bar'` will add an annotation for `title_nl`
-            - `title_i18n='foo'` will add an annotation for `title_<language>`
-              where `<language>` is the current active language.
+            - `title_i18n='foo'` will add an annotation for a coalesce of the
+               current active language, and all items of the fallback chain.
             - `Q(title_nl__contains='foo') will add an annotation for `title_nl`
 
         In all cases, the field part of the field lookup will be changed to use

@@ -97,11 +97,25 @@ class TranslatedVirtualField(object):
 
         field_name = build_localized_fieldname(self.original_name, language)
 
-        # fallback if key does not exist, or contains the empty string (only for <original_field>_i18n fields)
-        if self.language is None and (field_name not in instance.i18n or not instance.i18n[field_name]):
-            return getattr(instance, self.original_name)
+        def has_field(field_name):
+            return field_name in instance.i18n and instance.i18n[field_name]
 
-        return instance.i18n.get(field_name)
+        # in two cases, just return the value:
+        #  - if this is an explicit field (<name>_<lang>)
+        #  - if this is a implicit field (<name>_i18n) AND the value exists and is not Falsy
+        if self.language is not None or has_field(field_name):
+            return instance.i18n.get(field_name)
+
+        # this is the _i18n version of the field, and the current language is not available,
+        # so we walk the fallback chain:
+        for fallback_language in get_fallback_chain(language):
+            field_name = build_localized_fieldname(self.original_name, fallback_language)
+
+            if has_field(field_name):
+                return instance.i18n.get(field_name)
+
+        # finally, return the original field if all else fails.
+        return getattr(instance, self.original_name)
 
     def __set__(self, instance, value):
         if instance.i18n is None:
@@ -156,6 +170,13 @@ class TranslatedVirtualField(object):
 
         return Field()
 
+    def _localized_lookup(self, language):
+        if language == DEFAULT_LANGUAGE:
+            return self.original_name
+
+        name = build_localized_fieldname(self.original_name, language)
+        return RawSQL('{}.i18n->>%s'.format(self.model._meta.db_table), (name, ))
+
     def sql_lookup(self, fallback=True):
         '''
         Compose the sql lookup to get the value for this virtual field in a query.
@@ -165,13 +186,18 @@ class TranslatedVirtualField(object):
         if language == DEFAULT_LANGUAGE:
             return self.original_name
 
-        name = build_localized_fieldname(self.original_name, language)
-
-        i18n_lookup = RawSQL('{}.i18n->>%s'.format(self.model._meta.db_table), (name, ))
-
         if fallback:
-            return Coalesce(i18n_lookup, self.original_name, output_field=self.output_field())
+            fallback_chain = get_fallback_chain(language)
+            # first, add the current language to the list of lookups
+            lookups = [self._localized_lookup(language)]
+            # and now, add the list of fallback languages to the lookup list
+            for fallback_language in fallback_chain:
+                lookups.append(
+                    self._localized_lookup(fallback_language)
+                )
+            return Coalesce(*lookups, output_field=self.output_field())
         else:
+            i18n_lookup = self._localized_lookup(language)
             return Cast(i18n_lookup, self.output_field())
 
 
