@@ -27,6 +27,19 @@ class TranslateModelTest(TestCase):
         with self.assertRaisesMessage(ImproperlyConfigured, expected_message):
             translate_model(A)
 
+    def test_translation_unsupported_field(self):
+        class IntegerModel(models.Model):
+            integer = models.IntegerField()
+            i18n = TranslationField(fields=('integer', ))
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+
+        expected_message = 'IntegerField is not supported by django-modeltrans.'
+
+        with self.assertRaisesMessage(ImproperlyConfigured, expected_message):
+            translate_model(IntegerModel)
+
     def test_translate_nonexisting_field(self):
         class B(models.Model):
             i18n = TranslationField(fields=('foo', ))
