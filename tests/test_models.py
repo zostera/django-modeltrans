@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.core.exceptions import ValidationError
 from django.db import DataError, transaction
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils.translation import override
 
 from tests.app.models import Blog, NullableTextModel, TextModel
@@ -202,6 +202,45 @@ class TranslatedFieldTest(TestCase):
         )
         self.assertEquals(m.description_nl, long_str)
 
+    @override_settings(
+        MODELTRANS_AVAILABLE_LANGUAGES=('fr', 'fy', 'nl'),
+        MODELTRANS_FALLBACK={
+            'default': ('en', ),
+            'fy': ('nl', 'en')
+        }
+    )
+    def test_fallback_chain(self):
+        '''
+        Testing the fallback chain setting for model
+        '''
+        b = Blog.objects.create(title='Buzzard', i18n={
+            'title_fy': 'Mûzefalk',
+            'title_nl': 'Buizerd',
+            'title_fr': 'Buse'
+        })
+
+        with override('nl'):
+            self.assertEquals(b.title_i18n, 'Buizerd')
+        with override('fr'):
+            self.assertEquals(b.title_i18n, 'Buse')
+        with override('fy'):
+            self.assertEquals(b.title_i18n, 'Mûzefalk')
+
+        b = Blog.objects.create(title='Buzzard', i18n={
+            'title_nl': 'Buizerd',
+            'title_fr': 'Buse'
+        })
+        with override('fy'):
+            self.assertEquals(b.title_i18n, 'Buizerd')
+
+        b = Blog.objects.create(title='Buzzard', i18n={
+            'title_fr': 'Buse'
+        })
+        with override('fy'):
+            self.assertEquals(b.title_i18n, 'Buzzard')
+        with override('fr'):
+            self.assertEquals(b.title_i18n, 'Buse')
+
 
 class RefreshFromDbTest(TestCase):
     def test_refresh_from_db(self):
@@ -209,7 +248,6 @@ class RefreshFromDbTest(TestCase):
             'title_nl': 'Valk',
             'title_de': 'Falk'
         })
-
         Blog.objects.filter(title='Falcon').update(title='Falcon II')
 
         b.refresh_from_db()
