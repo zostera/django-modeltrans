@@ -237,6 +237,6 @@ class TranslationField(JSONField):
 
     def contribute_to_class(self, cls, name):
         if name != 'i18n':
-            raise ImproperlyConfigured('{} must have name "i18n"'.format(self.__name__))
+            raise ImproperlyConfigured('{} must have name "i18n"'.format(self.__class__.__name__))
 
         super(TranslationField, self).contribute_to_class(cls, name)
