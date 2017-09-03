@@ -40,6 +40,16 @@ class TranslateModelTest(TestCase):
         with self.assertRaisesMessage(ImproperlyConfigured, expected_message):
             translate_model(IntegerModel)
 
+    def test_translation_field_is_not_named_i18n(self):
+        expected_message = 'TranslationField must have name "i18n"'
+
+        with self.assertRaisesMessage(ImproperlyConfigured, expected_message):
+            class BadlyNamedTranslationField(models.Model):
+                i19n = TranslationField(fields=())
+
+                class Meta:
+                    app_label = 'django-modeltrans_tests'
+
     def test_translate_nonexisting_field(self):
         class B(models.Model):
             i18n = TranslationField(fields=('foo', ))
