@@ -3,11 +3,16 @@ from __future__ import unicode_literals
 
 from unittest import skip
 
+from django.db import models
 from django.db.models import F, Q
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils.translation import override
 
-from tests.app.models import Attribute, Blog, BlogAttr, Category, Choice, Site
+from modeltrans.fields import TranslationField
+from modeltrans.translator import translate_model
+
+from .app.models import Attribute, Blog, BlogAttr, Category, Choice, Site
+from .utils import CreateTestModel
 
 
 def key(queryset, key):
@@ -185,6 +190,58 @@ class OrderByTest(TestCase):
             qs = Blog.objects.all().order_by('title_i18n')
 
             self.assertEquals(key(qs, 'title_i18n'), ['A', 'B', 'C', 'D', 'H', 'X', 'Y', 'Z'])
+
+
+class FallbackOrderByTest(TestCase):
+
+    @override_settings(
+        MODELTRANS_AVAILABLE_LANGUAGES=('fr', 'fy', 'nl'),
+        MODELTRANS_FALLBACK={
+            'default': ('en', ),
+            'fy': ('nl', 'en')
+        },
+        DEBUG=True
+    )
+    def test_order_by_fallback_chain(self):
+
+        class TestObj(models.Model):
+            title = models.CharField(max_length=100)
+            i18n = TranslationField(fields=('title', ))
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+
+        translate_model(TestObj)
+
+        with CreateTestModel(TestObj):
+            TestObj.objects.bulk_create([
+                TestObj(title='Falcon', title_nl='Valk'),
+                TestObj(title='Frog', title_nl='Kikker', title_fr='Grenouilles', title_fy='Frosk'),
+                TestObj(title='Fox', title_nl='Vos', title_fy='Foks'),
+                TestObj(title='Gecko'),
+                TestObj(title='Gerbil'),
+                TestObj(title='Vulture', title_nl='Gier', title_fr='Vautour')
+            ])
+
+            # should use the 'default' fallback chain
+            with override('nl'):
+                qs = TestObj.objects.all().order_by('title_i18n')
+                self.assertEquals(key(qs, 'title_i18n'), ['Gecko', 'Gerbil', 'Gier', 'Kikker', 'Valk', 'Vos'])
+
+            # should use the 'fy' fallback chain
+            with override('fy'):
+                expected = ['Foks', 'Frosk', 'Gecko', 'Gerbil', 'Gier', 'Valk']
+                qs = TestObj.objects.all().order_by('title_i18n')
+                self.assertEquals(key(qs, 'title_i18n'), expected)
+
+                expected.reverse()
+                qs = TestObj.objects.all().order_by('-title_i18n')
+                self.assertEquals(key(qs, 'title_i18n'), expected)
+
+            # should use the 'default' fallback chain
+            with override('fr'):
+                qs = TestObj.objects.all().order_by('title_i18n')
+                self.assertEquals(key(qs, 'title_i18n'), ['Falcon', 'Fox', 'Gecko', 'Gerbil', 'Grenouilles', 'Vautour'])
 
 
 class FilteredOrderByTest(TestCase):

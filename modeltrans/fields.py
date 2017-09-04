@@ -2,6 +2,7 @@
 
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ImproperlyConfigured
+from django.db import connection
 from django.db.models import fields
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
@@ -174,8 +175,10 @@ class TranslatedVirtualField(object):
         if language == DEFAULT_LANGUAGE:
             return self.original_name
 
+        quoted_table_name = connection.ops.quote_name(self.model._meta.db_table)
         name = build_localized_fieldname(self.original_name, language)
-        return RawSQL('{}.i18n->>%s'.format(self.model._meta.db_table), (name, ))
+
+        return RawSQL('{}.i18n->>%s'.format(quoted_table_name), (name, ))
 
     def sql_lookup(self, fallback=True):
         '''
