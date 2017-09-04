@@ -114,3 +114,9 @@ Results in the following ordering::
 
 As you can see, although the german translations are not complete, ordering on
 ``title_i18n`` still results in a useful ordering.
+
+.. note::
+
+    These examples assume the default setting for `MODELTRANS_FALLBACK`.
+    If you customize that setting, it can get slightly more complex, resulting
+    in more than 2 arguments to the `COALESCE` function.
