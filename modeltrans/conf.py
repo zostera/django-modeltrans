@@ -63,13 +63,13 @@ def get_fallback_chain(lang):
     Returns the list of fallback languages for language `lang`.
 
     For example, this function will return `('nl', 'en')` when called
-    with `lang='fr'` and configured like this::
+    with `lang='fy'` and configured like this::
 
         LANGUAGE_CODE = 'en'
 
         MODELTRANS_FALLBACK = {
            'default': (LANGUAGE_CODE, ),
-           'fr': ('nl', 'en')
+           'fy': ('nl', 'en')
         }
     '''
     MODELTRANS_FALLBACK = get_fallback_setting()

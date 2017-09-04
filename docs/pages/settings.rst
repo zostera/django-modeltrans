@@ -1,8 +1,8 @@
 Settings Reference
 ==================
 
-django-modeltrans needs some settings to define it's behaviour. By default, it tries to
-use sensible defaults derived from the default django settings.
+django-modeltrans allows some configuration to define it's behaviour.
+By default, it tries to use sensible defaults derived from the default django settings.
 
 ``MODELTRANS_AVAILABLE_LANGUAGES``
 ----------------------------------
@@ -17,3 +17,21 @@ Note that
 A custom definition might be::
 
     MODELTRANS_AVAILABLE_LANGUAGES = ('en', 'de', 'fr')
+
+
+``MODELTRANS_FALLBACK``
+-----------------------
+A dict of fallback chains as lists of languages. By default, it falls back to the language defined in django setting `LANGUAGE_CODE`.
+
+For example, django-modeltrans will fallback to:
+ - english when the active language is 'nl'
+ - fist dutch and finally english with active language is 'fy'
+
+If configured like this::
+
+    LANGUAGE_CODE = 'en'
+    MODELTRANS_AVAILABLE_LANGUAGES = ('nl', 'fy')
+    MODELTRANS_FALLBACK = {
+       'default': (LANGUAGE_CODE, ),
+       'fy': ('nl', 'en')
+    }
