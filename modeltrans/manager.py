@@ -6,8 +6,8 @@ from django.db.models import F, TextField
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.functions import Cast
 
+from .conf import get_default_language
 from .fields import TranslatedVirtualField, TranslationField
-from .settings import get_default_language
 from .utils import split_translated_fieldname
 
 

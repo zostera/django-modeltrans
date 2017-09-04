@@ -12,9 +12,9 @@ from django.db import DEFAULT_DB_ALIAS, connections
 from django.db.migrations.loader import MigrationLoader
 from django.utils.timezone import now
 
-from modeltrans import __version__ as VERSION
-from modeltrans.settings import get_default_language
-from modeltrans.utils import split_translated_fieldname
+from . import __version__ as VERSION
+from .conf import get_default_language
+from .utils import split_translated_fieldname
 
 try:
     from modeltranslation.translator import translator
@@ -152,8 +152,6 @@ class I18nMigration(object):
     def write(self, out=None):
         if out is None:
             out = sys.stdout
-
-        from modeltrans import settings
 
         indexes = '\n'.join(
             [CREATE_INDEX_TEMPLATE.format(table=Model._meta.db_table) for Model, fields in self.models]

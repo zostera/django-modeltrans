@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import django.apps
 from django.apps import AppConfig
 
-from .settings import check_fallback_chain
+from .conf import check_fallback_chain
 from .translator import translate_model
 
 
