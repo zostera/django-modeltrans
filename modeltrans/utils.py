@@ -3,7 +3,7 @@ from django.utils.encoding import force_text
 from django.utils.functional import lazy
 from django.utils.translation import get_language as _get_language
 
-from .settings import get_available_languages, get_default_language
+from .conf import get_available_languages, get_default_language
 
 
 def get_language():
