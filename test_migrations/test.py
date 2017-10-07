@@ -17,8 +17,8 @@ def main():
     `post_migrate_tests` run after the migration to django-modeltrans
     '''
 
+    # change directory to the test_migrations folder
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
     print('Current working directory:', os.getcwd())
 
     # clean up the test projects directory
@@ -28,14 +28,19 @@ def main():
     cmd('pip install -r requirements.txt')
 
     # start with an empty db
-    cmd("echo 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' | ./manage.py dbshell")
+    cmd('dropdb modeltrans-migration --if-exists')
 
+    if 'TRAVIS' in os.environ:
+        cmd('createdb modeltrans-migration -U postgres')
+    else:
+        cmd('createdb modeltrans-migration')
+
+    # populate database and do some pre-migration verifications
     manage('migrate')
     manage('loaddata data.json')
-
     run_test('pre_migrate_tests')
 
-    # do the actual migration.
+    # do the actual migration modeltranslation -> modeltrans.
 
     # 1. install django-modeltrans and add to installed apps.
     cmd('pip install -U ..')
@@ -44,6 +49,13 @@ def main():
     # 2. Uncomment modeltrans i18n-field in models.py
     cmd('sed -i "s/# from/from/g" {}'.format(MODELS_PY))
     cmd('sed -i "s/# i18n/i18n/g" {}'.format(MODELS_PY))
+    # cmd("echo '\\nJIETER=1337\\n' >> migrate_test/settings.py")
+
+    # debug print some stuff
+    # cmd('find . -name "settings.py"')
+    # cmd('cat migrate_test/settings.py')
+    # manage('') # list possible commands
+
 
     # 3. make the migrations to add django-modeltrans json fields
     manage('makemigrations app')
@@ -68,7 +80,10 @@ def cmd(c):
     print('\033[92m Running command: \033[0m', c)
 
     try:
-        return check_output(c, shell=True, stderr=STDOUT, env=os.environ)
+        result = check_output(c, shell=True, stderr=STDOUT)
+        if len(result) > 0:
+            print(str(result).replace('\\n', '\n'))
+        return result
     except CalledProcessError as e:
         print('\033[31m Process errored: \033[0m, code: {}'.format(e.returncode))
         print(e.output)
@@ -76,7 +91,7 @@ def cmd(c):
 
 
 def manage(c):
-    print(cmd('coverage run ./manage.py {}'.format(c)))
+    cmd('./manage.py {}'.format(c))
 
 
 def run_test(test_module):
