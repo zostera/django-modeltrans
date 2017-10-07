@@ -28,7 +28,7 @@ matrix:
     - { python: 3.6, env: TOXENV=py36-2.0 }
     - { python: 3.6, env: TOXENV=py36-master }
     - { python: 2.7, env: TOXENV=isort }
-    - { python: 2.7, env: TOXENV=migrate }
+    - { python: 2.5, env: TOXENV=migrate }
     # no docs for this project yet
     # - { python: 2.7, env: TOXENV=docs }
 
