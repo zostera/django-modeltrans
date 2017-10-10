@@ -24,6 +24,7 @@ Table of contents
     :caption: Documentation
 
     pages/getting-started
+    pages/performance
     pages/inner-workings
     pages/related-packages
 
