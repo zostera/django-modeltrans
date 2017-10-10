@@ -12,7 +12,7 @@ before_install:
   - psql --version
 install:
   - pip install tox
-  # - pip install python-coveralls
+  - pip install python-coveralls
 before_script:
   - psql -c "CREATE DATABASE travisci;" -U postgres
 script:

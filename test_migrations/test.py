@@ -49,13 +49,6 @@ def main():
     # 2. Uncomment modeltrans i18n-field in models.py
     cmd('sed -i "s/# from/from/g" {}'.format(MODELS_PY))
     cmd('sed -i "s/# i18n/i18n/g" {}'.format(MODELS_PY))
-    # cmd("echo '\\nJIETER=1337\\n' >> migrate_test/settings.py")
-
-    # debug print some stuff
-    # cmd('find . -name "settings.py"')
-    # cmd('cat migrate_test/settings.py')
-    # manage('') # list possible commands
-
 
     # 3. make the migrations to add django-modeltrans json fields
     manage('makemigrations app')
