@@ -4,7 +4,7 @@ cache:
 services:
     - postgresql
 addons:
-    # 9.4 is supported, but 9.5 adds the ability to do
+    # 9.4 supports JSONB fields, but 9.5 adds the ability to do
     # CREATE INDEX IF NOT EXISTS
     postgresql: "9.5"
 
@@ -20,18 +20,18 @@ script:
 
 matrix:
   include:
-    # - { python: 2.7, env: TOXENV=py27-1.10 }
-    # - { python: 2.7, env: TOXENV=py27-1.11 }
-    # - { python: 3.4, env: TOXENV=py34-1.10 }
-    # - { python: 3.4, env: TOXENV=py34-1.11 }
-    # - { python: 3.4, env: TOXENV=py34-2.0 }
-    # - { python: 3.5, env: TOXENV=py35-1.10 }
-    # - { python: 3.5, env: TOXENV=py35-1.11 }
-    # - { python: 3.5, env: TOXENV=py35-2.0 }
-    # - { python: 3.5, env: TOXENV=py35-master }
-    # - { python: 3.6, env: TOXENV=py36-2.0 }
-    # - { python: 3.6, env: TOXENV=py36-master }
-    # - { python: 3.5, env: TOXENV=isort }
+    - { python: 2.7, env: TOXENV=py27-1.10 }
+    - { python: 2.7, env: TOXENV=py27-1.11 }
+    - { python: 3.4, env: TOXENV=py34-1.10 }
+    - { python: 3.4, env: TOXENV=py34-1.11 }
+    - { python: 3.4, env: TOXENV=py34-2.0 }
+    - { python: 3.5, env: TOXENV=py35-1.10 }
+    - { python: 3.5, env: TOXENV=py35-1.11 }
+    - { python: 3.5, env: TOXENV=py35-2.0 }
+    - { python: 3.5, env: TOXENV=py35-master }
+    - { python: 3.6, env: TOXENV=py36-2.0 }
+    - { python: 3.6, env: TOXENV=py36-master }
+    - { python: 3.5, env: TOXENV=isort }
     - { python: 2.7, env: TOXENV=migrate }
     # - { python: 2.7, env: TOXENV=docs }
 
