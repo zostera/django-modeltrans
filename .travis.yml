@@ -4,7 +4,9 @@ cache:
 services:
     - postgresql
 addons:
-    postgresql: "9.4"
+    # 9.4 is supported, but 9.5 adds the ability to do
+    # CREATE INDEX IF NOT EXISTS
+    postgresql: "9.5"
 
 before_install:
   - psql --version
