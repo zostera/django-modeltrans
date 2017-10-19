@@ -7,13 +7,13 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = 'Creates the datamigration the specified app'
+    help = 'Creates the i18n datamigration for the specified app'
 
     def add_arguments(self, parser):
         parser.add_argument('apps', nargs='+', type=str)
 
     def handle(self, *args, **options):
-        from modeltrans.migration import (I18nMigration, get_next_migration_filename, get_translatable_models,
+        from modeltrans.migration import (I18nDataMigration, get_next_migration_filename, get_translatable_models,
                                           get_translated_fields)
 
         models = get_translatable_models()
@@ -28,7 +28,7 @@ class Command(BaseCommand):
             if len(apps[app]) == 0:
                 print('No models registered for translation with django-modeltranslation')
                 return
-            migration = I18nMigration(app)
+            migration = I18nDataMigration(app)
 
             for Model in apps[app]:
                 translatable_fields = tuple(get_translated_fields(Model))

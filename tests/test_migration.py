@@ -5,23 +5,38 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 from django.utils.six import StringIO
 
-from modeltrans.migration import I18nMigration, get_translatable_models
+from modeltrans.migration import I18nDataMigration, I18nIndexMigration, get_translatable_models
 
 from .app.models import Blog, Category
 
 
-class I18nMigrationTest(TestCase):
-    def test_I18nMigration(self):
-        m = I18nMigration('test_app')
+def get_output(migration):
+    output = StringIO()
+    migration.write(output)
+    return output.getvalue()
+
+
+class I18nMigrationsTest(TestCase):
+
+    def test_I18nDataMigration(self):
+        m = I18nDataMigration('test_app')
         m.add_model(Blog, ('title_nl', 'title_fr', 'body_nl', 'body_fr'))
         m.add_model(Category, ('name_nl', 'name_fr'))
 
-        output = StringIO()
-        m.write(output)
-        output = output.getvalue()
-
+        output = get_output(m)
         self.assertTrue('Blog' in output)
+        self.assertTrue('title_nl' in output)
+        self.assertTrue('title_fr' in output)
+        self.assertTrue('migrations.RunPython(forwards, migrations.RunPython.noop)' in output)
+
+    def test_I18nIndexMigration(self):
+        m = I18nIndexMigration('test_app')
+        m.add_model(Blog, ('title_nl', 'title_fr', 'body_nl', 'body_fr'))
+        m.add_model(Category, ('name_nl', 'name_fr'))
+
+        output = get_output(m)
         self.assertTrue('app_category_i18n_gin' in output)
+        self.assertTrue('app_blog_i18n_gin' in output)
 
     def test_get_translatable_models(self):
         '''
