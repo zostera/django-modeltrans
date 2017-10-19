@@ -23,7 +23,7 @@ A custom definition might be::
 -----------------------
 A dict of fallback chains as lists of languages. By default, it falls back to the language defined in django setting `LANGUAGE_CODE`.
 
-For example, django-modeltrans will fallback to:
+For example, django-modeltrans will fall back to:
  - english when the active language is 'nl'
  - fist dutch and finally english with active language is 'fy'
 
