@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.utils import six
 
 
 def get_default_language():
@@ -11,11 +12,16 @@ def get_available_languages_setting():
     list of available languages for modeltrans translations.
     defaults to the list of language codes extracted from django setting LANGUAGES
     '''
-    return tuple(set(getattr(
+    languages = tuple(set(getattr(
         settings,
         'MODELTRANS_AVAILABLE_LANGUAGES',
         [code for code, _ in getattr(settings, 'LANGUAGES') if code != get_default_language()]
     )))
+
+    if not all(isinstance(x, six.string_types) for x in languages):
+        raise ImproperlyConfigured('MODELTRANS_AVAILABLE_LANGUAGES should be an iterable of strings')
+
+    return languages
 
 
 def get_fallback_setting():

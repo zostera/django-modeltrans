@@ -1,5 +1,8 @@
 # django-modeltrans change log
 
+## unreleased
+ - Check if `MODELTRANS_AVAILABLE_LANGUAGES` only contains strings.
+
 ## 0.0.7 (2017-09-04)
  - Cleaned up the settings used by django-modeltrans [#19](https://github.com/zostera/django-modeltrans/pull/19).
    This might be a breaking change, depending on your configuration.

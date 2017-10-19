@@ -1,7 +1,7 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 
-from modeltrans.conf import check_fallback_chain
+from modeltrans.conf import check_fallback_chain, get_available_languages_setting
 
 
 class FallbackConfTest(TestCase):
@@ -42,3 +42,11 @@ class FallbackConfTest(TestCase):
 
         with self.assertRaisesMessage(ImproperlyConfigured, message):
             check_fallback_chain()
+
+    @override_settings(
+        MODELTRANS_AVAILABLE_LANGUAGES=(('nl', 'Dutch'), ('en', 'English'))
+    )
+    def test_available_languages_should_be_str(self):
+        message = 'MODELTRANS_AVAILABLE_LANGUAGES should be an iterable of strings'
+        with self.assertRaisesMessage(ImproperlyConfigured, message):
+            get_available_languages_setting()
