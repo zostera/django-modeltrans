@@ -1,3 +1,5 @@
+import itertools
+
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils import six
@@ -15,13 +17,14 @@ def get_available_languages_setting():
     languages = tuple(set(getattr(
         settings,
         'MODELTRANS_AVAILABLE_LANGUAGES',
-        [code for code, _ in getattr(settings, 'LANGUAGES') if code != get_default_language()]
+        (code for code, _ in getattr(settings, 'LANGUAGES'))
     )))
 
     if not all(isinstance(x, six.string_types) for x in languages):
         raise ImproperlyConfigured('MODELTRANS_AVAILABLE_LANGUAGES should be an iterable of strings')
 
-    return languages
+    # make sure LANGUAGE_CODE is not in available languages
+    return (lang for lang in languages if lang != get_default_language())
 
 
 def get_fallback_setting():
@@ -38,8 +41,7 @@ def get_available_languages(include_default=True):
 
     if include_default:
         return tuple(set(
-            MODELTRANS_AVAILABLE_LANGUAGES +
-            tuple((get_default_language(), ))
+            itertools.chain(MODELTRANS_AVAILABLE_LANGUAGES, (get_default_language(), ))
         ))
     else:
         return MODELTRANS_AVAILABLE_LANGUAGES
