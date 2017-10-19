@@ -11,12 +11,12 @@ the language codes extracted from django's `LANGUAGES setting <https://docs.djan
 
 Note that
  - the default language, defined in django's `LANGUAGE_CODE setting <https://docs.djangoproject.com/en/stable/ref/settings/#language-code>`_,
-   should not be added to this list.
+   should not be added to this list (will be ignored).
  - order is not important
 
 A custom definition might be::
 
-    MODELTRANS_AVAILABLE_LANGUAGES = ('en', 'de', 'fr')
+    MODELTRANS_AVAILABLE_LANGUAGES = ('de', 'fr')
 
 
 ``MODELTRANS_FALLBACK``
