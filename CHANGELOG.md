@@ -1,6 +1,6 @@
 # django-modeltrans change log
 
-## unreleased
+## 0.0.8 (2017-10-19)
  - Check if `MODELTRANS_AVAILABLE_LANGUAGES` only contains strings.
  - Make sure `settings.LANGUAGE_CODE` is never returned from `conf.get_available_languages()`
 
