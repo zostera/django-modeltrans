@@ -135,6 +135,28 @@ class FilterTest(TestCase):
         with override('nl'):
             Attribute.objects.filter(blogattr__object_id__in=Blog.objects.filter(title__contains='al'))
 
+    def test_filter_subquery(self):
+        '''
+        When in a subquery, the table alias should be used rather than the real
+        table name.
+        '''
+        c1 = Category.objects.create(name='Sofa', name_nl='Bank')
+        c2 = Category.objects.create(name='modeltrans', name_nl='modeltrans')
+        birds = Category.objects.create(name='Birds')
+
+        Blog.objects.create(title='Chesterfield', category=c1)
+        Blog.objects.create(title='Why migrate', category=c2)
+        Blog.objects.create(title='Initial prototype', category=c2)
+        Blog.objects.create(title='Dogfooding', category=c2)
+
+        Blog.objects.create(title='Falcon', category=birds)
+
+        qs = Blog.objects.filter(
+            category__in=Category.objects.filter(name_nl__contains='an')
+        )
+
+        self.assertEquals(len(list(qs)), 4)
+
     @skip('Not yet implemented')
     def test_filter_spanning_relation(self):
         birds = Category.objects.create(name='Birds', name_nl='Vogels')
@@ -318,7 +340,7 @@ class ValuesTest(TestCase):
     def test_values_spanning_relation(self):
         qs = Blog.objects.all().order_by('title_nl') \
             .values_list('title_nl', 'category__name_nl')
-
+        print(qs.query)
         self.assertEquals(
             list(qs),
             [(None, None), ('Kikker', 'Amfibiën'), ('Valk', 'Vogels')]
