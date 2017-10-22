@@ -172,13 +172,16 @@ class TranslatedVirtualField(object):
         return Field()
 
     def _localized_lookup(self, language):
+        from django.contrib.postgres.fields.jsonb import KeyTextTransform
+
         if language == DEFAULT_LANGUAGE:
             return self.original_name
 
         quoted_table_name = connection.ops.quote_name(self.model._meta.db_table)
         name = build_localized_fieldname(self.original_name, language)
-
-        return RawSQL('{}.i18n->>%s'.format(quoted_table_name), (name, ))
+        print quoted_table_name
+        return KeyTextTransform(name, 'i18n')
+        # return RawSQL('''{}."i18n" ->> %s '''.format(quoted_table_name), (name, ))
 
     def sql_lookup(self, fallback=True):
         '''
