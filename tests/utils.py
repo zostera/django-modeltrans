@@ -1,9 +1,9 @@
-from django.db import connection
+from django.db import connection, models
 
 
 class CreateTestModel():
     '''
-    Create the database table for a Model during tests.
+    Create the database table for a one or more Models during tests.
 
     Helpfull if we want to use custom settings which influence the models
     created in our tests, used like this::
@@ -20,19 +20,21 @@ class CreateTestModel():
 
                     self.assertEquals(m.title, 'foo')
     '''
-    def __init__(self, Model):
-        self.Model = Model
+    def __init__(self, *models):
+        self.models = models
 
     def __enter__(self):
         '''
-        Create the table in our database
+        Create the tables in our database
         '''
         with connection.schema_editor() as editor:
-            editor.create_model(self.Model)
+            for Model in self.models:
+                editor.create_model(Model)
 
     def __exit__(self, *args):
         '''
-        Remove the table from our database
+        Remove the tables from our database
         '''
         with connection.schema_editor() as editor:
-            editor.delete_model(self.Model)
+            for Model in self.models:
+                editor.delete_model(Model)

@@ -213,7 +213,7 @@ class FilterTest(TestCase):
         print(qs.query)
 
 
-class OrderByTest(TestCase):
+class SimpleOrderByTest(TestCase):
     EN = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
     NL = ['A', 'B', 'C', 'D', 'Z', 'Y', 'X']
     FR = ['1', '1', '1', '1', '2', '2', '2']
@@ -253,19 +253,33 @@ class OrderByTest(TestCase):
 
             self.assertEquals(key(qs, 'title_i18n'), 'A B C D H X Y Z'.split())
 
-    def test_order_by_related_field(self):
+class OrderByTest(TestCase):
+    def setUp(self):
         birds = Category.objects.create(name='Birds', name_nl='Vogels')
-        Blog.objects.create(title='Falcon', category=birds)
-        Blog.objects.create(title='Vulture', category=birds)
-
         mammals = Category.objects.create(name='Mammals', name_nl='Zoogdieren')
-        Blog.objects.create(title='Bat', category=mammals)
-        Blog.objects.create(title='Dolfin', category=mammals)
-        Blog.objects.create(title='Zebra', category=mammals)
 
+        Blog.objects.bulk_create([
+            Blog(title='Falcon', category=birds),
+            Blog(title='Vulture', category=birds),
+
+            Blog(title='Bat', category=mammals),
+            Blog(title='Dolfin', category=mammals),
+            Blog(title='Zebra', category=mammals)
+        ])
+
+    def test_order_by_related_field(self):
         qs = Blog.objects.filter(category__isnull=False).order_by('-category__name_i18n', '-title')
-
         self.assertEquals(key(qs, 'title'), 'Zebra Dolfin Bat Vulture Falcon'.split())
+
+    def test_order_by_annotation(self):
+        qs = Category.objects.annotate(
+            num_blogs=models.Count('blog__title')
+        ).order_by('-num_blogs')
+
+        self.assertEquals(
+            {(m.name, m.num_blogs) for m in qs},
+            {('Mammals', 3), ('Birds', 2)}
+        )
 
 
 class FallbackOrderByTest(TestCase):
