@@ -217,7 +217,7 @@ class MultilingualQuerySet(models.query.QuerySet):
             return f
         field, _ = self._get_field(f.name)
 
-        rewritten = self.add_i18n_annotation(
+        rewritten = self._add_i18n_annotation(
             virtual_field=field,
             fallback=False,
             bare_lookup=f.name
