@@ -2,12 +2,11 @@
 
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ImproperlyConfigured
-from django.db import connection
 from django.db.models import fields
-from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import ugettext as _
 
+from .compat import KeyTextTransform
 from .conf import get_default_language, get_fallback_chain
 from .utils import build_localized_fieldname, get_language
 
@@ -171,19 +170,16 @@ class TranslatedVirtualField(object):
 
         return Field()
 
-    def _localized_lookup(self, language):
-        from django.contrib.postgres.fields.jsonb import KeyTextTransform
-
+    def _localized_lookup(self, language, bare_lookup):
         if language == DEFAULT_LANGUAGE:
             return self.original_name
 
-        quoted_table_name = connection.ops.quote_name(self.model._meta.db_table)
         name = build_localized_fieldname(self.original_name, language)
-        print quoted_table_name
-        return KeyTextTransform(name, 'i18n')
-        # return RawSQL('''{}."i18n" ->> %s '''.format(quoted_table_name), (name, ))
 
-    def sql_lookup(self, fallback=True):
+        i18n_lookup = bare_lookup.replace(self.name, 'i18n')
+        return KeyTextTransform(name, i18n_lookup)
+
+    def sql_lookup(self, bare_lookup, fallback=True):
         '''
         Compose the sql lookup to get the value for this virtual field in a query.
         '''
@@ -195,15 +191,15 @@ class TranslatedVirtualField(object):
         if fallback:
             fallback_chain = get_fallback_chain(language)
             # first, add the current language to the list of lookups
-            lookups = [self._localized_lookup(language)]
+            lookups = [self._localized_lookup(language, bare_lookup)]
             # and now, add the list of fallback languages to the lookup list
             for fallback_language in fallback_chain:
                 lookups.append(
-                    self._localized_lookup(fallback_language)
+                    self._localized_lookup(fallback_language, bare_lookup)
                 )
             return Coalesce(*lookups, output_field=self.output_field())
         else:
-            i18n_lookup = self._localized_lookup(language)
+            i18n_lookup = self._localized_lookup(language, bare_lookup)
             return Cast(i18n_lookup, self.output_field())
 
 
