@@ -24,6 +24,12 @@ class I18nMigrationTest(TestCase):
         self.assertTrue('app_category_i18n_gin' in output)
 
     def test_get_translatable_models(self):
+        '''
+        get_translatable_models() Should only work if django-modeltranslation is
+        available.
+        So if this test fails in your dev environment, you probably have
+        django-modeltranslation installed
+        '''
 
         with self.assertRaises(ImproperlyConfigured):
             get_translatable_models()
