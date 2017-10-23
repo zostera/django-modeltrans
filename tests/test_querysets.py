@@ -231,13 +231,13 @@ class OrderByTest(TestCase):
         '''Multiple translated fields should work too'''
         qs = Blog.objects.all().order_by('-title_fr', 'title_nl')
 
-        self.assertEquals(key(qs, 'title_nl'), 'X,Y,Z,A,B,C,D'.split(','))
+        self.assertEquals(key(qs, 'title_nl'), 'X Y Z A B C D'.split())
 
     def test_order_asc(self):
         qs = Blog.objects.all().order_by('title_nl')
 
         self.assertEquals(key(qs, 'title_nl'), sorted(self.NL))
-        self.assertEquals(key(qs, 'title'), 'A,B,C,D,G,F,E'.split(','))
+        self.assertEquals(key(qs, 'title'), 'A B C D G F E'.split())
 
     def test_order_desc(self):
         qs = Blog.objects.all().order_by('-title_nl')
@@ -251,11 +251,21 @@ class OrderByTest(TestCase):
         with override('nl'):
             qs = Blog.objects.all().order_by('title_i18n')
 
-            self.assertEquals(key(qs, 'title_i18n'), ['A', 'B', 'C', 'D', 'H', 'X', 'Y', 'Z'])
+            self.assertEquals(key(qs, 'title_i18n'), 'A B C D H X Y Z'.split())
 
     def test_order_by_related_field(self):
-        # TODO: implement
-        pass
+        birds = Category.objects.create(name='Birds', name_nl='Vogels')
+        Blog.objects.create(title='Falcon', category=birds)
+        Blog.objects.create(title='Vulture', category=birds)
+
+        mammals = Category.objects.create(name='Mammals', name_nl='Zoogdieren')
+        Blog.objects.create(title='Bat', category=mammals)
+        Blog.objects.create(title='Dolfin', category=mammals)
+        Blog.objects.create(title='Zebra', category=mammals)
+
+        qs = Blog.objects.filter(category__isnull=False).order_by('-category__name_i18n', '-title')
+
+        self.assertEquals(key(qs, 'title'), 'Zebra Dolfin Bat Vulture Falcon'.split())
 
 
 class FallbackOrderByTest(TestCase):

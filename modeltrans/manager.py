@@ -6,6 +6,7 @@ from django.db.models import F, TextField
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields.related import ForeignKey
 from django.db.models.functions import Cast
+from django.utils import six
 
 from .conf import get_default_language
 from .fields import TranslatedVirtualField, TranslationField
@@ -83,10 +84,6 @@ class MultilingualQuerySet(models.query.QuerySet):
             the name of the annotation created.
 
         '''
-        annotation = virtual_field.sql_lookup(fallback=fallback, bare_lookup=bare_lookup)
-        if isinstance(annotation, str):
-            return annotation
-
         if virtual_field.model is not self.model:
             # make sure Django properly joins the tables.
             # ie: when the lookup is `category__name_nl`, we add an annotation
@@ -101,11 +98,91 @@ class MultilingualQuerySet(models.query.QuerySet):
                 related_annotation_name
             )
 
+        annotation = virtual_field.sql_lookup(fallback=fallback, bare_lookup=bare_lookup)
+        if isinstance(annotation, six.string_types):
+            return annotation
+
         if annotation_name is None:
             annotation_name = '{}_annotation'.format(virtual_field.name)
 
         self.query.add_annotation(annotation, annotation_name)
         return annotation_name
+
+    def _get_field(self, lookup):
+        '''
+        Return the Django model field for a lookup plus the remainder of the lookup,
+        which should be the lookup type.
+        '''
+        field = None
+        lookup_type = ''
+
+        bits = lookup.split(LOOKUP_SEP)
+
+        model = self.model
+        for i, bit in enumerate(bits):
+            try:
+                field = model._meta.get_field(bit)
+            except FieldDoesNotExist:
+                lookup_type = LOOKUP_SEP.join(bits[i:])
+                break
+
+            if hasattr(field, 'remote_field'):
+                rel = getattr(field, 'remote_field', None)
+                model = getattr(rel, 'model', model)
+
+        return field, lookup_type
+
+    def _rewrite_expression(self, lookup, value):
+        value = self._rewrite_F(value)
+
+        # pk not a field, but shorthand for the primary key column.
+        if lookup == 'pk':
+            return lookup, value
+
+        field, lookup_type = self._get_field(lookup)
+
+        if not isinstance(field, TranslatedVirtualField):
+            return lookup, value
+
+        if lookup_type != '':
+            bare_lookup = lookup[0:-(len(LOOKUP_SEP + lookup_type))]
+        else:
+            bare_lookup = lookup
+
+        filter_field_name = self._add_i18n_annotation(
+            virtual_field=field,
+            bare_lookup=bare_lookup,
+            fallback=field.language is None
+        )
+
+        # re-add lookup type
+        if len(lookup_type) > 0:
+            filter_field_name += LOOKUP_SEP + lookup_type
+
+        return filter_field_name, value
+
+    def _rewrite_F(self, f):
+        if not isinstance(f, F):
+            return f
+        field, _ = self._get_field(f.name)
+
+        rewritten = self._add_i18n_annotation(
+            virtual_field=field,
+            fallback=False,
+            bare_lookup=f.name
+        )
+
+        return F(rewritten)
+
+    def _rewrite_Q(self, q):
+        if isinstance(q, models.Q):
+            return models.Q._new_instance(
+                list(self._rewrite_Q(child) for child in q.children),
+                connector=q.connector,
+                negated=q.negated
+            )
+        if isinstance(q, (list, tuple)):
+            return self._rewrite_expression(*q)
 
     def create(self, **kwargs):
         '''
@@ -156,84 +233,6 @@ class MultilingualQuerySet(models.query.QuerySet):
             new_field_names.append(sort_order + sort_field_name)
 
         return super(MultilingualQuerySet, self).order_by(*new_field_names)
-
-    def _get_field(self, lookup):
-        '''
-        Return the Django model field for a lookup plus the remainder of the lookup,
-        which should be the lookup type.
-        '''
-        field = None
-        lookup_type = ''
-
-        bits = lookup.split(LOOKUP_SEP)
-
-        model = self.model
-        for i, bit in enumerate(bits):
-            try:
-                field = model._meta.get_field(bit)
-            except FieldDoesNotExist:
-                lookup_type = LOOKUP_SEP.join(bits[i:])
-                break
-
-            if hasattr(field, 'remote_field'):
-                rel = getattr(field, 'remote_field', None)
-                model = getattr(rel, 'model', model)
-
-        return field, lookup_type
-
-    def _rewrite_expression(self, lookup, value):
-        value = self._rewrite_F(value)
-
-        # pk not a field, but shorthand for the primary key column.
-        if lookup == 'pk':
-            return lookup, value
-
-        # print 'rewrite_expression({}, {})'.format(lookup, value)
-
-        field, lookup_type = self._get_field(lookup)
-
-        if not isinstance(field, TranslatedVirtualField):
-            return lookup, value
-
-        if lookup_type != '':
-            bare_lookup = lookup[0:-(len(LOOKUP_SEP + lookup_type))]
-        else:
-            bare_lookup = lookup
-
-        filter_field_name = self._add_i18n_annotation(
-            virtual_field=field,
-            bare_lookup=bare_lookup,
-            fallback=field.language is None
-        )
-
-        # re-add lookup type
-        if len(lookup_type) > 0:
-            filter_field_name += LOOKUP_SEP + lookup_type
-
-        return filter_field_name, value
-
-    def _rewrite_F(self, f):
-        if not isinstance(f, F):
-            return f
-        field, _ = self._get_field(f.name)
-
-        rewritten = self._add_i18n_annotation(
-            virtual_field=field,
-            fallback=False,
-            bare_lookup=f.name
-        )
-
-        return F(rewritten)
-
-    def _rewrite_Q(self, q):
-        if isinstance(q, models.Q):
-            return models.Q._new_instance(
-                list(self._rewrite_Q(child) for child in q.children),
-                connector=q.connector,
-                negated=q.negated
-            )
-        if isinstance(q, (list, tuple)):
-            return self._rewrite_expression(*q)
 
     def _filter_or_exclude(self, negate, *args, **kwargs):
         '''

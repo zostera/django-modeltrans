@@ -172,7 +172,7 @@ class TranslatedVirtualField(object):
 
     def _localized_lookup(self, language, bare_lookup):
         if language == DEFAULT_LANGUAGE:
-            return self.original_name
+            return bare_lookup.replace(self.name, self.original_name)
 
         name = build_localized_fieldname(self.original_name, language)
 
@@ -186,7 +186,7 @@ class TranslatedVirtualField(object):
 
         language = self.get_language()
         if language == DEFAULT_LANGUAGE:
-            return self.original_name
+            return self._localized_lookup(language, bare_lookup)
 
         if fallback:
             fallback_chain = get_fallback_chain(language)

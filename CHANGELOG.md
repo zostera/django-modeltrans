@@ -1,5 +1,11 @@
 # django-modeltrans change log
 
+## unreleased
+ - Use proper alias in subqueries, fixes #23.
+ - Support lookups on related translated fields (`.filter(category__name_nl='Vogels')`), fixes #13.
+ - Use `KeyTextTransform()` rather than `RawSQL()` to access keys in the `JSONField`. For Django 1.9 and 1.10 the Django 1.11 version is used.
+ - 
+
 ## 0.0.8 (2017-10-19)
  - Check if `MODELTRANS_AVAILABLE_LANGUAGES` only contains strings.
  - Make sure `settings.LANGUAGE_CODE` is never returned from `conf.get_available_languages()`
