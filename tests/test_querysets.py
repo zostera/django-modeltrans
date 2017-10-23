@@ -208,14 +208,19 @@ class FilterTest(TestCase):
         to use the rewrite of the fields.
         '''
         s = Site.objects.create(name='Testsite')
-        Site.objects.create(name='Different site')
         Blog.objects.create(title='Strange', title_nl='Vreemd', site=s)
+
+        site_modeltrans = Site.objects.create(name='Modeltrans blog')
+        Blog.objects.create(title='Version 0.1.1 of modeltrans released', site=site_modeltrans)
 
         qs = Site.objects.filter(blog__title='Strange')
         self.assertEquals({m.name for m in qs}, {'Testsite'})
 
         qs = Site.objects.filter(blog__title_nl='Vreemd')
         self.assertEquals({m.name for m in qs}, {'Testsite'})
+
+        qs = Site.objects.filter(blog__title_i18n__contains='modeltrans')
+        self.assertEquals({m.name for m in qs}, {'Modeltrans blog'})
 
 
 class SimpleOrderByTest(TestCase):

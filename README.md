@@ -22,7 +22,7 @@ Queryset/Manager and can be considered TODO.
 - If the field `'i18n'` is added to `.defer()`, augmentation will likely not work at all. Adding translated fields (`title_nl`) to `.defer()` will likely yield error messages, and doesn't make sense as they are stored in `i18n`.
 - Passing expressions (kwargs) containing references to translated fields in  `values()` and `values_list()` is not supported.
 - Using translated fields in `.annotate()`, `.distinct()`, `.extra()`, `.aggregate()`, `.update()` is not supported.
-- Behaveiour is tested using `CharField()` en `TextField()`, as these make most sense for translated values.
+- Behaviour is tested using `CharField()` en `TextField()`, as these make most sense for translated values.
 
 # Running the tests
 
