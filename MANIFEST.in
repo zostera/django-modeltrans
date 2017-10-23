@@ -1,6 +1,5 @@
 include README.md
 include CHANGELOG.md
 include LICENSE
-recursive-include docs *
 recursive-include modeltrans/ *
 global-exclude *.pyc

@@ -1,5 +1,9 @@
 # django-modeltrans change log
 
+## 0.1.1 (2017-10-23)
+ - Allow adding `MultilingualManager()` as a manager to objects without translations to allow lookups
+   of translated content through those managers.
+
 ## 0.1.0 (2017-10-23)
  - Use proper alias in subqueries, fixes #23.
  - Support lookups on and ordering by related translated fields (`.filter(category__name_nl='Vogels')`), fixes #13.
