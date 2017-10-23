@@ -2,7 +2,6 @@
 
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
-from django.db.models import F, TextField
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields.related import ForeignKey
 from django.db.models.functions import Cast
@@ -166,9 +165,12 @@ class MultilingualQuerySet(models.query.QuerySet):
         return filter_field_name, value
 
     def _rewrite_F(self, f):
-        if not isinstance(f, F):
+        if not isinstance(f, models.F):
             return f
         field, _ = self._get_field(f.name)
+
+        if not isinstance(field, TranslatedVirtualField):
+            return f
 
         rewritten = self._add_i18n_annotation(
             virtual_field=field,
@@ -176,7 +178,7 @@ class MultilingualQuerySet(models.query.QuerySet):
             bare_lookup=f.name
         )
 
-        return F(rewritten)
+        return models.F(rewritten)
 
     def _rewrite_Q(self, q):
         if isinstance(q, models.Q):
@@ -187,6 +189,20 @@ class MultilingualQuerySet(models.query.QuerySet):
             )
         if isinstance(q, (list, tuple)):
             return self._rewrite_expression(*q)
+
+    def _rewrite_Func(self, f):
+        if not isinstance(f, models.Func):
+            return f
+
+        new_expressions = []
+        for expression in f.source_expressions:
+            new_expressions.append(self._rewrite_F(expression))
+
+        kwargs = {}
+        if hasattr(f, 'output_field'):
+            kwargs['output_field'] = f.output_field
+
+        return type(f)(*new_expressions, **kwargs)
 
     def create(self, **kwargs):
         '''
@@ -213,7 +229,11 @@ class MultilingualQuerySet(models.query.QuerySet):
         for field_name in field_names:
             # TODO: function passed to order_by, for example: Lower('title').
             # contents must be properly taken care of.
-            if not isinstance(field_name, six.string_types) or '_' not in field_name:
+            if not isinstance(field_name, six.string_types):
+                new_field_names.append(self._rewrite_Func(field_name))
+                break
+
+            if '_' not in field_name:
                 new_field_names.append(field_name)
                 continue
 

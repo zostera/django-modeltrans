@@ -340,8 +340,13 @@ class OrderByTest(TestCase):
         qs = Blog.objects.filter(category=c).order_by('title', 'title_nl')
         self.assertEquals({m.title for m in qs}, {'A', 'a'})
 
-        qs = Blog.objects.filter(category=c) \
-            .order_by(Lower('title'), 'title_nl')
+        qs = Blog.objects.filter(category=c).order_by(Lower('title'), 'title_nl')
+        self.assertEquals({m.title for m in qs}, {'A', 'a'})
+
+        qs = Blog.objects.filter(category=c).order_by(Lower('title_nl'))
+        self.assertEquals({m.title for m in qs}, {'A', 'a'})
+
+        qs = Blog.objects.filter(category=c).order_by(Lower('title_i18n'))
         self.assertEquals({m.title for m in qs}, {'A', 'a'})
 
 

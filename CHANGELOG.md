@@ -2,6 +2,7 @@
 
 ## 0.1.2 (2017-10-23)
  - Ensure a dynamic mixed `MultilingualQuerySet` can be pickled.
+ - Add basic support for `Func` in `order_by()`
 
 ## 0.1.1 (2017-10-23)
  - Allow adding `MultilingualManager()` as a manager to objects without translations to allow lookups
