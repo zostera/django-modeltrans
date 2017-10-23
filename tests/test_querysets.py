@@ -139,7 +139,6 @@ class FilterTest(TestCase):
             b = Blog.objects.get(Q(title_i18n='Kikker'))
             self.assertEquals(b.title, 'Frog')
 
-    @skip('temp')
     def test_filter_F_expression(self):
         Blog.objects.create(title='foo', title_nl=20, title_fr=10)
         Blog.objects.create(title='bar', title_nl=20, title_fr=30)
@@ -222,6 +221,11 @@ class OrderByTest(TestCase):
     def setUp(self):
         for i, en in enumerate(self.EN):
             Blog.objects.create(title=en, i18n={'title_nl': self.NL[i], 'title_fr': self.FR[i]})
+
+    def test_regular_fields(self):
+        qs = Blog.objects.all().order_by('-title')
+
+        self.assertEquals(key(qs, 'title'), 'G,F,E,D,C,B,A'.split(','))
 
     def test_order_by_two_fields(self):
         '''Multiple translated fields should work too'''
