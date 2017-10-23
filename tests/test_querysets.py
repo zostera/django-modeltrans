@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import pickle
 from unittest import skip
 
 from django.db import models
@@ -42,6 +43,40 @@ class GetFieldTest(TestCase):
     def test_endswith(self):
         self.assert_lookup('title__endswith', 'title', 'endswith')
         self.assert_lookup('category__name__endswith', 'name', 'endswith')
+
+
+class PickleTest(TestCase):
+    def setUp(self):
+        c = Category.objects.create(name='Hobby')
+        Blog.objects.create(title='Pickle', title_de='Einlegen', title_nl='Inmaken', category=c)
+        Blog.objects.create(title='Roadcycling', title_de='Radfahren', title_nl='Racefietsen', category=c)
+
+    def test_pickle_queryset(self):
+        qs = Blog.objects.all()
+        serialized = pickle.dumps(qs)
+
+        self.assertEquals(
+            {m.title for m in qs},
+            {m.title for m in pickle.loads(serialized)}
+        )
+
+    def test_pickle_prefetch_related(self):
+        qs = Blog.objects.all().prefetch_related('category')
+        serialized = pickle.dumps(qs)
+
+        self.assertEquals(
+            {m.title for m in qs},
+            {m.title for m in pickle.loads(serialized)}
+        )
+
+    def test_pickle_custom_queryset(self):
+        qs = Category.objects.all()
+        serialized = pickle.dumps(qs)
+
+        self.assertEquals(
+            {m.name for m in qs},
+            {m.name for m in pickle.loads(serialized)}
+        )
 
 
 class FilterTest(TestCase):

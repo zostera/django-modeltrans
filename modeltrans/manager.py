@@ -301,6 +301,12 @@ class MultilingualQuerySet(models.query.QuerySet):
 
         return super(MultilingualQuerySet, self)._values(*fields, **expressions)
 
+    def __reduce__(self):
+        '''
+        Make sure a dynamic version of this class can be pickled
+        '''
+        return multilingual_queryset_factory, (self.__class__.__bases__[0],), self.__getstate__()
+
 
 def multilingual_queryset_factory(old_cls, instantiate=True):
     '''Return a MultilingualQuerySet, or mix MultilingualQuerySet in custom QuerySets.'''

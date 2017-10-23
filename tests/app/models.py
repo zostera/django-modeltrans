@@ -10,10 +10,19 @@ from modeltrans.fields import TranslationField
 from modeltrans.manager import MultilingualManager
 
 
+class CategoryQueryset(models.QuerySet):
+    '''
+    Custom manager to make sure pickling on-the-fly created classes
+    can be pickled, see test_querysets.py::PickleTest
+    '''
+
+
 class Category(models.Model):
     name = models.CharField(max_length=255)
 
     i18n = TranslationField(fields=('name', ))
+
+    objects = CategoryQueryset.as_manager()
 
     def __str__(self):
         return self.name
