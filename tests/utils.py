@@ -20,8 +20,8 @@ class CreateTestModel():
 
                     self.assertEquals(m.title, 'foo')
     '''
-    def __init__(self, *models):
-        self.models = models
+    def __init__(self, *args):
+        self.models = args
 
     def __enter__(self):
         '''

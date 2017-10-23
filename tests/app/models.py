@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from modeltrans.fields import TranslationField
+from modeltrans.manager import MultilingualManager
 
 
 class Category(models.Model):
@@ -19,6 +21,8 @@ class Category(models.Model):
 
 class Site(models.Model):
     name = models.CharField(max_length=255)
+
+    objects = MultilingualManager()
 
     def __str__(self):
         return self.name

@@ -22,6 +22,11 @@ def transform_translatable_fields(model, fields):
         fields (dict): kwargs to a model __init__ or Model.objects.create() method
             for which the field names need to be translated to values in the i18n field
     '''
+    # if the current model does have the TranslationField, so we must not apply
+    # any transformation for it will result in a:
+    # TypeError: 'i18n' is an invalid keyword argument for this function
+    if not hasattr(model, 'i18n'):
+        return fields
 
     ret = {
         'i18n': fields.get('i18n', {})
@@ -82,7 +87,6 @@ class MultilingualQuerySet(models.query.QuerySet):
 
         Returns:
             the name of the annotation created.
-
         '''
         if virtual_field.model is not self.model:
             # make sure Django properly joins the tables.
@@ -207,7 +211,9 @@ class MultilingualQuerySet(models.query.QuerySet):
         new_field_names = []
 
         for field_name in field_names:
-            if '_' not in field_name:
+            # TODO: function passed to order_by, for example: Lower('title').
+            # contents must be properly taken care of.
+            if not isinstance(field_name, six.string_types) or '_' not in field_name:
                 new_field_names.append(field_name)
                 continue
 

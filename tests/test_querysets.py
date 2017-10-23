@@ -202,15 +202,20 @@ class FilterTest(TestCase):
             {b.title for b in bird_blogs}
         )
 
-    @skip('Not yet supported')
     def test_filter_spanning_relation_from_non_translatable(self):
         '''
-        Not sure if we should support this, but it requires having
-        `MultilingualManager` on non-translated models too.
+        `MultilingualManager` must be set on non-translated models too in order
+        to use the rewrite of the fields.
         '''
+        s = Site.objects.create(name='Testsite')
+        Site.objects.create(name='Different site')
+        Blog.objects.create(title='Strange', title_nl='Vreemd', site=s)
 
-        qs = Site.objects.filter(blog__title_nl__contains='al')
-        print(qs.query)
+        qs = Site.objects.filter(blog__title='Strange')
+        self.assertEquals({m.name for m in qs}, {'Testsite'})
+
+        qs = Site.objects.filter(blog__title_nl='Vreemd')
+        self.assertEquals({m.name for m in qs}, {'Testsite'})
 
 
 class SimpleOrderByTest(TestCase):
@@ -253,6 +258,7 @@ class SimpleOrderByTest(TestCase):
 
             self.assertEquals(key(qs, 'title_i18n'), 'A B C D H X Y Z'.split())
 
+
 class OrderByTest(TestCase):
     def setUp(self):
         birds = Category.objects.create(name='Birds', name_nl='Vogels')
@@ -271,6 +277,9 @@ class OrderByTest(TestCase):
         qs = Blog.objects.filter(category__isnull=False).order_by('-category__name_i18n', '-title')
         self.assertEquals(key(qs, 'title'), 'Zebra Dolfin Bat Vulture Falcon'.split())
 
+        qs = Blog.objects.filter(category__isnull=False).order_by('-category__name_nl', '-title')
+        self.assertEquals(key(qs, 'title'), 'Zebra Dolfin Bat Vulture Falcon'.split())
+
     def test_order_by_annotation(self):
         qs = Category.objects.annotate(
             num_blogs=models.Count('blog__title')
@@ -280,6 +289,20 @@ class OrderByTest(TestCase):
             {(m.name, m.num_blogs) for m in qs},
             {('Mammals', 3), ('Birds', 2)}
         )
+
+    def test_order_by_lower(self):
+        from django.db.models.functions import Lower
+
+        c = Category.objects.create(name='test')
+        Blog.objects.create(title='A', title_nl='c', category=c)
+        Blog.objects.create(title='a', title_nl='b', category=c)
+
+        qs = Blog.objects.filter(category=c).order_by('title', 'title_nl')
+        self.assertEquals({m.title for m in qs}, {'A', 'a'})
+
+        qs = Blog.objects.filter(category=c) \
+            .order_by(Lower('title'), 'title_nl')
+        self.assertEquals({m.title for m in qs}, {'A', 'a'})
 
 
 class FallbackOrderByTest(TestCase):
