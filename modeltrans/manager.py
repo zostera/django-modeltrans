@@ -4,6 +4,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import F, TextField
 from django.db.models.constants import LOOKUP_SEP
+from django.db.models.fields.related import ForeignKey
 from django.db.models.functions import Cast
 
 from .conf import get_default_language
@@ -64,39 +65,44 @@ class MultilingualQuerySet(models.query.QuerySet):
     mixed in to the manager class of that model.
     '''
 
-    def add_i18n_annotation(self, field, annotation_name=None, fallback=True):
+    def _add_i18n_annotation(self, virtual_field=None, fallback=True, bare_lookup=None, annotation_name=None):
         '''
         Private method to add an annotation to the query to extract the translated
         version of a field from the jsonb field to allow filtering and ordering.
 
         Arguments:
             field (TranslatedVirtualField): the virtual field to create an annotation for.
-            annotation_name (str): name of the annotation, if None (by default),
-                `<original_field>_<lang>_annotation` will be used.
+            annotation_name (str): name of the annotation, if None the default
+                `<original_field>_<lang>_annotation` will be used
+
             fallback (bool): If `True`, `COALESCE` will be used to get the value
                 of the original field if the requested translation is not in the
                 `i18n` dict.
 
         Returns:
-            the name of the annotation.
+            the name of the annotation created.
+
         '''
-        annotation = field.sql_lookup(fallback)
+        annotation = virtual_field.sql_lookup(fallback=fallback, bare_lookup=bare_lookup)
         if isinstance(annotation, str):
             return annotation
 
-        if field.model is not self.model and annotation_name is not None:
-            # strip the language to make sure Django properly joins the tables.
+        if virtual_field.model is not self.model:
+            # make sure Django properly joins the tables.
             # ie: when the lookup is `category__name_nl`, we add an annotation
             # for placeholder=Cast('category__name').
             # This has the side-effect that Django properly joins the tables,
             # but in case of values(), it is not added to the final query.
-            lookup_with_original_field = annotation_name[:annotation_name.rfind(field.name)] + field.original_name
+            original_field_lookup = bare_lookup[:bare_lookup.rfind(virtual_field.name)] + virtual_field.original_name
+            related_annotation_name = original_field_lookup + '_related_helper'
+
             self.query.add_annotation(
-                Cast(lookup_with_original_field, TextField()), 'related_annotation_helper'
+                Cast(original_field_lookup, virtual_field.output_field()),
+                related_annotation_name
             )
 
         if annotation_name is None:
-            annotation_name = '{}_annotation'.format(field.name)
+            annotation_name = '{}_annotation'.format(virtual_field.name)
 
         self.query.add_annotation(annotation, annotation_name)
         return annotation_name
@@ -134,68 +140,100 @@ class MultilingualQuerySet(models.query.QuerySet):
                 field_name = field_name[1:]
                 sort_order = '-'
 
-            field = self.model._meta.get_field(field_name)
+            field, _ = self._get_field(field_name)
+
+            # if the field is just a normal field, no annotation needed.
             if not isinstance(field, TranslatedVirtualField):
                 new_field_names.append(sort_order + field_name)
                 continue
 
-            sort_field_name = self.add_i18n_annotation(field, fallback=True)
+            sort_field_name = self._add_i18n_annotation(
+                virtual_field=field,
+                fallback=True,
+                bare_lookup=field_name
+            )
 
             new_field_names.append(sort_order + sort_field_name)
 
         return super(MultilingualQuerySet, self).order_by(*new_field_names)
 
-    def rewrite_expression(self, lookup, value):
-        requested_field_name = lookup
-        query_type = ''
+    def _get_field(self, lookup):
+        '''
+        Return the Django model field for a lookup plus the remainder of the lookup,
+        which should be the lookup type.
+        '''
+        field = None
+        lookup_type = ''
 
-        value = self.rewrite_F(value)
+        bits = lookup.split(LOOKUP_SEP)
 
-        # strip the query type
-        # TODO: this is going wrong if a related lookup is used.
-        # ie category__name.
-        # probably fixable by looking at the
-        if '__' in lookup:
-            lookup = lookup[0:lookup.rfind('__')]
-            query_type = requested_field_name[len(lookup):]
+        model = self.model
+        for i, bit in enumerate(bits):
+            try:
+                field = model._meta.get_field(bit)
+            except FieldDoesNotExist:
+                lookup_type = LOOKUP_SEP.join(bits[i:])
+                break
 
-        # special case for pk, because it is not a field.
+            if hasattr(field, 'remote_field'):
+                rel = getattr(field, 'remote_field', None)
+                model = getattr(rel, 'model', model)
+
+        return field, lookup_type
+
+    def _rewrite_expression(self, lookup, value):
+        value = self._rewrite_F(value)
+
+        # pk not a field, but shorthand for the primary key column.
         if lookup == 'pk':
-            return requested_field_name, value
+            return lookup, value
 
-        try:
-            field = self.model._meta.get_field(lookup)
-        except FieldDoesNotExist:
-            return requested_field_name, value
+        # print 'rewrite_expression({}, {})'.format(lookup, value)
+
+        field, lookup_type = self._get_field(lookup)
 
         if not isinstance(field, TranslatedVirtualField):
-            return requested_field_name, value
+            return lookup, value
 
-        fallback = field.language is None
-        filter_field_name = self.add_i18n_annotation(field, fallback=fallback)
+        if lookup_type != '':
+            bare_lookup = lookup[0:-(len(LOOKUP_SEP + lookup_type))]
+        else:
+            bare_lookup = lookup
 
-        # re-add query type
-        filter_field_name += query_type
+        filter_field_name = self._add_i18n_annotation(
+            virtual_field=field,
+            bare_lookup=bare_lookup,
+            fallback=field.language is None
+        )
+
+        # re-add lookup type
+        if len(lookup_type) > 0:
+            filter_field_name += LOOKUP_SEP + lookup_type
 
         return filter_field_name, value
 
-    def rewrite_F(self, f):
+    def _rewrite_F(self, f):
         if not isinstance(f, F):
             return f
-        field = self._get_field(f.name)
-        rewritten = self.add_i18n_annotation(field, fallback=False)
+        field, _ = self._get_field(f.name)
+
+        rewritten = self.add_i18n_annotation(
+            virtual_field=field,
+            fallback=False,
+            bare_lookup=f.name
+        )
 
         return F(rewritten)
 
-    def rewrite_Q(self, q):
+    def _rewrite_Q(self, q):
         if isinstance(q, models.Q):
             return models.Q._new_instance(
-                list(self.rewrite_Q(child) for child in q.children),
+                list(self._rewrite_Q(child) for child in q.children),
                 connector=q.connector,
                 negated=q.negated
             )
         if isinstance(q, (list, tuple)):
-            return self.rewrite_expression(*q)
+            return self._rewrite_expression(*q)
 
     def _filter_or_exclude(self, negate, *args, **kwargs):
         '''
@@ -216,54 +254,44 @@ class MultilingualQuerySet(models.query.QuerySet):
         # handle Q expressions
         new_args = []
         for arg in args:
-            new_args.append(self.rewrite_Q(arg))
+            new_args.append(self._rewrite_Q(arg))
 
         # handle the kwargs
         new_kwargs = {}
         for field, value in kwargs.items():
-            new_kwargs.update(dict((self.rewrite_expression(field, value), )))
+            new_kwargs.update(dict((self._rewrite_expression(field, value), )))
 
         return super(MultilingualQuerySet, self)._filter_or_exclude(negate, *new_args, **new_kwargs)
-
-    def _get_field(self, lookup):
-        model = self.model
-
-        field = None
-        for part in lookup.split(LOOKUP_SEP):
-            try:
-                field = model._meta.get_field(part)
-            except FieldDoesNotExist:
-                break
-
-            if hasattr(field, 'remote_field'):
-                rel = getattr(field, 'remote_field', None)
-                model = getattr(rel, 'model', model)
-
-        return field
 
     def _values(self, *fields, **expressions):
         '''
         Annotate lookups for `values()` and `values_list()`
 
-        It must be possible to use `Blogs.objects.all().values_list('title_i18n', 'title_nl', 'title_en')`
+        It must be possible to use:
+        `Blogs.objects.all().values_list('title_i18n', 'title_nl', 'title_en')`
+
+        But also spanning relations:
+        `Blogs.objects.all().values_list('title_i18n', 'category__name__i18n')`
         '''
         _fields = fields + tuple(expressions)
 
         for field_name in _fields:
-            field = self._get_field(field_name)
+            field, lookup_type = self._get_field(field_name)
             if not isinstance(field, TranslatedVirtualField):
                 continue
 
             fallback = field.language is None
 
             if field.get_language() == get_default_language():
+                original_field = field_name.replace(field.name, field.original_field.name)
                 # TODO: see if we can just do this with add_i18n_annotation()
-                self.query.add_annotation(Cast(field.original_name, field.output_field()), field_name)
+                self.query.add_annotation(Cast(original_field, field.output_field()), field_name)
             else:
-                self.add_i18n_annotation(
-                    field,
-                    annotation_name=field_name,
-                    fallback=fallback
+                self._add_i18n_annotation(
+                    virtual_field=field,
+                    fallback=fallback,
+                    bare_lookup=field_name,
+                    annotation_name=field_name
                 )
 
         return super(MultilingualQuerySet, self)._values(*fields, **expressions)
