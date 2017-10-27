@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import json
+import os
 import pickle
 from unittest import skip
 
@@ -8,12 +10,27 @@ from django.db import models
 from django.db.models import F, Q
 from django.test import TestCase, override_settings
 from django.utils.translation import override
-
 from modeltrans.fields import TranslationField
 from modeltrans.translator import translate_model
 
 from .app.models import Attribute, Blog, BlogAttr, Category, Choice, Site
 from .utils import CreateTestModel
+
+
+def load_wiki():
+    wiki = Category.objects.create(name='Wikipedia')
+    with open(os.path.join('tests', 'fixtures', 'fulltextsearch.json')) as infile:
+        data = json.load(infile)
+
+        for article in data:
+            kwargs = {}
+            for item in article:
+                lang = '_' + item['lang']
+
+                kwargs['title' + lang] = item['title']
+                kwargs['body' + lang] = item['body']
+
+            Blog.objects.create(category=wiki, **kwargs)
 
 
 def key(queryset, key):
@@ -256,6 +273,20 @@ class FilterTest(TestCase):
 
         qs = Site.objects.filter(blog__title_i18n__contains='modeltrans')
         self.assertEquals({m.name for m in qs}, {'Modeltrans blog'})
+
+
+class FulltextSearch(TestCase):
+    @skip('Work in progress')
+    def test_SearchVector(self):
+        load_wiki()
+
+        from django.contrib.postgres.search import SearchVector
+
+        qs = Blog.objects.annotate(
+            search=SearchVector('title_i18n', 'body_i18n'),
+        ).filter(search='prey')
+
+        print qs
 
 
 class SimpleOrderByTest(TestCase):

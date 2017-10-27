@@ -45,7 +45,7 @@ class Blog(models.Model):
     site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.CASCADE)
 
     i18n = TranslationField(
-        fields=('title', ),
+        fields=('title', 'body'),
         required_languages=('nl', )
     )
 

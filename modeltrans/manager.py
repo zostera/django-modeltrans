@@ -204,10 +204,23 @@ class MultilingualQuerySet(models.query.QuerySet):
 
         return type(f)(*new_expressions, **kwargs)
 
+    # def annotate(self, *args, **kwargs):
+    #     '''
+    #     Patch annotate to allow the use of translated field names in annotations.
+    #
+    #     https://docs.djangoproject.com/en/1.11/ref/models/querysets/#annotate
+    #     '''
+    #     args = [self._rewrite_Func(a) for a in args]
+    #     kwargs = {alias: self._rewrite_Func(expr) for alias, expr in kwargs.items()}
+    #
+    #     return super(MultilingualQuerySet, self).annotate(*args, **kwargs)
+
     def create(self, **kwargs):
         '''
         Patch the create method to allow adding the value for a translated field
         using `Model.objects.create(..., title_nl='...')`.
+
+        https://docs.djangoproject.com/en/1.11/ref/models/querysets/#create
         '''
         return super(MultilingualQuerySet, self).create(
             **transform_translatable_fields(self.model, kwargs)
@@ -223,12 +236,12 @@ class MultilingualQuerySet(models.query.QuerySet):
 
         The field names pointing to translated fields in the `field_names`
         argument will be replaced by their annotated versions.
+
+        https://docs.djangoproject.com/en/1.11/ref/models/querysets/#order_by
         '''
         new_field_names = []
 
         for field_name in field_names:
-            # TODO: function passed to order_by, for example: Lower('title').
-            # contents must be properly taken care of.
             if not isinstance(field_name, six.string_types):
                 new_field_names.append(self._rewrite_Func(field_name))
                 break

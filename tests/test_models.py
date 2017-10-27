@@ -158,11 +158,14 @@ class TranslatedFieldTest(TestCase):
             m.full_clean()
 
         self.assertEquals(list(e.exception), [
-            ('title_nl', ['This field cannot be null.'])
+            ('title_nl', ['This field cannot be null.']),
+            ('body_nl', ['This field cannot be null.'])
+
         ])
 
         # With an added `title_nl`, it should validate.
         m.title_nl = 'Paard'
+        m.body_nl = 'foo'
         m.full_clean()
 
     def test_textfield(self):
