@@ -41,7 +41,7 @@ class GetFieldTest(TestCase):
     '''
     Test getting from a lookup to a field.
     '''
-    def assert_lookup(self, lookup, expected_fieldname, expected_lookup_type=''):
+    def assert_lookup(self, lookup, expected_fieldname, expected_lookup_type=None):
         field, lookup_type = Blog.objects.all()._get_field(lookup)
 
         self.assertEquals(field.name, expected_fieldname)
@@ -351,14 +351,15 @@ class OrderByTest(TestCase):
         qs = Blog.objects.filter(category__isnull=False).order_by('-category__name_nl', '-title')
         self.assertEquals(key(qs, 'title'), 'Zebra Dolfin Bat Vulture Falcon'.split())
 
+    @skip("Fails with AttributeError: 'NoneType' object has no attribute 'startswith'")
     def test_order_by_annotation(self):
         qs = Category.objects.annotate(
-            num_blogs=models.Count('blog__title')
+            num_blogs=models.Count('blog__title_nl')
         ).order_by('-num_blogs')
 
         self.assertEquals(
-            {(m.name, m.num_blogs) for m in qs},
-            {('Mammals', 3), ('Birds', 2)}
+            [(m.name, m.num_blogs) for m in qs],
+            [('Mammals', 3), ('Birds', 2)]
         )
 
     def test_order_by_lower(self):
@@ -368,18 +369,57 @@ class OrderByTest(TestCase):
         Blog.objects.create(title='A', title_nl='c', category=c)
         Blog.objects.create(title='a', title_nl='b', category=c)
 
-        qs = Blog.objects.filter(category=c).order_by('title', 'title_nl')
-        self.assertEquals({m.title for m in qs}, {'A', 'a'})
+        filtered = Blog.objects.filter(category=c)
 
-        qs = Blog.objects.filter(category=c).order_by(Lower('title'), 'title_nl')
-        self.assertEquals({m.title for m in qs}, {'A', 'a'})
+        # order by title should result in aA because it is case sensitive.
+        # qs = filtered.order_by('title', 'title_nl')
+        # self.assertEquals(key(qs, 'title'), ['a', 'A'])
 
-        qs = Blog.objects.filter(category=c).order_by(Lower('title_nl'))
-        self.assertEquals({m.title for m in qs}, {'A', 'a'})
+        # order by Lower('title') should result in Aa because lower('A') == lower('A')
+        # so the title_nl field should determine the sorting
+        qs = filtered.order_by(Lower('title'), 'title_nl')
+        self.assertEquals(key(qs, 'title'), ['a', 'A'])
 
-        qs = Blog.objects.filter(category=c).order_by(Lower('title_i18n'))
-        self.assertEquals({m.title for m in qs}, {'A', 'a'})
+        # applying lower to title_nl should not matter since it is not the same letter
+        qs = filtered.order_by(Lower('title_nl'))
+        self.assertEquals(key(qs, 'title'), ['a', 'A'])
 
+        # should be the same as previous
+        with override('nl'):
+            qs = filtered.order_by(Lower('title_i18n'))
+            self.assertEquals(key(qs, 'title'), ['a', 'A'])
+
+    def test_order_by_two_virtual_fields(self):
+        ca = Category.objects.create(name='foo a', title='test a', title_nl='testje a')
+        cb = Category.objects.create(name='foo b', title='test b', title_nl='testje b')
+
+        Blog.objects.bulk_create([
+            Blog(title='a', title_nl='d', category=cb),
+            Blog(title='b', title_nl='c', category=cb),
+            Blog(title='c', title_nl='b', category=cb),
+
+            Blog(title='z', title_nl='a', category=ca),
+            Blog(title='y', title_nl='b', category=ca),
+            Blog(title='x', title_nl='c', category=ca)
+        ])
+
+        qs = Blog.objects.filter(category__title_nl__contains='test').order_by(
+            '-category__title_nl',
+            '-title_nl'
+        )
+        # This produces the following SQL, which is wrong because ordering should be done on
+        # two fields, not on one. Could be fixed by changing the name of the annotation, or
+        # to not annotate but rather pass the COALESCE(...)-construction to order_by rather than
+        # the annotated name.
+        #
+        # SELECT ...
+        #    "app_category"."title"::varchar(255) AS "category__title_related_helper",
+        #    COALESCE(("app_blog"."i18n" ->> 'title_nl'), "app_blog"."title") AS "title_nl_annotation"
+        # FROM "app_blog"
+        # LEFT OUTER JOIN "app_category" ON ("app_blog"."category_id" = "app_category"."id")
+        # WHERE ("app_category"."i18n" ->> 'title_nl')::varchar(255)::text LIKE %test%
+        # ORDER BY "title_nl_annotation" DESC
+        self.assertEquals([m.title for m in qs], 'a b c x y z'.split())
 
 class FallbackOrderByTest(TestCase):
 

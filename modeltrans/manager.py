@@ -21,7 +21,7 @@ def transform_translatable_fields(model, fields):
         fields (dict): kwargs to a model __init__ or Model.objects.create() method
             for which the field names need to be translated to values in the i18n field
     '''
-    # if the current model does have the TranslationField, so we must not apply
+    # If the current model does have the TranslationField, we must not apply
     # any transformation for it will result in a:
     # TypeError: 'i18n' is an invalid keyword argument for this function
     if not hasattr(model, 'i18n'):
@@ -101,7 +101,7 @@ class MultilingualQuerySet(models.query.QuerySet):
                 related_annotation_name
             )
 
-        annotation = virtual_field.sql_lookup(fallback=fallback, bare_lookup=bare_lookup)
+        annotation = virtual_field.as_sql(fallback=fallback, bare_lookup=bare_lookup)
         if isinstance(annotation, six.string_types):
             return annotation
 
@@ -117,7 +117,7 @@ class MultilingualQuerySet(models.query.QuerySet):
         which should be the lookup type.
         '''
         field = None
-        lookup_type = ''
+        lookup_type = None
 
         bits = lookup.split(LOOKUP_SEP)
 
@@ -147,7 +147,7 @@ class MultilingualQuerySet(models.query.QuerySet):
         if not isinstance(field, TranslatedVirtualField):
             return lookup, value
 
-        if lookup_type != '':
+        if lookup_type is not None:
             bare_lookup = lookup[0:-(len(LOOKUP_SEP + lookup_type))]
         else:
             bare_lookup = lookup
@@ -159,7 +159,7 @@ class MultilingualQuerySet(models.query.QuerySet):
         )
 
         # re-add lookup type
-        if len(lookup_type) > 0:
+        if lookup_type is not None:
             filter_field_name += LOOKUP_SEP + lookup_type
 
         return filter_field_name, value
@@ -201,6 +201,9 @@ class MultilingualQuerySet(models.query.QuerySet):
         kwargs = {}
         if hasattr(f, 'output_field'):
             kwargs['output_field'] = f.output_field
+
+        if hasattr(f, 'desc') and f.desc is True:
+            kwargs['desc'] = True
 
         return type(f)(*new_expressions, **kwargs)
 
@@ -244,7 +247,7 @@ class MultilingualQuerySet(models.query.QuerySet):
         for field_name in field_names:
             if not isinstance(field_name, six.string_types):
                 new_field_names.append(self._rewrite_Func(field_name))
-                break
+                continue
 
             if '_' not in field_name:
                 new_field_names.append(field_name)
@@ -256,11 +259,22 @@ class MultilingualQuerySet(models.query.QuerySet):
                 field_name = field_name[1:]
                 sort_order = '-'
 
-            field, _ = self._get_field(field_name)
+            field, transform = self._get_field(field_name)
 
             # if the field is just a normal field, no annotation needed.
             if not isinstance(field, TranslatedVirtualField):
                 new_field_names.append(sort_order + field_name)
+                continue
+
+            if transform is None:
+                sort_field = field.as_sql(bare_lookup=field_name)
+                if isinstance(sort_field, six.string_types):
+                    sort_field = sort_order + sort_field
+                else:
+                    if sort_order == '-':
+                        sort_field = sort_field.desc()
+
+                new_field_names.append(sort_field)
                 continue
 
             sort_field_name = self._add_i18n_annotation(

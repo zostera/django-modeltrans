@@ -179,28 +179,27 @@ class TranslatedVirtualField(object):
         i18n_lookup = bare_lookup.replace(self.name, 'i18n')
         return KeyTextTransform(name, i18n_lookup)
 
-    def sql_lookup(self, bare_lookup, fallback=True):
+    def as_sql(self, bare_lookup, fallback=True):
         '''
         Compose the sql lookup to get the value for this virtual field in a query.
         '''
-
         language = self.get_language()
         if language == DEFAULT_LANGUAGE:
             return self._localized_lookup(language, bare_lookup)
 
-        if fallback:
-            fallback_chain = get_fallback_chain(language)
-            # first, add the current language to the list of lookups
-            lookups = [self._localized_lookup(language, bare_lookup)]
-            # and now, add the list of fallback languages to the lookup list
-            for fallback_language in fallback_chain:
-                lookups.append(
-                    self._localized_lookup(fallback_language, bare_lookup)
-                )
-            return Coalesce(*lookups, output_field=self.output_field())
-        else:
+        if not fallback:
             i18n_lookup = self._localized_lookup(language, bare_lookup)
             return Cast(i18n_lookup, self.output_field())
+
+        fallback_chain = get_fallback_chain(language)
+        # first, add the current language to the list of lookups
+        lookups = [self._localized_lookup(language, bare_lookup)]
+        # and now, add the list of fallback languages to the lookup list
+        for fallback_language in fallback_chain:
+            lookups.append(
+                self._localized_lookup(fallback_language, bare_lookup)
+            )
+        return Coalesce(*lookups, output_field=self.output_field())
 
 
 class TranslationField(JSONField):

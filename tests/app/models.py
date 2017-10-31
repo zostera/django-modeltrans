@@ -19,8 +19,9 @@ class CategoryQueryset(models.QuerySet):
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
+    title = models.CharField(max_length=255)
 
-    i18n = TranslationField(fields=('name', ))
+    i18n = TranslationField(fields=('name', 'title'))
 
     objects = CategoryQueryset.as_manager()
 
