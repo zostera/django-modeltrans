@@ -10,6 +10,7 @@ from django.db import models
 from django.db.models import F, Q
 from django.test import TestCase, override_settings
 from django.utils.translation import override
+
 from modeltrans.fields import TranslationField
 from modeltrans.translator import translate_model
 
@@ -63,7 +64,8 @@ class GetFieldTest(TestCase):
 
 
 class PickleTest(TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(self):
         c = Category.objects.create(name='Hobby')
         Blog.objects.create(title='Pickle', title_de='Einlegen', title_nl='Inmaken', category=c)
         Blog.objects.create(title='Roadcycling', title_de='Radfahren', title_nl='Racefietsen', category=c)
@@ -105,10 +107,11 @@ class FilterTest(TestCase):
         ('Dolphin', 'Dolfijn', None)
     )
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(self):
         birds = Category.objects.create(name='Birds', name_nl='Vogels')
 
-        for title, title_nl, category in self.data:
+        for title, title_nl, category in FilterTest.data:
             b = Blog.objects.create(title=title, i18n={'title_nl': title_nl})
             if category == birds.name:
                 b.category = birds
@@ -286,7 +289,7 @@ class FulltextSearch(TestCase):
             search=SearchVector('title_i18n', 'body_i18n'),
         ).filter(search='prey')
 
-        print qs
+        print(qs)
 
 
 class SimpleOrderByTest(TestCase):
@@ -294,7 +297,8 @@ class SimpleOrderByTest(TestCase):
     NL = ['A', 'B', 'C', 'D', 'Z', 'Y', 'X']
     FR = ['1', '1', '1', '1', '2', '2', '2']
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(self):
         for i, en in enumerate(self.EN):
             Blog.objects.create(title=en, i18n={'title_nl': self.NL[i], 'title_fr': self.FR[i]})
 
@@ -331,7 +335,8 @@ class SimpleOrderByTest(TestCase):
 
 
 class OrderByTest(TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(self):
         birds = Category.objects.create(name='Birds', name_nl='Vogels')
         mammals = Category.objects.create(name='Mammals', name_nl='Zoogdieren')
 
@@ -420,6 +425,7 @@ class OrderByTest(TestCase):
         # WHERE ("app_category"."i18n" ->> 'title_nl')::varchar(255)::text LIKE %test%
         # ORDER BY "title_nl_annotation" DESC
         self.assertEquals([m.title for m in qs], 'a b c x y z'.split())
+
 
 class FallbackOrderByTest(TestCase):
 

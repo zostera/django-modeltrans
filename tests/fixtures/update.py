@@ -4,13 +4,16 @@ from __future__ import print_function
 
 import json
 import os
-import requests
 import sys
 from collections import defaultdict
 
+import requests
 
 OUTPUT_FILE = 'fulltextsearch.json'
-WIKIPEDIA_URL = 'https://{lang}.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&explaintext=&titles={titles}'
+WIKIPEDIA_URL = (
+    'https://{lang}.wikipedia.org/w/api.php?format=json&action=query'
+    '&prop=extracts&exintro=&explaintext=&titles={titles}'
+)
 
 # seperate titles by a bar (|)
 TITLE_SEP = '|'
