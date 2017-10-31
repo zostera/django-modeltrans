@@ -157,11 +157,13 @@ class TranslatedFieldTest(TestCase):
         with self.assertRaises(ValidationError) as e:
             m.full_clean()
 
-        self.assertEquals(list(e.exception), [
-            ('title_nl', ['This field cannot be null.']),
-            ('body_nl', ['This field cannot be null.'])
-
-        ])
+        self.assertEquals(
+            {(field, tuple(errors)) for field, errors in e.exception},
+            {
+                ('title_nl', ('This field cannot be null.', )),
+                ('body_nl', ('This field cannot be null.', ))
+            }
+        )
 
         # With an added `title_nl`, it should validate.
         m.title_nl = 'Paard'
