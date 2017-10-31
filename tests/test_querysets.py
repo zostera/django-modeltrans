@@ -62,6 +62,10 @@ class GetFieldTest(TestCase):
         self.assert_lookup('title__endswith', 'title', 'endswith')
         self.assert_lookup('category__name__endswith', 'name', 'endswith')
 
+    def test_lower_endswith(self):
+        self.assert_lookup('title__lower__endswith', 'title', 'lower__endswith')
+        self.assert_lookup('category__name__lower__endswith', 'name', 'lower__endswith')
+
 
 class PickleTest(TestCase):
     @classmethod
@@ -377,8 +381,8 @@ class OrderByTest(TestCase):
         filtered = Blog.objects.filter(category=c)
 
         # order by title should result in aA because it is case sensitive.
-        # qs = filtered.order_by('title', 'title_nl')
-        # self.assertEquals(key(qs, 'title'), ['a', 'A'])
+        qs = filtered.order_by('title', 'title_nl')
+        self.assertEquals(key(qs, 'title'), ['a', 'A'])
 
         # order by Lower('title') should result in Aa because lower('A') == lower('A')
         # so the title_nl field should determine the sorting
@@ -412,18 +416,6 @@ class OrderByTest(TestCase):
             '-category__title_nl',
             '-title_nl'
         )
-        # This produces the following SQL, which is wrong because ordering should be done on
-        # two fields, not on one. Could be fixed by changing the name of the annotation, or
-        # to not annotate but rather pass the COALESCE(...)-construction to order_by rather than
-        # the annotated name.
-        #
-        # SELECT ...
-        #    "app_category"."title"::varchar(255) AS "category__title_related_helper",
-        #    COALESCE(("app_blog"."i18n" ->> 'title_nl'), "app_blog"."title") AS "title_nl_annotation"
-        # FROM "app_blog"
-        # LEFT OUTER JOIN "app_category" ON ("app_blog"."category_id" = "app_category"."id")
-        # WHERE ("app_category"."i18n" ->> 'title_nl')::varchar(255)::text LIKE %test%
-        # ORDER BY "title_nl_annotation" DESC
         self.assertEquals([m.title for m in qs], 'a b c x y z'.split())
 
 

@@ -87,20 +87,6 @@ class MultilingualQuerySet(models.query.QuerySet):
         Returns:
             the name of the annotation created.
         '''
-        if virtual_field.model is not self.model:
-            # make sure Django properly joins the tables.
-            # ie: when the lookup is `category__name_nl`, we add an annotation
-            # for placeholder=Cast('category__name').
-            # This has the side-effect that Django properly joins the tables,
-            # but in case of values(), it is not added to the final query.
-            original_field_lookup = bare_lookup[:bare_lookup.rfind(virtual_field.name)] + virtual_field.original_name
-            related_annotation_name = original_field_lookup + '_related_helper'
-
-            self.query.add_annotation(
-                Cast(original_field_lookup, virtual_field.output_field()),
-                related_annotation_name
-            )
-
         annotation = virtual_field.as_sql(fallback=fallback, bare_lookup=bare_lookup)
         if isinstance(annotation, six.string_types):
             return annotation
@@ -249,41 +235,28 @@ class MultilingualQuerySet(models.query.QuerySet):
                 new_field_names.append(self._rewrite_Func(field_name))
                 continue
 
-            if '_' not in field_name:
-                new_field_names.append(field_name)
-                continue
-
             # remove descending prefix, not relevant for the annotation
             sort_order = ''
             if field_name[0] == '-':
                 field_name = field_name[1:]
                 sort_order = '-'
 
-            field, transform = self._get_field(field_name)
+            field, lookup_type = self._get_field(field_name)
+            assert lookup_type is None, '{} is not a valid order_by lookup'.format(field_name)
 
             # if the field is just a normal field, no annotation needed.
             if not isinstance(field, TranslatedVirtualField):
                 new_field_names.append(sort_order + field_name)
                 continue
 
-            if transform is None:
-                sort_field = field.as_sql(bare_lookup=field_name)
-                if isinstance(sort_field, six.string_types):
-                    sort_field = sort_order + sort_field
-                else:
-                    if sort_order == '-':
-                        sort_field = sort_field.desc()
-
-                new_field_names.append(sort_field)
+            sort_field = field.as_sql(bare_lookup=field_name)
+            if isinstance(sort_field, six.string_types):
+                new_field_names.append(sort_order + sort_field)
                 continue
+            elif sort_order == '-':
+                sort_field = sort_field.desc()
 
-            sort_field_name = self._add_i18n_annotation(
-                virtual_field=field,
-                fallback=True,
-                bare_lookup=field_name
-            )
-
-            new_field_names.append(sort_order + sort_field_name)
+            new_field_names.append(sort_field)
 
         return super(MultilingualQuerySet, self).order_by(*new_field_names)
 
@@ -303,7 +276,7 @@ class MultilingualQuerySet(models.query.QuerySet):
         '''
         # TODO: handle F expressions in the righthand (value) side of filters
 
-        # handle Q expressions
+        # handle Q expressions / args
         new_args = []
         for arg in args:
             new_args.append(self._rewrite_Q(arg))
@@ -336,7 +309,6 @@ class MultilingualQuerySet(models.query.QuerySet):
 
             if field.get_language() == get_default_language():
                 original_field = field_name.replace(field.name, field.original_field.name)
-                # TODO: see if we can just do this with add_i18n_annotation()
                 self.query.add_annotation(Cast(original_field, field.output_field()), field_name)
             else:
                 self._add_i18n_annotation(
