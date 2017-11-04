@@ -195,6 +195,16 @@ class Migration(migrations.Migration):
             operations=self.get_operations()
         ))
 
+    def write_migration_file(self):
+        '''
+        Write the
+        '''
+        filename = get_next_migration_filename(self.app)
+        with open(filename, 'w') as f:
+            self.write(f)
+
+        return filename
+
 
 class I18nIndexMigration(I18nMigration):
     index_template = '''
