@@ -24,4 +24,4 @@ Adding GIN indexes to the JSON field
 Syntax: ``./manage.py i18n_make_indexes <apps>``
 
 In Django 1.11 and later, a GIN index is automatically added with the
-``i18n``-field. For earlier versions,
+``i18n``-field. For 1.9 and 1.10 you can use this command.
