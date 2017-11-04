@@ -55,8 +55,6 @@ def main():
     manage('migrate app')
     manage('i18n_makemigrations app')
     manage('migrate app')
-    manage('i18n_make_indexes app')
-    manage('migrate app')
 
     # 4. remove django-modeltranslation
     cmd('''sed -i "s/'modeltranslation',//g" migrate_test/settings.py''')

@@ -14,6 +14,7 @@ from django.utils.timezone import now
 
 from . import __version__ as VERSION
 from .conf import get_default_language
+from .translator import get_i18n_index_name
 from .utils import split_translated_fieldname
 
 try:
@@ -209,15 +210,19 @@ class Migration(migrations.Migration):
 class I18nIndexMigration(I18nMigration):
     index_template = '''
     migrations.RunSQL(
-        [("CREATE INDEX IF NOT EXISTS {table}_i18n_gin ON {table} USING gin (i18n jsonb_path_ops);", None)],
-        [('DROP INDEX {table}_i18n_gin;', None)],
+        [("CREATE INDEX IF NOT EXISTS {index_name} ON {table} USING gin (i18n jsonb_path_ops);", None)],
+        [('DROP INDEX {index_name};', None)],
     ),'''
 
     def get_operations(self):
-        indexes = '\n'.join(
-            [self.index_template.format(table=Model._meta.db_table) for Model, _ in self.models]
-        )
-        return indexes
+        indexes = [
+            self.index_template.format(
+                table=Model._meta.db_table,
+                index_name=get_i18n_index_name(Model)
+            )
+            for Model, _ in self.models
+        ]
+        return '\n'.join(indexes)
 
 
 class I18nDataMigration(I18nMigration):

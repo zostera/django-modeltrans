@@ -27,6 +27,7 @@ Table of contents
     pages/performance
     pages/inner-workings
     pages/related-packages
+    pages/management
 
 .. toctree::
     :maxdepth: 1

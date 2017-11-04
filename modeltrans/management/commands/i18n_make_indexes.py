@@ -23,7 +23,7 @@ class Command(BaseCommand):
             apps[model._meta.app_label].append(model)
 
         for app in options['apps']:
-            print('Create migration for app:', app)
+            print('Create migration to add GIN indexes for app:', app)
 
             if len(apps[app]) == 0:
                 print('No models in this app have a i18n = TranslationField()')
@@ -33,10 +33,7 @@ class Command(BaseCommand):
             for Model in apps[app]:
                 translatable_fields = tuple(get_translated_fields(Model))
 
-                print('added model "{}" with fields [{}]('.format(
-                    Model.__name__,
-                    str(translatable_fields)
-                ))
+                print('added model "{}".'.format(Model.__name__))
                 migration.add_model(Model, translatable_fields)
 
             filename = migration.write_migration_file()

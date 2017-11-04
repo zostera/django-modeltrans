@@ -1,3 +1,5 @@
+.. _modeltranslation_migration:
+
 Migrating from django-modeltranslation
 ======================================
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.apps import apps
+from django.conf import settings
 from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.db.models import Manager
 
@@ -35,6 +36,15 @@ def get_translated_models(app_name):
             yield model
 
 
+def get_i18n_index_name(Model):
+    '''
+    Returns the name for the gin index on the i18n field.
+
+    Limited to 30 charachters because Django doesn't allow longer names.
+    '''
+    return '{}_i18n_gin'.format(Model._meta.db_table[0:20])
+
+
 def translate_model(Model):
     i18n_field = get_i18n_field(Model)
 
@@ -54,6 +64,20 @@ def translate_model(Model):
     add_manager(Model)
     add_virtual_fields(Model, i18n_field.fields, i18n_field.required_languages)
     patch_constructor(Model)
+
+    # add the gin index
+    try:
+        from django.contrib.postgres.indexes import GinIndex
+
+        index_name = get_i18n_index_name(Model)
+        Model._meta.indexes.append(GinIndex(fields=['i18n'], name=index_name))
+    except ImportError:
+        if settings.DEBUG:
+            msg = (
+                'django-modeltrans cannot create GIN index for this model automatically, '
+                'use `./manage.py i18n_make_indexes {}` to create the index.'
+            )
+            print(msg.format(Model._meta.app_label))
 
 
 def check_languages(languages, model):
