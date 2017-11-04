@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from django.apps import apps
 from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.db.models import Manager
 
@@ -8,13 +9,36 @@ from .fields import TranslationField, translated_field_factory
 from .manager import MultilingualManager, transform_translatable_fields
 
 
-def translate_model(Model):
+def get_i18n_field(Model):
+    '''
+    Return the i18n field if the model has it, else None.
+    '''
     try:
         i18n_field = Model._meta.get_field('i18n')
     except FieldDoesNotExist:
         return
 
     if not isinstance(i18n_field, TranslationField):
+        return
+
+    return i18n_field
+
+
+def get_translated_models(app_name):
+    '''
+    Return models having a i18n = TranslationField() for given app_name.
+    '''
+    app = apps.get_app_config(app_name)
+    for model in app.get_models():
+        i18n_field = get_i18n_field(model)
+        if i18n_field is not None:
+            yield model
+
+
+def translate_model(Model):
+    i18n_field = get_i18n_field(Model)
+
+    if i18n_field is None:
         return
 
     if not i18n_field.virtual_fields:

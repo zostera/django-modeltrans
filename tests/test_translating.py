@@ -7,7 +7,43 @@ from django.test import TestCase
 
 from modeltrans.fields import TranslationField
 from modeltrans.manager import MultilingualManager, MultilingualQuerySet
-from modeltrans.translator import translate_model
+from modeltrans.translator import get_i18n_field, get_translated_models, translate_model
+
+from .app import models as app_models
+
+
+class Translating_utils(TestCase):
+    def test_get_i18n_field(self):
+        self.assertEquals(get_i18n_field(app_models.Blog), app_models.Blog._meta.get_field('i18n'))
+
+        class I18nFieldTestModel(models.Model):
+            test = models.CharField(max_length=20)
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+
+        self.assertEquals(get_i18n_field(I18nFieldTestModel), None)
+
+        class I18nFieldTestModel2(models.Model):
+            test = models.CharField(max_length=20)
+            i18n = models.CharField(max_length=20)
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+
+        self.assertEquals(get_i18n_field(I18nFieldTestModel2), None)
+
+    def test_get_translated_models(self):
+        i18n_models = set(get_translated_models('app'))
+
+        self.assertEquals(
+            i18n_models,
+            {
+                app_models.Blog, app_models.Category, app_models.Person,
+                app_models.TextModel, app_models.NullableTextModel,
+                app_models.Attribute, app_models.Choice
+            }
+        )
 
 
 class TranslateModelTest(TestCase):
