@@ -84,7 +84,7 @@ def cmd(c):
 
 
 def manage(c):
-    cmd('coverage run ./manage.py {}'.format(c))
+    cmd('coverage run --rcfile=../.coveragerc ./manage.py {}'.format(c))
 
 
 def run_test(test_module):
