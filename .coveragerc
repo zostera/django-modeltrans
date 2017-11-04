@@ -2,7 +2,5 @@
 source =
     modeltrans
 
-
-
 [html]
 directory = reports/htmlcov
