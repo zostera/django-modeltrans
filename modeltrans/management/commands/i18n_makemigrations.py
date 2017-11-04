@@ -33,7 +33,7 @@ class Command(BaseCommand):
             for Model in apps[app]:
                 translatable_fields = tuple(get_translated_fields(Model))
 
-                print('added model "{}" with fields [{}]('.format(
+                print('added model "{}" with fields [{}]'.format(
                     Model.__name__,
                     str(translatable_fields)
                 ))
