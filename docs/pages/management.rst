@@ -18,6 +18,8 @@ the JSON field managed by django-modeltrans.
 Explained in more detail in :ref:`modeltranslation_migration`
 
 
+.. _add_gin_index:
+
 Adding GIN indexes to the JSON field
 ------------------------------------
 

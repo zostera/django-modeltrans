@@ -1,3 +1,4 @@
+from django.db import connection
 from django.test import TestCase
 from django.utils.translation import override
 
@@ -22,3 +23,19 @@ class PostMigrateTest(TestCase):
 
         with override('de'):
             self.assertEquals(falcon.title_i18n, 'Falk')
+
+    def test_indexes_in_place(self):
+        '''
+        Check if the i18n column has the gin index.
+        '''
+        db_table = Blog._meta.db_table
+        expected_name = '{}_i18n_gin'.format(db_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                'SELECT indexname, indexdef FROM pg_indexes WHERE tablename = %s;',
+                [db_table]
+            )
+            indexes = {name: definition for name, definition in cursor.fetchall()}
+
+        self.assertIn(expected_name, indexes)

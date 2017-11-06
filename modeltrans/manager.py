@@ -193,6 +193,39 @@ class MultilingualQuerySet(models.query.QuerySet):
 
         return type(f)(*new_expressions, **kwargs)
 
+    def _rewrite_ordering(self, field_names):
+        new_field_names = []
+
+        for field_name in field_names:
+            if not isinstance(field_name, six.string_types):
+                new_field_names.append(self._rewrite_Func(field_name))
+                continue
+
+            # remove descending prefix, not relevant for the annotation
+            sort_order = ''
+            if field_name[0] == '-':
+                field_name = field_name[1:]
+                sort_order = '-'
+
+            field, lookup_type = self._get_field(field_name)
+            assert lookup_type is None, '{} is not a valid order_by lookup'.format(field_name)
+
+            # if the field is just a normal field, no annotation needed.
+            if not isinstance(field, TranslatedVirtualField):
+                new_field_names.append(sort_order + field_name)
+                continue
+
+            sort_field = field.as_sql(bare_lookup=field_name)
+            if isinstance(sort_field, six.string_types):
+                new_field_names.append(sort_order + sort_field)
+                continue
+            elif sort_order == '-':
+                sort_field = sort_field.desc()
+
+            new_field_names.append(sort_field)
+
+        return new_field_names
+
     # def annotate(self, *args, **kwargs):
     #     '''
     #     Patch annotate to allow the use of translated field names in annotations.
@@ -228,35 +261,8 @@ class MultilingualQuerySet(models.query.QuerySet):
 
         https://docs.djangoproject.com/en/1.11/ref/models/querysets/#order_by
         '''
-        new_field_names = []
 
-        for field_name in field_names:
-            if not isinstance(field_name, six.string_types):
-                new_field_names.append(self._rewrite_Func(field_name))
-                continue
-
-            # remove descending prefix, not relevant for the annotation
-            sort_order = ''
-            if field_name[0] == '-':
-                field_name = field_name[1:]
-                sort_order = '-'
-
-            field, lookup_type = self._get_field(field_name)
-            assert lookup_type is None, '{} is not a valid order_by lookup'.format(field_name)
-
-            # if the field is just a normal field, no annotation needed.
-            if not isinstance(field, TranslatedVirtualField):
-                new_field_names.append(sort_order + field_name)
-                continue
-
-            sort_field = field.as_sql(bare_lookup=field_name)
-            if isinstance(sort_field, six.string_types):
-                new_field_names.append(sort_order + sort_field)
-                continue
-            elif sort_order == '-':
-                sort_field = sort_field.desc()
-
-            new_field_names.append(sort_field)
+        new_field_names = self._rewrite_ordering(field_names)
 
         return super(MultilingualQuerySet, self).order_by(*new_field_names)
 

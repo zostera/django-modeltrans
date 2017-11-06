@@ -53,15 +53,17 @@ def main():
     # 3. make the migrations to add django-modeltrans json fields
     manage('makemigrations app')
     manage('migrate app')
+
+    # 4. Create the data migration
     manage('i18n_makemigrations app')
     manage('migrate app')
 
-    # 4. remove django-modeltranslation
+    # 5. remove django-modeltranslation
     cmd('''sed -i "s/'modeltranslation',//g" migrate_test/settings.py''')
     cmd('rm -r migrate_test/app/translation.py')
     cmd('sed -i "s/, virtual_fields=False//g" {}'.format(MODELS_PY))
 
-    # 5. migrate once more to remove django-modeltranslation's fields
+    # 6. migrate once more to remove django-modeltranslation's fields
     manage('makemigrations app')
     manage('migrate app')
 
@@ -79,7 +81,7 @@ def cmd(c):
         return result
     except CalledProcessError as e:
         print('\033[31m Process errored: \033[0m, code: {}'.format(e.returncode))
-        print(e.output)
+        print(str(e.output).replace('\\n', '\n'))
         sys.exit(1)
 
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import django
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
@@ -36,15 +37,6 @@ def get_translated_models(app_name):
             yield model
 
 
-def get_i18n_index_name(Model):
-    '''
-    Returns the name for the gin index on the i18n field.
-
-    Limited to 30 charachters because Django doesn't allow longer names.
-    '''
-    return '{}_i18n_gin'.format(Model._meta.db_table[0:20])
-
-
 def translate_model(Model):
     i18n_field = get_i18n_field(Model)
 
@@ -65,19 +57,7 @@ def translate_model(Model):
     add_virtual_fields(Model, i18n_field.fields, i18n_field.required_languages)
     patch_constructor(Model)
 
-    # add the gin index
-    try:
-        from django.contrib.postgres.indexes import GinIndex
-
-        index_name = get_i18n_index_name(Model)
-        Model._meta.indexes.append(GinIndex(fields=['i18n'], name=index_name))
-    except ImportError:
-        if settings.DEBUG:
-            msg = (
-                'django-modeltrans cannot create GIN index for this model automatically, '
-                'use `./manage.py i18n_make_indexes {}` to create the index.'
-            )
-            print(msg.format(Model._meta.app_label))
+    translate_meta_ordering(Model)
 
 
 def check_languages(languages, model):
@@ -246,3 +226,19 @@ def patch_constructor(model):
     def patched_init(self, *args, **kwargs):
         old_init(self, *args, **transform_translatable_fields(self.__class__, kwargs))
     model.__init__ = patched_init
+
+
+def translate_meta_ordering(Model):
+    '''
+    If a model has ``Meta.ordering`` defined, we check if
+    one of it's fields is a translated field. If that's the case,
+    add the expression to get the value from the i18n-field.
+    '''
+
+    ordering = Model._meta.ordering
+
+    if len(ordering) == 0:
+        return
+    queryset = Model.objects.get_queryset()
+
+    Model._meta.ordering = queryset._rewrite_ordering(ordering)

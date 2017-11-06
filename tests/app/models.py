@@ -136,3 +136,14 @@ def createBaseAttr(model):
 
 class BlogAttr(createBaseAttr(Blog)):
     pass
+
+
+class MetaOrderingModel(models.Model):
+    # doesn't make sense to translate names, but it serves as a test.
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+
+    i18n = TranslationField(fields=('last_name', 'first_name'))
+
+    class Meta:
+        ordering = ('last_name_i18n', 'first_name_i18n', )

@@ -39,7 +39,8 @@ class Translating_utils(TestCase):
         self.assertEquals(
             i18n_models,
             {
-                app_models.Blog, app_models.Category, app_models.Person,
+                app_models.Blog, app_models.Category,
+                app_models.Person, app_models.MetaOrderingModel,
                 app_models.TextModel, app_models.NullableTextModel,
                 app_models.Attribute, app_models.Choice
             }

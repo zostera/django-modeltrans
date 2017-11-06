@@ -14,8 +14,7 @@ from django.utils.timezone import now
 
 from . import __version__ as VERSION
 from .conf import get_default_language
-from .translator import get_i18n_index_name
-from .utils import split_translated_fieldname
+from .utils import get_i18n_index_name, split_translated_fieldname
 
 try:
     from modeltranslation.translator import translator
@@ -118,12 +117,15 @@ def get_latest_migration(app_name, connection=None):
     return last
 
 
-def get_next_migration_filename(app_name, connection=None):
+def get_next_migration_filename(app_name, connection=None, migration_type='data'):
     '''
     Return name (including the absolute path) of the next migration to insert for this app
     '''
     latest_migration_name = get_latest_migration(app_name)
-    next_migration_name = '{0:04d}_i18n_data_migration.py'.format(int(latest_migration_name[0:4]) + 1)
+    next_migration_name = '{0:04d}_i18n_{1}_migration.py'.format(
+        int(latest_migration_name[0:4]) + 1,
+        migration_type
+    )
     app_path = os.path.join(*apps.get_app_config(app_name).name.split('.'))
 
     return os.path.join(settings.BASE_DIR, app_path, 'migrations', next_migration_name)
@@ -200,7 +202,7 @@ class Migration(migrations.Migration):
         '''
         Write the
         '''
-        filename = get_next_migration_filename(self.app)
+        filename = get_next_migration_filename(self.app, migration_type=self.migration_type)
         with open(filename, 'w') as f:
             self.write(f)
 
@@ -208,9 +210,10 @@ class Migration(migrations.Migration):
 
 
 class I18nIndexMigration(I18nMigration):
+    migration_type = 'index'
     index_template = '''
     migrations.RunSQL(
-        [("CREATE INDEX IF NOT EXISTS {index_name} ON {table} USING gin (i18n jsonb_path_ops);", None)],
+        [('CREATE INDEX IF NOT EXISTS {index_name} ON {table} USING gin (i18n);', None)],
         [('DROP INDEX {index_name};', None)],
     ),'''
 
@@ -226,6 +229,7 @@ class I18nIndexMigration(I18nMigration):
 
 
 class I18nDataMigration(I18nMigration):
+    migration_type = 'data'
     helper_functions = (
         split_translated_fieldname,
         copy_translations,

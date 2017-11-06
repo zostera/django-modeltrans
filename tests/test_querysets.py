@@ -4,8 +4,9 @@ from __future__ import print_function, unicode_literals
 import json
 import os
 import pickle
-from unittest import skip
+from unittest import skip, skipIf
 
+import django
 from django.db import models
 from django.db.models import F, Q
 from django.test import TestCase, override_settings
@@ -14,7 +15,7 @@ from django.utils.translation import override
 from modeltrans.fields import TranslationField
 from modeltrans.translator import translate_model
 
-from .app.models import Attribute, Blog, BlogAttr, Category, Choice, Site
+from .app.models import Attribute, Blog, BlogAttr, Category, Choice, MetaOrderingModel, Site
 from .utils import CreateTestModel
 
 
@@ -497,6 +498,23 @@ class FilteredOrderByTest(TestCase):
 
             self.assertEquals(key(qs, 'title_i18n'), ['Gerbil', 'Gecko'])
             self.assertTrue('annotation' not in str(qs.query))
+
+
+class ModelMetaOrderByTest(TestCase):
+    @skipIf(django.VERSION < (2, 0), 'Only supported in Django 2.0 and later')
+    def test_meta_ordering(self):
+        TEST_NAMES = (
+            ('Jaïr', 'Kleinsma'),
+            ('Hakki', 'van Velsen'),
+            ('Josip', 'Engel'),
+            ('Berry', 'Reuver')
+        )
+
+        for first, last in TEST_NAMES:
+            MetaOrderingModel.objects.create(first_name=first, last_name=last)
+
+        qs = MetaOrderingModel.objects.all()
+        self.assertEquals(key(qs, 'first_name'), 'Josip,Jaïr,Berry,Hakki'.split(','))
 
 
 class ValuesTest(TestCase):

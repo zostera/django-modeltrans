@@ -86,3 +86,7 @@ def get_fallback_chain(lang):
         lang = 'default'
 
     return MODELTRANS_FALLBACK[lang]
+
+
+def get_create_gin_setting():
+    return getattr(settings, 'MODELTRANS_CREATE_GIN', True)

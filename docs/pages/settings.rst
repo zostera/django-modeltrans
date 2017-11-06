@@ -35,3 +35,13 @@ If configured like this::
        'default': (LANGUAGE_CODE, ),
        'fy': ('nl', 'en')
     }
+
+
+``MODELTRANS_CREATE_GIN``
+-------------------------
+Boolean signalling django-modeltrans to create a `GinIndex <https://docs.djangoproject.com/en/stable/ref/contrib/postgres/indexes/#ginindex>`_
+for each ``i18n`` field.
+Support for ``GinIndex`` is added in django 1.11, for previous versions,
+use :ref:`add_gin_index`.
+
+``True`` by default.

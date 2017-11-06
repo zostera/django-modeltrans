@@ -1,5 +1,7 @@
+import hashlib
+
 from django.utils import six
-from django.utils.encoding import force_text
+from django.utils.encoding import force_bytes, force_text
 from django.utils.functional import lazy
 from django.utils.translation import get_language as _get_language
 
@@ -30,3 +32,29 @@ def build_localized_fieldname(field_name, lang):
         # current naming scheme as Django foreign keys also add "id" suffix.
         lang = 'ind'
     return str('{}_{}'.format(field_name, lang.replace('-', '_')))
+
+
+def _hash_generator(*args):
+    '''
+    Generate a 32-bit digest of a set of arguments that can be used to
+    shorten identifying names.
+
+    implementation form django.db.models.indexes
+    '''
+    h = hashlib.md5()
+    for arg in args:
+        h.update(force_bytes(arg))
+    return h.hexdigest()[:6]
+
+
+def get_i18n_index_name(Model):
+    '''
+    Returns the name for the gin index on the i18n field.
+
+    Limited to 30 charachters because Django doesn't allow longer names.
+    '''
+    prefix = Model._meta.db_table
+    if len(prefix) > 20:
+        prefix = '{}_{}'.format(Model._meta.app_label[:14], _hash_generator(prefix))
+
+    return '{}_i18n_gin'.format(prefix)
