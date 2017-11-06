@@ -138,17 +138,13 @@ class MultilingualQuerySet(models.query.QuerySet):
         else:
             bare_lookup = lookup
 
-        filter_field_name = self._add_i18n_annotation(
-            virtual_field=field,
-            bare_lookup=bare_lookup,
-            fallback=field.language is None
-        )
+        expression = field.as_sql(fallback=field.language is None, bare_lookup=bare_lookup)
 
-        # re-add lookup type
         if lookup_type is not None:
-            filter_field_name += LOOKUP_SEP + lookup_type
+            for lookup in lookup_type.split(LOOKUP_SEP):
+                expression = field.get_lookup(lookup)(expression, value)
 
-        return filter_field_name, value
+        return expression
 
     def _rewrite_F(self, f):
         if not isinstance(f, models.F):
@@ -290,7 +286,11 @@ class MultilingualQuerySet(models.query.QuerySet):
         # handle the kwargs
         new_kwargs = {}
         for field, value in kwargs.items():
-            new_kwargs.update(dict((self._rewrite_expression(field, value), )))
+            expression = self._rewrite_expression(field, value)
+            if hasattr(expression, 'len'):
+                new_kwargs.update(dict((expression, )))
+            else:
+                new_args.append(expression)
 
         return super(MultilingualQuerySet, self)._filter_or_exclude(negate, *new_args, **new_kwargs)
 
