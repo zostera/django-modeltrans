@@ -280,3 +280,30 @@ class CreatingInstancesTest(TestCase):
 
         self.assertEquals(b.title, 'Falcon')
         self.assertEquals(b.title_nl, 'Valk')
+
+    def test_get_or_create(self):
+        kwargs = dict(title='Falcon', title_nl='Valk')
+
+        a = Blog.objects.create(**kwargs)
+        b, created = Blog.objects.get_or_create(**kwargs)
+        self.assertFalse(created)
+
+        self.assertEquals(a, b)
+        c, created = Blog.objects.get_or_create(title='Falcon')
+        self.assertEquals(c, a)
+
+        kwargs = dict(title='Buzzard', title_nl='Buizerd')
+        a, _ = Blog.objects.get_or_create(**kwargs)
+        b, created = Blog.objects.get_or_create(**kwargs)
+        self.assertEquals(a, b)
+
+    def test_update_or_create(self):
+        a = Blog.objects.create(title='Falcon')
+
+        defaults = dict(title_nl='Valk', title_de='Falk')
+        b, created = Blog.objects.update_or_create(defaults=defaults, title='Falcon')
+        self.assertFalse(created)
+        self.assertEquals(a, b)
+
+        a.refresh_from_db()
+        self.assertEquals(a.title_de, defaults['title_de'])
