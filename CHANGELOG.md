@@ -1,5 +1,10 @@
 # django-modeltrans change log
 
+## master
+ - No annotations are made while ordering anymore, instead, expressions are passed onto the original `order_by()` method.
+ - `django.contrib.postgres.GinIndex` is added to the `i18n` column if it's supported by the django version used (1.11 and later). It can be disabled with the setting `MODELTRANS_CREATE_GIN`.
+ - The migration generated from `./manage.py i18n_makemigrations <app>` used to move the data and add a GIN index. This is split into two commands: `./manage.py i18n_makemigrations` and `./manage.py i18n_make_indexes`.
+
 ## 0.1.2 (2017-10-23)
  - Ensure a dynamic mixed `MultilingualQuerySet` can be pickled.
  - Add basic support for `Func` in `order_by()`

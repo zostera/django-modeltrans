@@ -23,6 +23,7 @@ Queryset/Manager and can be considered TODO.
 - Passing expressions (kwargs) containing references to translated fields in  `values()` and `values_list()` is not supported.
 - Using translated fields in `.annotate()`, `.distinct()`, `.extra()`, `.aggregate()`, `.update()` is not supported.
 - Behaviour is tested using `CharField()` en `TextField()`, as these make most sense for translated values.
+- Any ordering using `i18n`-fields defined in `Model.Meta.ordering` is only translated in django 2.0 and later ([django/django#8473](https://github.com/django/django/pull/8673) is required).
 
 # Running the tests
 

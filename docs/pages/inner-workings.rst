@@ -96,8 +96,8 @@ value to order by::
         qs = Blog.objects.order_by('title_i18n')
 
     # SELECT ...,
-    # COALESCE((app_blog.i18n->>'title_de'), "app_blog"."title") AS "title_i18n_annotation"
-    # FROM "app_blog" ORDER BY "title_i18n_annotation" ASC
+    # FROM "app_blog"
+    # ORDER BY COALESCE((app_blog.i18n->>'title_de'), "app_blog"."title") ASC
 
 Results in the following ordering::
 
