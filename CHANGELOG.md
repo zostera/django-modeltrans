@@ -1,6 +1,6 @@
 # django-modeltrans change log
 
-## master
+## 0.2.0 (2017-11-13)
  - No annotations are made while ordering anymore, instead, expressions are passed onto the original `order_by()` method.
  - Any translated fields used in `Model.Meta.ordering` is transformed into the correct expression with django 2.0 and later (fixes #25).
  - `django.contrib.postgres.GinIndex` is added to the `i18n` column if it's supported by the django version used (1.11 and later). It can be disabled with the setting `MODELTRANS_CREATE_GIN`.
