@@ -382,6 +382,52 @@ class AnnotateTest(TestCase):
             {('Mammals', 1), ('Birds', 1)}
         )
 
+    def test_annotate_coalesce(self):
+        qs = Blog.objects.annotate(
+            e=models.functions.Coalesce('title_nl', models.Value('EMPTY'))
+        )
+        self.assertEquals(
+            list(qs.values_list('e', flat=True)),
+            ['Valk', 'EMPTY', 'EMPTY', 'EMPTY', 'Zebra']
+        )
+
+    def test_annotate_substr(self):
+        qs = Blog.objects.annotate(e=models.functions.Substr('title_nl', 1, 3))
+
+        self.assertEquals(
+            list(qs.values_list('e', flat=True)),
+            ['Val', None, None, None, 'Zeb']
+        )
+
+    def test_annotate_upper(self):
+        with override('nl'):
+            qs = Blog.objects.annotate(e=models.functions.Upper('title_i18n'))
+
+            self.assertEquals(
+                list(qs.values_list('e', flat=True)),
+                ['VALK', 'VULTURE', 'BAT', 'DOLFIN', 'ZEBRA']
+            )
+
+    def test_annotate_with_some_expressions(self):
+        Blog.objects.create(
+            category=Category.objects.get(name='Birds'),
+            title_nl='Gull'
+        )
+        qs = Category.objects.annotate(
+            a=models.Count('blog__title_nl') + 1,
+            b=1 + models.Count('blog__title_nl'),
+            c=1 / models.Count('blog__title_nl'),
+            d=4 * models.Count('blog__title_nl'),
+        )
+
+        self.assertEquals(
+            list(qs.values_list('name', 'a', 'b', 'c', 'd')),
+            [
+                ('Birds', 3, 3, 0, 8),
+                ('Mammals', 2, 2, 1, 4)
+            ]
+        )
+
 
 class OrderByTest(TestCase):
     @classmethod

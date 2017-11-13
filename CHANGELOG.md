@@ -1,5 +1,8 @@
 # django-modeltrans change log
 
+## master
+
+
 ## 0.2.0 (2017-11-13)
  - No annotations are made while ordering anymore, instead, expressions are passed onto the original `order_by()` method.
  - Any translated fields used in `Model.Meta.ordering` is transformed into the correct expression with django 2.0 and later (fixes #25).

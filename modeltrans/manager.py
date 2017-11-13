@@ -159,14 +159,13 @@ class MultilingualQuerySet(models.query.QuerySet):
         '''
         Rewrite rhs of expressions.
         '''
-        if isinstance(expr, models.F):
+        if isinstance(expr, models.expressions.F):
             field, _ = self._get_field(expr.name)
 
             if not isinstance(field, TranslatedVirtualField):
                 return expr
 
-            return field.as_sql(fallback=False, bare_lookup=expr.name)
-
+            return field.as_sql(fallback=field.language is None, bare_lookup=expr.name)
         elif isinstance(expr, models.expressions.CombinedExpression):
             return models.expressions.CombinedExpression(
                 self._rewrite_expression(expr.lhs),
@@ -295,8 +294,6 @@ class MultilingualQuerySet(models.query.QuerySet):
         In all cases, the field part of the field lookup will be changed to use
         the annotated verion.
         '''
-        # TODO: handle F expressions in the righthand (value) side of filters
-
         # handle Q expressions / args
         new_args = []
         for arg in args:
