@@ -13,7 +13,7 @@ class Command(BaseCommand):
         parser.add_argument('apps', nargs='+', type=str)
 
     def handle(self, *args, **options):
-        from modeltrans.migration import (I18nDataMigration, get_next_migration_filename, get_translatable_models,
+        from modeltrans.migration import (I18nDataMigration, get_translatable_models,
                                           get_translated_fields)
 
         models = get_translatable_models()

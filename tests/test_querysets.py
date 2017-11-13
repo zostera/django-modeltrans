@@ -4,7 +4,7 @@ from __future__ import print_function, unicode_literals
 import json
 import os
 import pickle
-from unittest import skip, skipIf
+from unittest import skipIf
 
 import django
 from django.db import models
@@ -15,7 +15,7 @@ from django.utils.translation import override
 from modeltrans.fields import TranslationField
 from modeltrans.translator import translate_model
 
-from .app.models import Attribute, Blog, BlogAttr, Category, Choice, MetaOrderingModel, Site
+from .app.models import Attribute, Blog, BlogAttr, Category, MetaOrderingModel, Site
 from .utils import CreateTestModel
 
 
@@ -210,6 +210,16 @@ class FilterTest(TestCase):
         qs = Blog.objects.filter(title_nl__lt=F('title_fr'))
         self.assertEquals({m.title for m in qs}, {'bar', 'baz'})
 
+    def test_filter_F_expressions_function(self):
+        Blog.objects.create(title='foo', title_nl='foo')
+        Blog.objects.create(title='bar', title_nl='BAR')
+        Blog.objects.create(title='baz', title_nl='BAZ')
+
+        qs = Blog.objects.filter(
+            title_nl=models.functions.Upper(F('title_nl'))
+        )
+        self.assertEquals({m.title for m in qs}, {'bar', 'baz'})
+
     def test_filter_relations(self):
         mass = Attribute.objects.create(slug='mass', name='Mean Mass')
         length = Attribute.objects.create(slug='length', name='Length', name_nl='Lengte')
@@ -284,7 +294,6 @@ class FilterTest(TestCase):
 
 
 class FulltextSearch(TestCase):
-    @skip('Work in progress')
     def test_SearchVector(self):
         load_wiki()
 
@@ -293,8 +302,7 @@ class FulltextSearch(TestCase):
         qs = Blog.objects.annotate(
             search=SearchVector('title_i18n', 'body_i18n'),
         ).filter(search='prey')
-
-        print(qs)
+        self.assertEquals({m.title for m in qs}, {'Vulture', 'Falcon', 'Dolphin'})
 
 
 class SimpleOrderByTest(TestCase):
@@ -339,6 +347,42 @@ class SimpleOrderByTest(TestCase):
             self.assertEquals(key(qs, 'title_i18n'), 'A B C D H X Y Z'.split())
 
 
+class AnnotateTest(TestCase):
+    @classmethod
+    def setUpTestData(self):
+        birds = Category.objects.create(name='Birds', name_nl='Vogels')
+        mammals = Category.objects.create(name='Mammals', name_nl='Zoogdieren')
+
+        Blog.objects.bulk_create([
+            Blog(title='Falcon', title_nl='Valk', category=birds),
+            Blog(title='Vulture', category=birds),
+
+            Blog(title='Bat', category=mammals),
+            Blog(title='Dolfin', category=mammals),
+            Blog(title='Zebra', title_nl='Zebra', category=mammals)
+        ])
+
+    def test_annotate_normal_count(self):
+        qs = Category.objects.annotate(
+            num_blogs=models.Count('blog__title')
+        )
+
+        self.assertEquals(
+            {(m.name, m.num_blogs) for m in qs},
+            {('Mammals', 3), ('Birds', 2)}
+        )
+
+    def test_annotate_count_i18n_field(self):
+        qs = Category.objects.annotate(
+            num_blogs=models.Count('blog__title_nl')
+        )
+
+        self.assertEquals(
+            {(m.name, m.num_blogs) for m in qs},
+            {('Mammals', 1), ('Birds', 1)}
+        )
+
+
 class OrderByTest(TestCase):
     @classmethod
     def setUpTestData(self):
@@ -360,17 +404,6 @@ class OrderByTest(TestCase):
 
         qs = Blog.objects.filter(category__isnull=False).order_by('-category__name_nl', '-title')
         self.assertEquals(key(qs, 'title'), 'Zebra Dolfin Bat Vulture Falcon'.split())
-
-    @skip("Fails with AttributeError: 'NoneType' object has no attribute 'startswith'")
-    def test_order_by_annotation(self):
-        qs = Category.objects.annotate(
-            num_blogs=models.Count('blog__title_nl')
-        ).order_by('-num_blogs')
-
-        self.assertEquals(
-            [(m.name, m.num_blogs) for m in qs],
-            [('Mammals', 3), ('Birds', 2)]
-        )
 
     def test_order_by_lower(self):
         from django.db.models.functions import Lower
@@ -574,14 +607,12 @@ class ValuesTest(TestCase):
             [('Falcon', 'Birds'), ('Frog', 'Amphibians'), ('Gecko', 'Reptiles')]
         )
 
-    @skip('Annotation of expressions in _values() not yet implemented.')
-    def test_values_kwarg(self):
+    @skipIf(django.VERSION < (1, 11), '**expressions only supported in Django 1.11 and later')
+    def test_values_kwarg_lower(self):
         from django.db.models.functions import Lower
 
         qs1 = Blog.objects.values(lower_name=Lower('category__name'))
         qs2 = Blog.objects.values(lower_name=Lower('category__name_en'))
-        print(qs2.query)
-        print(qs2)
         self.assertEquals(list(qs1), list(qs2))
 
     def test_values_spanning_relation(self):

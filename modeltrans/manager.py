@@ -3,13 +3,11 @@
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models.constants import LOOKUP_SEP
-from django.db.models.fields.related import ForeignKey
 from django.db.models.functions import Cast
 from django.utils import six
 
 from .conf import get_default_language
 from .fields import TranslatedVirtualField, TranslationField
-from .utils import split_translated_fieldname
 
 
 def transform_translatable_fields(model, fields):
@@ -121,8 +119,15 @@ class MultilingualQuerySet(models.query.QuerySet):
 
         return field, lookup_type
 
-    def _rewrite_expression(self, lookup, value):
-        value = self._rewrite_F(value)
+    def _rewrite_filter_clause(self, lookup, value):
+        '''
+        private method which rewrites a filter clause passed to filter()/exclude()
+        etc., for example:
+
+        for title_nl__like='va'
+        _rewrite_filter_clause('title_nl__like', 'va') would be called.
+        '''
+        value = self._rewrite_expression(value)
 
         # pk not a field, but shorthand for the primary key column.
         if lookup == 'pk':
@@ -150,21 +155,43 @@ class MultilingualQuerySet(models.query.QuerySet):
 
         return filter_field_name, value
 
-    def _rewrite_F(self, f):
-        if not isinstance(f, models.F):
-            return f
-        field, _ = self._get_field(f.name)
+    def _rewrite_expression(self, expr):
+        '''
+        Rewrite rhs of expressions.
+        '''
+        if isinstance(expr, models.F):
+            field, _ = self._get_field(expr.name)
 
-        if not isinstance(field, TranslatedVirtualField):
-            return f
+            if not isinstance(field, TranslatedVirtualField):
+                return expr
 
-        rewritten = self._add_i18n_annotation(
-            virtual_field=field,
-            fallback=False,
-            bare_lookup=f.name
-        )
+            return field.as_sql(fallback=False, bare_lookup=expr.name)
 
-        return models.F(rewritten)
+        elif isinstance(expr, models.expressions.CombinedExpression):
+            return models.expressions.CombinedExpression(
+                self._rewrite_expression(expr.lhs),
+                expr.connector,
+                self._rewrite_expression(expr.rhs)
+            )
+        elif isinstance(expr, models.Count):
+            return models.Count(
+                self._rewrite_expression(expr.source_expressions[0])
+            )
+        elif isinstance(expr, models.Func):
+            new_expressions = []
+            for expression in expr.source_expressions:
+                new_expressions.append(self._rewrite_expression(expression))
+
+            kwargs = {}
+            if hasattr(expr, 'output_field'):
+                kwargs['output_field'] = expr.output_field
+
+            if hasattr(expr, 'desc') and expr.desc is True:
+                kwargs['desc'] = True
+
+            return type(expr)(*new_expressions, **kwargs)
+        else:
+            return expr
 
     def _rewrite_Q(self, q):
         if isinstance(q, models.Q):
@@ -174,31 +201,14 @@ class MultilingualQuerySet(models.query.QuerySet):
                 negated=q.negated
             )
         if isinstance(q, (list, tuple)):
-            return self._rewrite_expression(*q)
-
-    def _rewrite_Func(self, f):
-        if not isinstance(f, models.Func):
-            return f
-
-        new_expressions = []
-        for expression in f.source_expressions:
-            new_expressions.append(self._rewrite_F(expression))
-
-        kwargs = {}
-        if hasattr(f, 'output_field'):
-            kwargs['output_field'] = f.output_field
-
-        if hasattr(f, 'desc') and f.desc is True:
-            kwargs['desc'] = True
-
-        return type(f)(*new_expressions, **kwargs)
+            return self._rewrite_filter_clause(*q)
 
     def _rewrite_ordering(self, field_names):
         new_field_names = []
 
         for field_name in field_names:
             if not isinstance(field_name, six.string_types):
-                new_field_names.append(self._rewrite_Func(field_name))
+                new_field_names.append(self._rewrite_expression(field_name))
                 continue
 
             # remove descending prefix, not relevant for the annotation
@@ -226,16 +236,16 @@ class MultilingualQuerySet(models.query.QuerySet):
 
         return new_field_names
 
-    # def annotate(self, *args, **kwargs):
-    #     '''
-    #     Patch annotate to allow the use of translated field names in annotations.
-    #
-    #     https://docs.djangoproject.com/en/1.11/ref/models/querysets/#annotate
-    #     '''
-    #     args = [self._rewrite_Func(a) for a in args]
-    #     kwargs = {alias: self._rewrite_Func(expr) for alias, expr in kwargs.items()}
-    #
-    #     return super(MultilingualQuerySet, self).annotate(*args, **kwargs)
+    def annotate(self, *args, **kwargs):
+        '''
+        Patch annotate to allow the use of translated field names in annotations.
+
+        https://docs.djangoproject.com/en/1.11/ref/models/querysets/#annotate
+        '''
+        args = [self._rewrite_expression(a) for a in args]
+        kwargs = {alias: self._rewrite_expression(expr) for alias, expr in kwargs.items()}
+
+        return super(MultilingualQuerySet, self).annotate(*args, **kwargs)
 
     def create(self, **kwargs):
         '''
@@ -290,7 +300,7 @@ class MultilingualQuerySet(models.query.QuerySet):
         # handle the kwargs
         new_kwargs = {}
         for field, value in kwargs.items():
-            new_kwargs.update(dict((self._rewrite_expression(field, value), )))
+            new_kwargs.update(dict((self._rewrite_filter_clause(field, value), )))
 
         return super(MultilingualQuerySet, self)._filter_or_exclude(negate, *new_args, **new_kwargs)
 

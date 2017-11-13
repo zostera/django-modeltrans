@@ -17,11 +17,10 @@ Translates Django model fields in a `JSONField` using a registration approach.
 # Known issues
 
 Below is a list of things not yet implemented/catched into the
-Queryset/Manager and can be considered TODO.
+Queryset/Manager and most of them can be considered TODO.
 
 - If the field `'i18n'` is added to `.defer()`, augmentation will likely not work at all. Adding translated fields (`title_nl`) to `.defer()` will likely yield error messages, and doesn't make sense as they are stored in `i18n`.
-- Passing expressions (kwargs) containing references to translated fields in  `values()` and `values_list()` is not supported.
-- Using translated fields in `.annotate()`, `.distinct()`, `.extra()`, `.aggregate()`, `.update()` is not supported.
+- Using translated fields in `.distinct()`, `.extra()`, `.aggregate()`, `.update()` is not supported.
 - Behaviour is tested using `CharField()` en `TextField()`, as these make most sense for translated values.
 - Any ordering using `i18n`-fields defined in `Model.Meta.ordering` is only translated in django 2.0 and later ([django/django#8473](https://github.com/django/django/pull/8673) is required).
 

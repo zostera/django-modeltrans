@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import django
 from django.apps import apps
-from django.conf import settings
 from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.db.models import Manager
 

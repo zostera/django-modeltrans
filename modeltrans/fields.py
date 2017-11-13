@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import fields
