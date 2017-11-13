@@ -217,13 +217,18 @@ class MultilingualQuerySet(models.query.QuerySet):
                 field_name = field_name[1:]
                 sort_order = '-'
 
-            field, lookup_type = self._get_field(field_name)
-            assert lookup_type is None, '{} is not a valid order_by lookup'.format(field_name)
+            if field_name == 'pk':
+                new_field_names.append(sort_order + 'pk')
+                continue
 
-            # if the field is just a normal field, no annotation needed.
-            if not isinstance(field, TranslatedVirtualField):
+            field, lookup_type = self._get_field(field_name)
+            if field is None or not isinstance(field, TranslatedVirtualField):
+                # if the field is just a normal field or not a field
+                # no rewriting needed
                 new_field_names.append(sort_order + field_name)
                 continue
+
+            assert lookup_type is None, '{} is not a valid order_by lookup'.format(field_name)
 
             sort_field = field.as_sql(bare_lookup=field_name)
             if isinstance(sort_field, six.string_types):

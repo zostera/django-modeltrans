@@ -452,6 +452,15 @@ class OrderByTest(TestCase):
         )
         self.assertEquals([m.title for m in qs], 'a b c x y z'.split())
 
+    def test_order_by_annotation(self):
+        qs = Category.objects.annotate(
+            num_blogs=models.Count('blog__title')
+        )
+        expected = ['Birds', 'Mammals']
+
+        self.assertEquals([m.name for m in qs.order_by('num_blogs')], expected)
+        self.assertEquals([m.name for m in qs.order_by('-num_blogs')], list(reversed(expected)))
+
 
 class FallbackOrderByTest(TestCase):
 

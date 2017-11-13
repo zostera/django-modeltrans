@@ -212,3 +212,22 @@ class TranslateModelTest(TestCase):
         self.assertEquals(list(e.exception), [
             ('title_nl', ['must be equal to or greater than 20.']),
         ])
+
+    def test_model_meta_ordering_pk(self):
+        '''
+        When Model.Meta.ordering contains 'pk'
+        '''
+
+        class OrderByPkModel(models.Model):
+            title = models.CharField(max_length=100)
+
+            i18n = TranslationField(fields=('title', ))
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+                ordering = ('-pk', )
+
+        translate_model(OrderByPkModel)
+        sql = str(OrderByPkModel.objects.all().query)
+
+        self.assertIn('ORDER BY "django-modeltrans_tests_orderbypkmodel"."id" DESC', sql)
