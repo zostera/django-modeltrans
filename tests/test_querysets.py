@@ -408,6 +408,15 @@ class AnnotateTest(TestCase):
                 ['VALK', 'VULTURE', 'BAT', 'DOLFIN', 'ZEBRA']
             )
 
+    def test_annotate_length(self):
+        with override('nl'):
+            qs = Blog.objects.annotate(l=models.functions.Length('title_i18n'))
+
+            self.assertEquals(
+                list(qs.values_list('l', flat=True)),
+                map(len, ['VALK', 'VULTURE', 'BAT', 'DOLFIN', 'ZEBRA'])
+            )
+
     def test_annotate_with_some_expressions(self):
         Blog.objects.create(
             category=Category.objects.get(name='Birds'),
@@ -417,7 +426,7 @@ class AnnotateTest(TestCase):
             a=models.Count('blog__title_nl') + 1,
             b=1 + models.Count('blog__title_nl'),
             c=1 / models.Count('blog__title_nl'),
-            d=4 * models.Count('blog__title_nl'),
+            d=4 * models.Count('blog__title_nl')
         )
 
         self.assertEquals(
