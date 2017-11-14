@@ -254,7 +254,7 @@ class TranslationField(JSONField):
                 from django.contrib.postgres.indexes import GinIndex
                 index_name = get_i18n_index_name(cls)
                 cls._meta.indexes.append(GinIndex(fields=['i18n'], name=index_name))
-            except ImportError:
+            except ImportError: # noqa
                 # remove if support for django 1.9 and 1.10 is dropped.
                 pass
 
