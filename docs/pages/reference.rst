@@ -18,3 +18,8 @@ API Reference
 `.MultilingualQuerySet`
 -----------------------
 .. autoclass:: modeltrans.manager.MultilingualQuerySet
+
+
+`.ActiveLanguageMixin`
+-----------------------
+.. autoclass:: modeltrans.admin.ActiveLanguageMixin
