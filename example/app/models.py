@@ -14,8 +14,8 @@ class Category(models.Model):
     class Meta:
         verbose_name_plural = 'categories'
 
-    def __str__(self):
-        return self.name
+    def __unicode__(self):
+        return self.name_i18n
 
 
 class Blog(models.Model):
@@ -26,5 +26,5 @@ class Blog(models.Model):
 
     i18n = TranslationField(fields=('title', 'body', ))
 
-    def __str__(self):
-        return self.title
+    def __unicode__(self):
+        return self.title_i18n

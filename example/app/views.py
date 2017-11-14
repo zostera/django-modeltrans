@@ -17,7 +17,7 @@ from .models import Blog
 
 class BlogTable(tables.Table):
     edit = tables.TemplateColumn(
-        template_code='''<a href="{% url 'blog-edit' pk=record.pk %}" class="btn btn-small">edit</a>''',
+        template_code='''<a href="{% url 'blog-edit' pk=record.pk %}" class="btn btn-sm btn-primary">edit</a>''',
         empty_values=(),
         orderable=False
     )
@@ -31,7 +31,11 @@ class BlogTable(tables.Table):
             'title_nl',
             'title_de',
             'title_fr',
-            'category',
+
+            'category.name_i18n',
+
+            'edit',
+            'category.i18n',
             'i18n'
         )
 
