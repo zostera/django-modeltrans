@@ -236,6 +236,14 @@ class TranslationField(JSONField):
 
         return name, path, args, kwargs
 
+    def get_translated_fields(self):
+        '''
+        Return a generator for all translated fields.
+        '''
+        for field in self.model._meta.get_fields():
+            if isinstance(field, TranslatedVirtualField):
+                yield field
+
     def contribute_to_class(self, cls, name):
         if name != 'i18n':
             raise ImproperlyConfigured('{} must have name "i18n"'.format(self.__class__.__name__))
