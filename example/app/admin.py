@@ -16,7 +16,6 @@ class BlogAdmin(admin.ModelAdmin):
     pass
 
 
-
 class DefaultAdminCategory(Category):
     '''
     Proxy model to have both the unlimited version of the ModelAdmin and

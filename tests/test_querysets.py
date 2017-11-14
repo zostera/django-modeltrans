@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
 
-import json
-import os
 import pickle
 from unittest import skipIf
 
@@ -16,23 +14,7 @@ from modeltrans.fields import TranslationField
 from modeltrans.translator import translate_model
 
 from .app.models import Attribute, Blog, BlogAttr, Category, MetaOrderingModel, Site
-from .utils import CreateTestModel
-
-
-def load_wiki():
-    wiki = Category.objects.create(name='Wikipedia')
-    with open(os.path.join('tests', 'fixtures', 'fulltextsearch.json')) as infile:
-        data = json.load(infile)
-
-        for article in data:
-            kwargs = {}
-            for item in article:
-                lang = '_' + item['lang']
-
-                kwargs['title' + lang] = item['title']
-                kwargs['body' + lang] = item['body']
-
-            Blog.objects.create(category=wiki, **kwargs)
+from .utils import CreateTestModel, load_wiki
 
 
 def key(queryset, key):
@@ -430,11 +412,11 @@ class AnnotateTest(TestCase):
         )
 
         self.assertEquals(
-            list(qs.values_list('name', 'a', 'b', 'c', 'd')),
-            [
+            set(qs.values_list('name', 'a', 'b', 'c', 'd')),
+            {
                 ('Birds', 3, 3, 0, 8),
                 ('Mammals', 2, 2, 1, 4)
-            ]
+            }
         )
 
 
