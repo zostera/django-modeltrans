@@ -28,6 +28,7 @@ Table of contents
     pages/inner-workings
     pages/related-packages
     pages/management
+    pages/admin
 
 .. toctree::
     :maxdepth: 1
