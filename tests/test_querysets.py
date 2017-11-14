@@ -414,7 +414,7 @@ class AnnotateTest(TestCase):
 
             self.assertEquals(
                 list(qs.values_list('l', flat=True)),
-                map(len, ['VALK', 'VULTURE', 'BAT', 'DOLFIN', 'ZEBRA'])
+                list(map(len, ['VALK', 'VULTURE', 'BAT', 'DOLFIN', 'ZEBRA']))
             )
 
     def test_annotate_with_some_expressions(self):
