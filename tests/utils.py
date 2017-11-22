@@ -41,7 +41,7 @@ class CreateTestModel():
         Remove the tables from our database
         '''
         with connection.schema_editor() as editor:
-            for Model in self.models:
+            for Model in reversed(self.models):
                 editor.delete_model(Model)
 
 
