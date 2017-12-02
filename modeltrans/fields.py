@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields.jsonb import JSONField, KeyTextTransform
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import fields
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import ugettext as _
 
-from .compat import KeyTextTransform
 from .conf import get_create_gin_setting, get_default_language, get_fallback_chain
 from .utils import build_localized_fieldname, get_i18n_index_name, get_language
 
@@ -249,13 +248,8 @@ class TranslationField(JSONField):
             raise ImproperlyConfigured('{} must have name "i18n"'.format(self.__class__.__name__))
 
         if get_create_gin_setting():
-            # If used with Django 1.11 and later, this will add a GinIndex() for the i18n column.
-            try:
-                from django.contrib.postgres.indexes import GinIndex
-                index_name = get_i18n_index_name(cls)
-                cls._meta.indexes.append(GinIndex(fields=['i18n'], name=index_name))
-            except ImportError: # noqa
-                # remove if support for django 1.9 and 1.10 is dropped.
-                pass
+            from django.contrib.postgres.indexes import GinIndex
+            index_name = get_i18n_index_name(cls)
+            cls._meta.indexes.append(GinIndex(fields=['i18n'], name=index_name))
 
         super(TranslationField, self).contribute_to_class(cls, name)

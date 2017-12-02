@@ -244,7 +244,7 @@ class MultilingualQuerySet(models.query.QuerySet):
         '''
         Patch annotate to allow the use of translated field names in annotations.
 
-        https://docs.djangoproject.com/en/1.11/ref/models/querysets/#annotate
+        https://docs.djangoproject.com/en/stable/ref/models/querysets/#annotate
         '''
         args = [self._rewrite_expression(a) for a in args]
         kwargs = {alias: self._rewrite_expression(expr) for alias, expr in kwargs.items()}
@@ -256,7 +256,7 @@ class MultilingualQuerySet(models.query.QuerySet):
         Patch the create method to allow adding the value for a translated field
         using `Model.objects.create(..., title_nl='...')`.
 
-        https://docs.djangoproject.com/en/1.11/ref/models/querysets/#create
+        https://docs.djangoproject.com/en/stable/ref/models/querysets/#create
         '''
         return super(MultilingualQuerySet, self).create(
             **transform_translatable_fields(self.model, kwargs)

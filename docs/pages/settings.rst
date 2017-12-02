@@ -41,7 +41,6 @@ If configured like this::
 -------------------------
 Boolean signalling django-modeltrans to create a `GinIndex <https://docs.djangoproject.com/en/stable/ref/contrib/postgres/indexes/#ginindex>`_
 for each ``i18n`` field.
-Support for ``GinIndex`` is added in django 1.11, for previous versions,
-use :ref:`add_gin_index`.
+Can be disabled to allow customization.
 
 ``True`` by default.

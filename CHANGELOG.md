@@ -1,7 +1,7 @@
 # django-modeltrans change log
 
 ## master
-
+ - Dropped support for Django 1.9 and 1.10.
 
 ## 0.2.0 (2017-11-13)
  - No annotations are made while ordering anymore, instead, expressions are passed onto the original `order_by()` method.
