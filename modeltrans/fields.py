@@ -248,13 +248,8 @@ class TranslationField(JSONField):
             raise ImproperlyConfigured('{} must have name "i18n"'.format(self.__class__.__name__))
 
         if get_create_gin_setting():
-            # If used with Django 1.11 and later, this will add a GinIndex() for the i18n column.
-            try:
-                from django.contrib.postgres.indexes import GinIndex
-                index_name = get_i18n_index_name(cls)
-                cls._meta.indexes.append(GinIndex(fields=['i18n'], name=index_name))
-            except ImportError: # noqa
-                # remove if support for django 1.9 and 1.10 is dropped.
-                pass
+            from django.contrib.postgres.indexes import GinIndex
+            index_name = get_i18n_index_name(cls)
+            cls._meta.indexes.append(GinIndex(fields=['i18n'], name=index_name))
 
         super(TranslationField, self).contribute_to_class(cls, name)
