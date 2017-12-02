@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields.jsonb import JSONField, KeyTextTransform
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import fields
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import ugettext as _
 
-from .compat import KeyTextTransform
 from .conf import get_create_gin_setting, get_default_language, get_fallback_chain
 from .utils import build_localized_fieldname, get_i18n_index_name, get_language
 
