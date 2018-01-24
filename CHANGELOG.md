@@ -1,7 +1,12 @@
 # django-modeltrans change log
 
 ## master
+
+
+## 0.2.1 (2018-01-24)
  - Dropped support for Django 1.9 and 1.10.
+ - Used `ugettext_lazy` rather than `ugettext` to fix admin header translation [#32](https://github.com/zostera/django-modeltrans/pull/32)
+ - Removed default value `False` for `Field.editable`, to allow using the translated version of a field in a `ModelForm`.
 
 ## 0.2.0 (2017-11-13)
  - No annotations are made while ordering anymore, instead, expressions are passed onto the original `order_by()` method.
