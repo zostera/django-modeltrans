@@ -18,10 +18,10 @@ from .utils import CreateTestModel, load_wiki
 
 
 def key(queryset, key, sep=None):
-    l = list([getattr(model, key) for model in queryset])
+    items = list([getattr(model, key) for model in queryset])
     if sep is not None:
-        l = sep.join(l)
-    return l
+        items = sep.join(items)
+    return items
 
 
 class GetFieldTest(TestCase):
@@ -303,19 +303,19 @@ class SimpleOrderByTest(TestCase):
     def test_regular_fields(self):
         qs = Blog.objects.all().order_by('-title')
 
-        self.assertEquals(key(qs, 'title'), 'G,F,E,D,C,B,A'.split(','))
+        self.assertEquals(key(qs, 'title', sep=' '), 'G F E D C B A')
 
     def test_order_by_two_fields(self):
         '''Multiple translated fields should work too'''
         qs = Blog.objects.all().order_by('-title_fr', 'title_nl')
 
-        self.assertEquals(key(qs, 'title_nl'), 'X Y Z A B C D'.split())
+        self.assertEquals(key(qs, 'title_nl', sep=' '), 'X Y Z A B C D')
 
     def test_order_asc(self):
         qs = Blog.objects.all().order_by('title_nl')
 
         self.assertEquals(key(qs, 'title_nl'), sorted(self.NL))
-        self.assertEquals(key(qs, 'title'), 'A B C D G F E'.split())
+        self.assertEquals(key(qs, 'title', sep=' '), 'A B C D G F E')
 
     def test_order_desc(self):
         qs = Blog.objects.all().order_by('-title_nl')
@@ -395,10 +395,10 @@ class AnnotateTest(TestCase):
 
     def test_annotate_length(self):
         with override('nl'):
-            qs = Blog.objects.annotate(l=models.functions.Length('title_i18n'))
+            qs = Blog.objects.annotate(len=models.functions.Length('title_i18n'))
 
             self.assertEquals(
-                list(qs.values_list('l', flat=True)),
+                list(qs.values_list('len', flat=True)),
                 list(map(len, ['VALK', 'VULTURE', 'BAT', 'DOLFIN', 'ZEBRA']))
             )
 

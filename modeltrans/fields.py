@@ -52,7 +52,6 @@ class TranslatedVirtualField(object):
 
         self.blank = kwargs['blank']
         self.null = kwargs['null']
-        self.editable = kwargs.get('editable', True)
 
         self.concrete = False
 
