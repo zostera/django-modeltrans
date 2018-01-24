@@ -17,8 +17,11 @@ from .app.models import Attribute, Blog, BlogAttr, Category, MetaOrderingModel, 
 from .utils import CreateTestModel, load_wiki
 
 
-def key(queryset, key):
-    return list([getattr(model, key) for model in queryset])
+def key(queryset, key, sep=None):
+    l = list([getattr(model, key) for model in queryset])
+    if sep is not None:
+        l = sep.join(l)
+    return l
 
 
 class GetFieldTest(TestCase):
@@ -443,6 +446,9 @@ class OrderByTest(TestCase):
         self.assertEquals(key(qs, 'title'), 'Zebra Dolfin Bat Vulture Falcon'.split())
 
     def test_order_by_lower(self):
+        '''
+        Beware: database configuration influences ordering.
+        '''
         from django.db.models.functions import Lower
 
         c = Category.objects.create(name='test')
@@ -453,21 +459,21 @@ class OrderByTest(TestCase):
 
         # order by title should result in aA because it is case sensitive.
         qs = filtered.order_by('title', 'title_nl')
-        self.assertEquals(key(qs, 'title'), ['a', 'A'])
+        self.assertEquals(key(qs, 'title', sep=''), 'aA')
 
         # order by Lower('title') should result in Aa because lower('A') == lower('A')
         # so the title_nl field should determine the sorting
         qs = filtered.order_by(Lower('title'), 'title_nl')
-        self.assertEquals(key(qs, 'title'), ['a', 'A'])
+        self.assertEquals(key(qs, 'title', sep=''), 'aA')
 
         # applying lower to title_nl should not matter since it is not the same letter
         qs = filtered.order_by(Lower('title_nl'))
-        self.assertEquals(key(qs, 'title'), ['a', 'A'])
+        self.assertEquals(key(qs, 'title', sep=''), 'aA')
 
         # should be the same as previous
         with override('nl'):
             qs = filtered.order_by(Lower('title_i18n'))
-            self.assertEquals(key(qs, 'title'), ['a', 'A'])
+            self.assertEquals(key(qs, 'title', sep=''), 'aA')
 
     def test_order_by_two_virtual_fields(self):
         ca = Category.objects.create(name='foo a', title='test a', title_nl='testje a')
@@ -487,16 +493,13 @@ class OrderByTest(TestCase):
             '-category__title_nl',
             '-title_nl'
         )
-        self.assertEquals([m.title for m in qs], 'a b c x y z'.split())
+        self.assertEquals(key(qs, 'title', sep=' '), 'a b c x y z')
 
     def test_order_by_annotation(self):
-        qs = Category.objects.annotate(
-            num_blogs=models.Count('blog__title')
-        )
-        expected = ['Birds', 'Mammals']
+        qs = Category.objects.annotate(num_blogs=models.Count('blog__title'))
 
-        self.assertEquals([m.name for m in qs.order_by('num_blogs')], expected)
-        self.assertEquals([m.name for m in qs.order_by('-num_blogs')], list(reversed(expected)))
+        self.assertEquals(key(qs.order_by('num_blogs'), 'name', sep=' '), 'Birds Mammals')
+        self.assertEquals(key(qs.order_by('-num_blogs'), 'name', sep=' '), 'Mammals Birds')
 
 
 class FallbackOrderByTest(TestCase):
