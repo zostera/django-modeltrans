@@ -5,6 +5,22 @@ from django.utils.translation import override
 from migrate_test.app.models import Blog
 
 
+def get_indexes(table):
+    """
+    Get the type, column-name tuples for all single-column indexes on the table using a new cursor.
+
+    Adapted from
+    from django/django django/tests/schema/tests.py::SchemaTests
+    https://github.com/django/django/blob/6afede82192067efecedb039c29eb301816d5fb5/tests/schema/tests.py#L112
+    """
+    with connection.cursor() as cursor:
+        return [
+            (c['type'], c['columns'][0])
+            for c in connection.introspection.get_constraints(cursor, table).values()
+            if c['index'] and len(c['columns']) == 1
+        ]
+
+
 class PostMigrateTest(TestCase):
     def test_verify_installed_apps(self):
         from django.conf import settings
@@ -29,13 +45,6 @@ class PostMigrateTest(TestCase):
         Check if the i18n column has the gin index.
         '''
         db_table = Blog._meta.db_table
-        expected_name = '{}_i18n_gin'.format(db_table)
+        indexes = get_indexes(db_table)
 
-        with connection.cursor() as cursor:
-            cursor.execute(
-                'SELECT indexname, indexdef FROM pg_indexes WHERE tablename = %s;',
-                [db_table]
-            )
-            indexes = {name: definition for name, definition in cursor.fetchall()}
-
-        self.assertIn(expected_name, indexes)
+        self.assertIn(('gin', 'i18n'), indexes)

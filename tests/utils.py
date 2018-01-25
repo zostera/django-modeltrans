@@ -59,3 +59,19 @@ def load_wiki():
                 kwargs['body' + lang] = item['body']
 
             Blog.objects.create(category=wiki, **kwargs)
+
+
+def get_indexes(table):
+    """
+    Get the type, column-name tuples for all single-column indexes on the table using a new cursor.
+
+    Adapted from
+    from django/django django/tests/schema/tests.py::SchemaTests
+    https://github.com/django/django/blob/6afede82192067efecedb039c29eb301816d5fb5/tests/schema/tests.py#L112
+    """
+    with connection.cursor() as cursor:
+        return [
+            (c['type'], c['columns'][0])
+            for c in connection.introspection.get_constraints(cursor, table).values()
+            if c['index'] and len(c['columns']) == 1
+        ]

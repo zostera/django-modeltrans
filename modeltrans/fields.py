@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.contrib.postgres.fields.jsonb import JSONField, KeyTextTransform
+from django.contrib.postgres.indexes import GinIndex
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import fields
 from django.db.models.functions import Cast, Coalesce
@@ -246,9 +247,13 @@ class TranslationField(JSONField):
         if name != 'i18n':
             raise ImproperlyConfigured('{} must have name "i18n"'.format(self.__class__.__name__))
 
-        if get_create_gin_setting():
-            from django.contrib.postgres.indexes import GinIndex
-            index_name = get_i18n_index_name(cls)
-            cls._meta.indexes.append(GinIndex(fields=['i18n'], name=index_name))
-
         super(TranslationField, self).contribute_to_class(cls, name)
+
+        if get_create_gin_setting():
+            index = GinIndex(fields=[name])
+            # set_name_with_model relies on the field being present, so this must
+            # always come after the super() call.
+            index.set_name_with_model(cls)
+            cls._meta.indexes.append(index)
+
+        print cls._meta.indexes

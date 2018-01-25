@@ -13,6 +13,7 @@ class Category(models.Model):
 
     class Meta:
         verbose_name_plural = 'categories'
+        indexes = []
 
     def __unicode__(self):
         return self.name_i18n
@@ -28,3 +29,9 @@ class Blog(models.Model):
 
     def __unicode__(self):
         return self.title_i18n
+
+
+class Test(models.Model):
+    title = models.CharField(max_length=255)
+
+    i18n = TranslationField(fields=('title', ))

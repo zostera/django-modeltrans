@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.core.exceptions import ImproperlyConfigured, ValidationError
-from django.db import models
+from django.db import connection, models
 from django.test import TestCase
 
 from modeltrans.fields import TranslationField
@@ -10,6 +10,7 @@ from modeltrans.manager import MultilingualManager, MultilingualQuerySet
 from modeltrans.translator import get_i18n_field, get_translated_models, translate_model
 
 from .app import models as app_models
+from .utils import get_indexes
 
 
 class Translating_utils(TestCase):
@@ -20,7 +21,7 @@ class Translating_utils(TestCase):
             test = models.CharField(max_length=20)
 
             class Meta:
-                app_label = 'django-modeltrans_tests'
+                app_label = 'tests'
 
         self.assertEquals(get_i18n_field(I18nFieldTestModel), None)
 
@@ -29,7 +30,7 @@ class Translating_utils(TestCase):
             i18n = models.CharField(max_length=20)
 
             class Meta:
-                app_label = 'django-modeltrans_tests'
+                app_label = 'tests'
 
         self.assertEquals(get_i18n_field(I18nFieldTestModel2), None)
 
@@ -49,7 +50,7 @@ class Translating_utils(TestCase):
 
 class TranslateModelTest(TestCase):
     def test_translate_bad_required_language(self):
-        class A(models.Model):
+        class BadRequiredLanguageMedel(models.Model):
             title = models.CharField(max_length=100)
 
             i18n = TranslationField(fields=('title', ), required_languages=('es', ))
@@ -58,11 +59,11 @@ class TranslateModelTest(TestCase):
                 app_label = 'django-modeltrans_tests'
 
         expected_message = (
-            'Language "es" is in required_languages on '
-            'Model "A" but not in settings.MODELTRANS_AVAILABLE_LANGUAGES.'
+            'Language "es" is in required_languages on Model '
+            '"BadRequiredLanguageMedel" but not in settings.MODELTRANS_AVAILABLE_LANGUAGES.'
         )
         with self.assertRaisesMessage(ImproperlyConfigured, expected_message):
-            translate_model(A)
+            translate_model(BadRequiredLanguageMedel)
 
     def test_translation_unsupported_field(self):
         class IntegerModel(models.Model):
@@ -88,11 +89,11 @@ class TranslateModelTest(TestCase):
                     app_label = 'django-modeltrans_tests'
 
     def test_translate_nonexisting_field(self):
-        class B(models.Model):
+        class TranslateNonexistingFieldModel(models.Model):
             i18n = TranslationField(fields=('foo', ))
 
             class Meta:
-                app_label = 'django-modeltrans_tests'
+                app_label = 'tests'
 
         expected_message = (
             'Argument "fields" to TranslationField contains an item "foo", '
@@ -100,7 +101,7 @@ class TranslateModelTest(TestCase):
         )
 
         with self.assertRaisesMessage(ImproperlyConfigured, expected_message):
-            translate_model(B)
+            translate_model(TranslateNonexistingFieldModel)
 
     def test_translate_model_with_custom_manager(self):
         '''
@@ -116,7 +117,7 @@ class TranslateModelTest(TestCase):
             def custom_method(self):
                 return 'foo'
 
-        class TestModel1(models.Model):
+        class CustomManagerModel(models.Model):
             name = models.CharField(max_length=100)
 
             i18n = TranslationField(fields=('name', ))
@@ -124,15 +125,15 @@ class TranslateModelTest(TestCase):
             objects = CustomManager()
 
             class Meta:
-                app_label = 'django-modeltrans_tests'
+                app_label = 'tests'
 
-        translate_model(TestModel1)
+        translate_model(CustomManagerModel)
 
-        self.assertIsInstance(TestModel1.objects, CustomManager)
-        self.assertIsInstance(TestModel1.objects, MultilingualManager)
+        self.assertIsInstance(CustomManagerModel.objects, CustomManager)
+        self.assertIsInstance(CustomManagerModel.objects, MultilingualManager)
 
-        self.assertEquals(TestModel1.objects.custom_method(), 'foo')
-        self.assertIsInstance(TestModel1.objects.all(), MultilingualQuerySet)
+        self.assertEquals(CustomManagerModel.objects.custom_method(), 'foo')
+        self.assertIsInstance(CustomManagerModel.objects.all(), MultilingualQuerySet)
 
     def test_translate_model_with_existing_field(self):
         class TestModel2(models.Model):
@@ -142,7 +143,7 @@ class TranslateModelTest(TestCase):
             i18n = TranslationField(fields=('title', ))
 
             class Meta:
-                app_label = 'django-modeltrans_tests'
+                app_label = 'tests'
 
         expected_message = (
             'Error adding translation field. Model "TestModel2" already '
@@ -158,7 +159,7 @@ class TranslateModelTest(TestCase):
             i18n = models.BooleanField()
 
             class Meta:
-                app_label = 'django-modeltrans_tests'
+                app_label = 'tests'
 
         translate_model(TestModel3)
 
@@ -169,7 +170,7 @@ class TranslateModelTest(TestCase):
             i18n = TranslationField(fields=('title', ), virtual_fields=False)
 
             class Meta:
-                app_label = 'django-modeltrans_tests'
+                app_label = 'tests'
 
         m = TestModel4(title='foo')
         self.assertTrue(hasattr(m, 'i18n'))
@@ -195,7 +196,7 @@ class TranslateModelTest(TestCase):
             i18n = TranslationField(fields=('title', ))
 
             class Meta:
-                app_label = 'django-modeltrans_tests'
+                app_label = 'tests'
 
         translate_model(TestModel5)
 
@@ -224,10 +225,25 @@ class TranslateModelTest(TestCase):
             i18n = TranslationField(fields=('title', ))
 
             class Meta:
-                app_label = 'django-modeltrans_tests'
+                app_label = 'tests'
                 ordering = ('-pk', )
 
         translate_model(OrderByPkModel)
         sql = str(OrderByPkModel.objects.all().query)
 
-        self.assertIn('ORDER BY "django-modeltrans_tests_orderbypkmodel"."id" DESC', sql)
+        self.assertIn('ORDER BY "tests_orderbypkmodel"."id" DESC', sql)
+
+    def test_add_indexes(self):
+        class IndexTestModel(models.Model):
+            test = models.TextField()
+            i18n = TranslationField(fields=())
+
+            class Meta:
+                app_label = 'tests'
+                # indexes = [] # models.Index(fields=['test'])]
+
+        from .utils import CreateTestModel
+        with CreateTestModel(IndexTestModel):
+            indexes = get_indexes(IndexTestModel._meta.db_table)
+
+        self.assertEquals([('gin', 'i18n')], indexes)
