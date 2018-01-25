@@ -31,8 +31,8 @@ class GetFieldTest(TestCase):
     def assert_lookup(self, lookup, expected_fieldname, expected_lookup_type=None):
         field, lookup_type = Blog.objects.all()._get_field(lookup)
 
-        self.assertEquals(field.name, expected_fieldname)
-        self.assertEquals(lookup_type, expected_lookup_type)
+        self.assertEqual(field.name, expected_fieldname)
+        self.assertEqual(lookup_type, expected_lookup_type)
 
     def test_bare_field(self):
         self.assert_lookup('title', 'title')
@@ -64,7 +64,7 @@ class PickleTest(TestCase):
         qs = Blog.objects.all()
         serialized = pickle.dumps(qs)
 
-        self.assertEquals(
+        self.assertEqual(
             {m.title for m in qs},
             {m.title for m in pickle.loads(serialized)}
         )
@@ -73,7 +73,7 @@ class PickleTest(TestCase):
         qs = Blog.objects.all().prefetch_related('category')
         serialized = pickle.dumps(qs)
 
-        self.assertEquals(
+        self.assertEqual(
             {m.title for m in qs},
             {m.title for m in pickle.loads(serialized)}
         )
@@ -82,7 +82,7 @@ class PickleTest(TestCase):
         qs = Category.objects.all()
         serialized = pickle.dumps(qs)
 
-        self.assertEquals(
+        self.assertEqual(
             {m.name for m in qs},
             {m.name for m in pickle.loads(serialized)}
         )
@@ -112,37 +112,37 @@ class FilterTest(TestCase):
         We want to do a text contains in translated value lookup
         '''
         qs = Blog.objects.filter(title_nl__contains='al')
-        self.assertEquals(qs[0].title_nl, 'Valk')
+        self.assertEqual(qs[0].title_nl, 'Valk')
 
         qs = Blog.objects.filter(title__contains='al')
-        self.assertEquals(qs[0].title, 'Falcon')
+        self.assertEqual(qs[0].title, 'Falcon')
 
     def test_filter_exact(self):
         qs = Blog.objects.filter(title_nl='Valk')
-        self.assertEquals(qs[0].title, 'Falcon')
+        self.assertEqual(qs[0].title, 'Falcon')
 
         qs = Blog.objects.filter(title='Falcon')
-        self.assertEquals(qs[0].title, 'Falcon')
+        self.assertEqual(qs[0].title, 'Falcon')
 
     def test_filter_startswith(self):
         qs = Blog.objects.filter(title_nl__startswith='Va')
-        self.assertEquals(qs[0].title, 'Falcon')
+        self.assertEqual(qs[0].title, 'Falcon')
 
     def test_exclude_exact(self):
         expected = {'Frog', 'Toad', 'Duck', 'Dolphin'}
 
         qs = Blog.objects.exclude(title='Falcon')
-        self.assertEquals({m.title for m in qs}, expected)
+        self.assertEqual({m.title for m in qs}, expected)
 
         qs = Blog.objects.exclude(title_nl='Valk')
-        self.assertEquals({m.title for m in qs}, expected)
+        self.assertEqual({m.title for m in qs}, expected)
 
         qs = Blog.objects.exclude(title_nl='Valk').exclude(title_nl='Pad')
-        self.assertEquals({m.title for m in qs}, {'Frog', 'Duck', 'Dolphin'})
+        self.assertEqual({m.title for m in qs}, {'Frog', 'Duck', 'Dolphin'})
 
     def test_exclude_contains(self):
         qs = Blog.objects.exclude(title_nl__contains='o')
-        self.assertEquals({m.title for m in qs}, {'Falcon', 'Frog', 'Toad', 'Duck'})
+        self.assertEqual({m.title for m in qs}, {'Falcon', 'Frog', 'Toad', 'Duck'})
 
     def test_filter_i18n(self):
         Blog.objects.create(title='Cod')
@@ -150,39 +150,39 @@ class FilterTest(TestCase):
         with override('nl'):
             # should fallback to english
             qs = Blog.objects.filter(title_i18n='Cod')
-            self.assertEquals({m.title for m in qs}, {'Cod'})
+            self.assertEqual({m.title for m in qs}, {'Cod'})
 
             # should not fallback
             qs = Blog.objects.filter(title_nl='Cod')
-            self.assertEquals({m.title for m in qs}, set())
+            self.assertEqual({m.title for m in qs}, set())
 
     def test_filter_by_default_language(self):
         qs = Blog.objects.filter(title_en__contains='al')
-        self.assertEquals({m.title for m in qs}, {'Falcon'})
+        self.assertEqual({m.title for m in qs}, {'Falcon'})
         self.assertTrue('annotation' not in str(qs.query))
 
     def test_get(self):
         '''get() is just a special case of filter()'''
         b = Blog.objects.get(title_nl='Valk')
 
-        self.assertEquals(b.title, 'Falcon')
+        self.assertEqual(b.title, 'Falcon')
 
         with self.assertRaisesMessage(Blog.DoesNotExist, 'Blog matching query does not exist.'):
             Blog.objects.get(title_fr='Boo')
 
     def test_filter_Q_object(self):
         b = Blog.objects.get(Q(title_nl__contains='al'))
-        self.assertEquals(b.title, 'Falcon')
+        self.assertEqual(b.title, 'Falcon')
 
         qs = Blog.objects.filter(Q(title_nl__contains='al') | Q(title_en__contains='Fro'))
-        self.assertEquals({m.title for m in qs}, {'Falcon', 'Frog'})
+        self.assertEqual({m.title for m in qs}, {'Falcon', 'Frog'})
 
         b = Blog.objects.get(Q(title_nl__contains='al'), Q(title_en__contains='al'))
-        self.assertEquals(b.title, 'Falcon')
+        self.assertEqual(b.title, 'Falcon')
 
         with override('nl'):
             b = Blog.objects.get(Q(title_i18n='Kikker'))
-            self.assertEquals(b.title, 'Frog')
+            self.assertEqual(b.title, 'Frog')
 
     def test_filter_F_expression(self):
         Blog.objects.create(title='foo', title_nl=20, title_fr=10)
@@ -190,10 +190,10 @@ class FilterTest(TestCase):
         Blog.objects.create(title='baz', title_nl=20, title_fr=40)
 
         qs = Blog.objects.filter(title_nl__gt=F('title_fr'))
-        self.assertEquals({m.title for m in qs}, {'foo'})
+        self.assertEqual({m.title for m in qs}, {'foo'})
 
         qs = Blog.objects.filter(title_nl__lt=F('title_fr'))
-        self.assertEquals({m.title for m in qs}, {'bar', 'baz'})
+        self.assertEqual({m.title for m in qs}, {'bar', 'baz'})
 
     def test_filter_F_expressions_function(self):
         Blog.objects.create(title='foo', title_nl='foo')
@@ -203,7 +203,7 @@ class FilterTest(TestCase):
         qs = Blog.objects.filter(
             title_nl=models.functions.Upper(F('title_nl'))
         )
-        self.assertEquals({m.title for m in qs}, {'bar', 'baz'})
+        self.assertEqual({m.title for m in qs}, {'bar', 'baz'})
 
     def test_filter_relations(self):
         mass = Attribute.objects.create(slug='mass', name='Mean Mass')
@@ -239,20 +239,20 @@ class FilterTest(TestCase):
         qs = Blog.objects.filter(
             category__in=Category.objects.filter(name_nl__contains='an')
         )
-        self.assertEquals(
+        self.assertEqual(
             {m.title_i18n for m in qs},
             {'Chesterfield', 'Why migrate', 'Initial prototype', 'Dogfooding'}
         )
 
     def test_queryset_related_model(self):
         qs = Blog.objects.filter(category__name_nl='Vogels')
-        self.assertEquals({m.title for m in qs}, {'Falcon', 'Duck'})
+        self.assertEqual({m.title for m in qs}, {'Falcon', 'Duck'})
 
     def test_filter_spanning_relation(self):
         birds = Category.objects.get(name='Birds')
         bird_blogs = Blog.objects.filter(category=birds)
 
-        self.assertEquals(
+        self.assertEqual(
             {b.title for b in Blog.objects.filter(category__name_nl='Vogels')},
             {b.title for b in bird_blogs}
         )
@@ -269,13 +269,13 @@ class FilterTest(TestCase):
         Blog.objects.create(title='Version 0.1.1 of modeltrans released', site=site_modeltrans)
 
         qs = Site.objects.filter(blog__title='Strange')
-        self.assertEquals({m.name for m in qs}, {'Testsite'})
+        self.assertEqual({m.name for m in qs}, {'Testsite'})
 
         qs = Site.objects.filter(blog__title_nl='Vreemd')
-        self.assertEquals({m.name for m in qs}, {'Testsite'})
+        self.assertEqual({m.name for m in qs}, {'Testsite'})
 
         qs = Site.objects.filter(blog__title_i18n__contains='modeltrans')
-        self.assertEquals({m.name for m in qs}, {'Modeltrans blog'})
+        self.assertEqual({m.name for m in qs}, {'Modeltrans blog'})
 
 
 class FulltextSearch(TestCase):
@@ -287,7 +287,7 @@ class FulltextSearch(TestCase):
         qs = Blog.objects.annotate(
             search=SearchVector('title_i18n', 'body_i18n'),
         ).filter(search='prey')
-        self.assertEquals({m.title for m in qs}, {'Vulture', 'Falcon', 'Dolphin'})
+        self.assertEqual({m.title for m in qs}, {'Vulture', 'Falcon', 'Dolphin'})
 
 
 class SimpleOrderByTest(TestCase):
@@ -303,33 +303,33 @@ class SimpleOrderByTest(TestCase):
     def test_regular_fields(self):
         qs = Blog.objects.all().order_by('-title')
 
-        self.assertEquals(key(qs, 'title', sep=' '), 'G F E D C B A')
+        self.assertEqual(key(qs, 'title', sep=' '), 'G F E D C B A')
 
     def test_order_by_two_fields(self):
         '''Multiple translated fields should work too'''
         qs = Blog.objects.all().order_by('-title_fr', 'title_nl')
 
-        self.assertEquals(key(qs, 'title_nl', sep=' '), 'X Y Z A B C D')
+        self.assertEqual(key(qs, 'title_nl', sep=' '), 'X Y Z A B C D')
 
     def test_order_asc(self):
         qs = Blog.objects.all().order_by('title_nl')
 
-        self.assertEquals(key(qs, 'title_nl'), sorted(self.NL))
-        self.assertEquals(key(qs, 'title', sep=' '), 'A B C D G F E')
+        self.assertEqual(key(qs, 'title_nl'), sorted(self.NL))
+        self.assertEqual(key(qs, 'title', sep=' '), 'A B C D G F E')
 
     def test_order_desc(self):
         qs = Blog.objects.all().order_by('-title_nl')
-        self.assertEquals(key(qs, 'title_nl'), sorted(self.NL, reverse=True))
+        self.assertEqual(key(qs, 'title_nl'), sorted(self.NL, reverse=True))
 
         qs = Blog.objects.all().order_by('-title')
-        self.assertEquals(key(qs, 'title'), sorted(self.EN, reverse=True))
+        self.assertEqual(key(qs, 'title'), sorted(self.EN, reverse=True))
 
     def test_order_by_i18n(self):
         Blog.objects.create(title='H')
         with override('nl'):
             qs = Blog.objects.all().order_by('title_i18n')
 
-            self.assertEquals(key(qs, 'title_i18n', sep=' '), 'A B C D H X Y Z')
+            self.assertEqual(key(qs, 'title_i18n', sep=' '), 'A B C D H X Y Z')
 
 
 class AnnotateTest(TestCase):
@@ -352,7 +352,7 @@ class AnnotateTest(TestCase):
             num_blogs=models.Count('blog__title')
         )
 
-        self.assertEquals(
+        self.assertEqual(
             {(m.name, m.num_blogs) for m in qs},
             {('Mammals', 3), ('Birds', 2)}
         )
@@ -362,7 +362,7 @@ class AnnotateTest(TestCase):
             num_blogs=models.Count('blog__title_nl')
         )
 
-        self.assertEquals(
+        self.assertEqual(
             {(m.name, m.num_blogs) for m in qs},
             {('Mammals', 1), ('Birds', 1)}
         )
@@ -371,7 +371,7 @@ class AnnotateTest(TestCase):
         qs = Blog.objects.annotate(
             e=models.functions.Coalesce('title_nl', models.Value('EMPTY'))
         )
-        self.assertEquals(
+        self.assertEqual(
             list(qs.values_list('e', flat=True)),
             ['Valk', 'EMPTY', 'EMPTY', 'EMPTY', 'Zebra']
         )
@@ -379,7 +379,7 @@ class AnnotateTest(TestCase):
     def test_annotate_substr(self):
         qs = Blog.objects.annotate(e=models.functions.Substr('title_nl', 1, 3))
 
-        self.assertEquals(
+        self.assertEqual(
             list(qs.values_list('e', flat=True)),
             ['Val', None, None, None, 'Zeb']
         )
@@ -388,7 +388,7 @@ class AnnotateTest(TestCase):
         with override('nl'):
             qs = Blog.objects.annotate(e=models.functions.Upper('title_i18n'))
 
-            self.assertEquals(
+            self.assertEqual(
                 list(qs.values_list('e', flat=True)),
                 ['VALK', 'VULTURE', 'BAT', 'DOLFIN', 'ZEBRA']
             )
@@ -397,7 +397,7 @@ class AnnotateTest(TestCase):
         with override('nl'):
             qs = Blog.objects.annotate(len=models.functions.Length('title_i18n'))
 
-            self.assertEquals(
+            self.assertEqual(
                 list(qs.values_list('len', flat=True)),
                 list(map(len, ['VALK', 'VULTURE', 'BAT', 'DOLFIN', 'ZEBRA']))
             )
@@ -414,7 +414,7 @@ class AnnotateTest(TestCase):
             d=4 * models.Count('blog__title_nl')
         )
 
-        self.assertEquals(
+        self.assertEqual(
             set(qs.values_list('name', 'a', 'b', 'c', 'd')),
             {
                 ('Birds', 3, 3, 0, 8),
@@ -441,10 +441,10 @@ class OrderByTest(TestCase):
     def test_order_by_related_field(self):
         expected = 'Zebra Dolfin Bat Vulture Falcon'
         qs = Blog.objects.filter(category__isnull=False).order_by('-category__name_i18n', '-title')
-        self.assertEquals(key(qs, 'title', sep=' '), expected)
+        self.assertEqual(key(qs, 'title', sep=' '), expected)
 
         qs = Blog.objects.filter(category__isnull=False).order_by('-category__name_nl', '-title')
-        self.assertEquals(key(qs, 'title', sep=' '), expected)
+        self.assertEqual(key(qs, 'title', sep=' '), expected)
 
     def test_order_by_lower(self):
         '''
@@ -460,21 +460,21 @@ class OrderByTest(TestCase):
 
         # order by title should result in aA because it is case sensitive.
         qs = filtered.order_by('title', 'title_nl')
-        self.assertEquals(key(qs, 'title', sep=''), 'aA')
+        self.assertEqual(key(qs, 'title', sep=''), 'aA')
 
         # order by Lower('title') should result in Aa because lower('A') == lower('A')
         # so the title_nl field should determine the sorting
         qs = filtered.order_by(Lower('title'), 'title_nl')
-        self.assertEquals(key(qs, 'title', sep=''), 'aA')
+        self.assertEqual(key(qs, 'title', sep=''), 'aA')
 
         # applying lower to title_nl should not matter since it is not the same letter
         qs = filtered.order_by(Lower('title_nl'))
-        self.assertEquals(key(qs, 'title', sep=''), 'aA')
+        self.assertEqual(key(qs, 'title', sep=''), 'aA')
 
         # should be the same as previous
         with override('nl'):
             qs = filtered.order_by(Lower('title_i18n'))
-            self.assertEquals(key(qs, 'title', sep=''), 'aA')
+            self.assertEqual(key(qs, 'title', sep=''), 'aA')
 
     def test_order_by_two_virtual_fields(self):
         ca = Category.objects.create(name='foo a', title='test a', title_nl='testje a')
@@ -494,13 +494,13 @@ class OrderByTest(TestCase):
             '-category__title_nl',
             '-title_nl'
         )
-        self.assertEquals(key(qs, 'title', sep=' '), 'a b c x y z')
+        self.assertEqual(key(qs, 'title', sep=' '), 'a b c x y z')
 
     def test_order_by_annotation(self):
         qs = Category.objects.annotate(num_blogs=models.Count('blog__title'))
 
-        self.assertEquals(key(qs.order_by('num_blogs'), 'name', sep=' '), 'Birds Mammals')
-        self.assertEquals(key(qs.order_by('-num_blogs'), 'name', sep=' '), 'Mammals Birds')
+        self.assertEqual(key(qs.order_by('num_blogs'), 'name', sep=' '), 'Birds Mammals')
+        self.assertEqual(key(qs.order_by('-num_blogs'), 'name', sep=' '), 'Mammals Birds')
 
     @skip
     def test_order_by_distinct(self):
@@ -564,22 +564,22 @@ class FallbackOrderByTest(TestCase):
             # should use the 'default' fallback chain
             with override('nl'):
                 qs = TestObj.objects.all().order_by('title_i18n')
-                self.assertEquals(key(qs, 'title_i18n', sep=' '), 'Gecko Gerbil Gier Kikker Valk Vos')
+                self.assertEqual(key(qs, 'title_i18n', sep=' '), 'Gecko Gerbil Gier Kikker Valk Vos')
 
             # should use the 'fy' fallback chain
             with override('fy'):
                 expected = ['Foks', 'Frosk', 'Gecko', 'Gerbil', 'Gier', 'Valk']
                 qs = TestObj.objects.all().order_by('title_i18n')
-                self.assertEquals(key(qs, 'title_i18n'), expected)
+                self.assertEqual(key(qs, 'title_i18n'), expected)
 
                 expected.reverse()
                 qs = TestObj.objects.all().order_by('-title_i18n')
-                self.assertEquals(key(qs, 'title_i18n'), expected)
+                self.assertEqual(key(qs, 'title_i18n'), expected)
 
             # should use the 'default' fallback chain
             with override('fr'):
                 qs = TestObj.objects.all().order_by('title_i18n')
-                self.assertEquals(key(qs, 'title_i18n', sep=' '), 'Falcon Fox Gecko Gerbil Grenouilles Vautour')
+                self.assertEqual(key(qs, 'title_i18n', sep=' '), 'Falcon Fox Gecko Gerbil Grenouilles Vautour')
 
 
 class FilteredOrderByTest(TestCase):
@@ -594,19 +594,19 @@ class FilteredOrderByTest(TestCase):
         ])
 
         qs = Blog.objects.filter(title_en__contains='F').order_by('title_nl')
-        self.assertEquals(key(qs, 'title_nl'), ['Kikker', 'Valk', 'Vos'])
+        self.assertEqual(key(qs, 'title_nl'), ['Kikker', 'Valk', 'Vos'])
 
         qs = Blog.objects.filter(title_en__contains='G').order_by('title_en')
-        self.assertEquals(key(qs, 'title'), ['Gecko', 'Gerbil'])
+        self.assertEqual(key(qs, 'title'), ['Gecko', 'Gerbil'])
 
         with override('nl'):
             qs = Blog.objects.filter(title_i18n__contains='G').order_by('title_i18n')
-            self.assertEquals(key(qs, 'title_i18n'), ['Gecko', 'Gerbil', 'Gier'])
+            self.assertEqual(key(qs, 'title_i18n'), ['Gecko', 'Gerbil', 'Gier'])
 
         with override('en'):
             qs = Blog.objects.filter(title_i18n__contains='G').order_by('-title_i18n')
 
-            self.assertEquals(key(qs, 'title_i18n'), ['Gerbil', 'Gecko'])
+            self.assertEqual(key(qs, 'title_i18n'), ['Gerbil', 'Gecko'])
             self.assertTrue('annotation' not in str(qs.query))
 
 
@@ -624,7 +624,7 @@ class ModelMetaOrderByTest(TestCase):
             MetaOrderingModel.objects.create(first_name=first, last_name=last)
 
         qs = MetaOrderingModel.objects.all()
-        self.assertEquals(key(qs, 'first_name'), 'Josip,Jaïr,Berry,Hakki'.split(','))
+        self.assertEqual(key(qs, 'first_name'), 'Josip,Jaïr,Berry,Hakki'.split(','))
 
 
 class ValuesTest(TestCase):
@@ -641,7 +641,7 @@ class ValuesTest(TestCase):
 
     def assertEqualsList(self, qs, expected):
         try:
-            self.assertEquals(list(qs), expected)
+            self.assertEqual(list(qs), expected)
         except AssertionError:
             print('Queryset query: {}'.format(qs.query))
 
@@ -670,10 +670,10 @@ class ValuesTest(TestCase):
         # doesn't make sense to add a much tests for values_list() specifically,
         # as the underlying function for value() is axactly the same.
         qs = Blog.objects.all().order_by('title_nl').values_list('title_nl')
-        self.assertEquals(list(qs), [(None, ), ('Kikker', ), ('Valk', )])
+        self.assertEqual(list(qs), [(None, ), ('Kikker', ), ('Valk', )])
 
     def test_queryset_values_list_default_language(self):
-        self.assertEquals(
+        self.assertEqual(
             list(Blog.objects.all().order_by('title_en').values_list('title_en')),
             list(Blog.objects.all().order_by('title').values_list('title')),
         )
@@ -690,12 +690,12 @@ class ValuesTest(TestCase):
 
         qs1 = Blog.objects.values(lower_name=Lower('category__name'))
         qs2 = Blog.objects.values(lower_name=Lower('category__name_en'))
-        self.assertEquals(list(qs1), list(qs2))
+        self.assertEqual(list(qs1), list(qs2))
 
     def test_values_spanning_relation(self):
         qs = Blog.objects.all().order_by('title_nl') \
             .values_list('title_nl', 'category__name_nl')
-        self.assertEquals(
+        self.assertEqual(
             list(qs),
             [(None, None), ('Kikker', 'Amfibiën'), ('Valk', 'Vogels')]
         )

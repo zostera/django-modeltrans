@@ -35,18 +35,18 @@ class AdminTest(TestCase):
         ]
         for url in urls:
             response = self.client.get(url)
-            self.assertEquals(response.status_code, 200)
+            self.assertEqual(response.status_code, 200)
 
             with override('nl'):
                 response = self.client.get(url)
-                self.assertEquals(response.status_code, 200)
+                self.assertEqual(response.status_code, 200)
 
             with override('de'):
                 response = self.client.get(url)
-                self.assertEquals(response.status_code, 200)
+                self.assertEqual(response.status_code, 200)
 
     def test_non_translated_admin(self):
         url = reverse('admin:app_site_change', args=(self.site.pk, ))
         response = self.client.get(url)
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)

@@ -12,18 +12,18 @@ from tests.app.models import Blog
 class UtilsTest(TestCase):
     def test_split_translated_fieldname(self):
 
-        self.assertEquals(
+        self.assertEqual(
             split_translated_fieldname('title_nl'),
             ('title', 'nl')
         )
 
-        self.assertEquals(
+        self.assertEqual(
             split_translated_fieldname('full_name_nl'),
             ('full_name', 'nl')
         )
 
     def test_transform_translatable_fields(self):
-        self.assertEquals(
+        self.assertEqual(
             transform_translatable_fields(Blog, {'title': 'bar', 'title_nl': 'foo'}),
             {
                 'i18n': {
@@ -34,17 +34,17 @@ class UtilsTest(TestCase):
         )
 
     def test_build_localized_fieldname(self):
-        self.assertEquals(
+        self.assertEqual(
             build_localized_fieldname('title', 'nl'),
             'title_nl'
         )
-        self.assertEquals(
+        self.assertEqual(
             build_localized_fieldname('category__name', 'nl'),
             'category__name_nl'
         )
 
     def test_get_i18n_index_name(self):
-        self.assertEquals(
+        self.assertEqual(
             get_i18n_index_name(Blog),
             'app_blog_i18n_gin'
         )
@@ -53,7 +53,7 @@ class UtilsTest(TestCase):
             class Meta:
                 app_label = 'test_app'
 
-        self.assertEquals(
+        self.assertEqual(
             get_i18n_index_name(LongDBTableModel),
             'test_app_7ed506_i18n_gin'
         )
@@ -62,7 +62,7 @@ class UtilsTest(TestCase):
             class Meta:
                 app_label = 'app_name_is_very_long'
 
-        self.assertEquals(
+        self.assertEqual(
             get_i18n_index_name(LongAppnameModel),
             'app_name_is_ve_4fab22_i18n_gin'
         )

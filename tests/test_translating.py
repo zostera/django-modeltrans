@@ -14,7 +14,7 @@ from .app import models as app_models
 
 class Translating_utils(TestCase):
     def test_get_i18n_field(self):
-        self.assertEquals(get_i18n_field(app_models.Blog), app_models.Blog._meta.get_field('i18n'))
+        self.assertEqual(get_i18n_field(app_models.Blog), app_models.Blog._meta.get_field('i18n'))
 
         class I18nFieldTestModel(models.Model):
             test = models.CharField(max_length=20)
@@ -22,7 +22,7 @@ class Translating_utils(TestCase):
             class Meta:
                 app_label = 'django-modeltrans_tests'
 
-        self.assertEquals(get_i18n_field(I18nFieldTestModel), None)
+        self.assertEqual(get_i18n_field(I18nFieldTestModel), None)
 
         class I18nFieldTestModel2(models.Model):
             test = models.CharField(max_length=20)
@@ -31,12 +31,12 @@ class Translating_utils(TestCase):
             class Meta:
                 app_label = 'django-modeltrans_tests'
 
-        self.assertEquals(get_i18n_field(I18nFieldTestModel2), None)
+        self.assertEqual(get_i18n_field(I18nFieldTestModel2), None)
 
     def test_get_translated_models(self):
         i18n_models = set(get_translated_models('app'))
 
-        self.assertEquals(
+        self.assertEqual(
             i18n_models,
             {
                 app_models.Blog, app_models.Category,
@@ -131,7 +131,7 @@ class TranslateModelTest(TestCase):
         self.assertIsInstance(TestModel1.objects, CustomManager)
         self.assertIsInstance(TestModel1.objects, MultilingualManager)
 
-        self.assertEquals(TestModel1.objects.custom_method(), 'foo')
+        self.assertEqual(TestModel1.objects.custom_method(), 'foo')
         self.assertIsInstance(TestModel1.objects.all(), MultilingualQuerySet)
 
     def test_translate_model_with_existing_field(self):
@@ -209,7 +209,7 @@ class TranslateModelTest(TestCase):
         with self.assertRaises(ValidationError) as e:
             m.full_clean()
 
-        self.assertEquals(list(e.exception), [
+        self.assertEqual(list(e.exception), [
             ('title_nl', ['must be equal to or greater than 20.']),
         ])
 
