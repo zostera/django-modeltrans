@@ -2,7 +2,7 @@
 from __future__ import print_function, unicode_literals
 
 import pickle
-from unittest import skipIf
+from unittest import skipIf, skip
 
 import django
 from django.db import models
@@ -329,7 +329,7 @@ class SimpleOrderByTest(TestCase):
         with override('nl'):
             qs = Blog.objects.all().order_by('title_i18n')
 
-            self.assertEquals(key(qs, 'title_i18n'), 'A B C D H X Y Z'.split())
+            self.assertEquals(key(qs, 'title_i18n', sep=' '), 'A B C D H X Y Z')
 
 
 class AnnotateTest(TestCase):
@@ -430,8 +430,8 @@ class OrderByTest(TestCase):
         mammals = Category.objects.create(name='Mammals', name_nl='Zoogdieren')
 
         Blog.objects.bulk_create([
-            Blog(title='Falcon', category=birds),
-            Blog(title='Vulture', category=birds),
+            Blog(title='Falcon', title_nl='Valk', category=birds),
+            Blog(title='Vulture', title_nl='Gier', category=birds),
 
             Blog(title='Bat', category=mammals),
             Blog(title='Dolfin', category=mammals),
@@ -439,11 +439,12 @@ class OrderByTest(TestCase):
         ])
 
     def test_order_by_related_field(self):
+        expected = 'Zebra Dolfin Bat Vulture Falcon'
         qs = Blog.objects.filter(category__isnull=False).order_by('-category__name_i18n', '-title')
-        self.assertEquals(key(qs, 'title'), 'Zebra Dolfin Bat Vulture Falcon'.split())
+        self.assertEquals(key(qs, 'title', sep=' '), expected)
 
         qs = Blog.objects.filter(category__isnull=False).order_by('-category__name_nl', '-title')
-        self.assertEquals(key(qs, 'title'), 'Zebra Dolfin Bat Vulture Falcon'.split())
+        self.assertEquals(key(qs, 'title', sep=' '), expected)
 
     def test_order_by_lower(self):
         '''
@@ -501,6 +502,33 @@ class OrderByTest(TestCase):
         self.assertEquals(key(qs.order_by('num_blogs'), 'name', sep=' '), 'Birds Mammals')
         self.assertEquals(key(qs.order_by('-num_blogs'), 'name', sep=' '), 'Mammals Birds')
 
+    @skip
+    def test_order_by_distinct(self):
+        '''
+        Postgres requires the distict expression to match the order_by expression.
+        This is because it needs to reliably choose the first row from a set of
+        duplicates, which is only possible if the results are also ordered by the
+        value that needs to be distinct.
+
+        https://github.com/zostera/django-modeltrans/issues/27
+
+        The english case works, as the queryset is sorted on `title_i18n`, which is
+        translated to `title`.
+
+        For the dutch case, this error message is raised, because `title_i18n`
+        translates to a COALESCE-expression, resulting in a database error:
+
+        SELECT DISTINCT ON expressions must match initial ORDER BY expressions.
+        '''
+
+        with override('en'):
+            qs = Blog.objects.filter(category__name_i18n='Birds').order_by('title_i18n').distinct('title')
+            self.assertEqual(key(qs, 'title_i18n', sep=' '), 'Falcon Vulture')
+
+        with override('nl'):
+            qs = Blog.objects.filter(category__name_i18n='Vogels').order_by('title_i18n').distinct('title_i18n')
+            self.assertEqual(key(qs, 'title_i18n', sep=' '), 'Valk Gier')
+
 
 class FallbackOrderByTest(TestCase):
 
@@ -536,7 +564,7 @@ class FallbackOrderByTest(TestCase):
             # should use the 'default' fallback chain
             with override('nl'):
                 qs = TestObj.objects.all().order_by('title_i18n')
-                self.assertEquals(key(qs, 'title_i18n'), ['Gecko', 'Gerbil', 'Gier', 'Kikker', 'Valk', 'Vos'])
+                self.assertEquals(key(qs, 'title_i18n', sep=' '), 'Gecko Gerbil Gier Kikker Valk Vos')
 
             # should use the 'fy' fallback chain
             with override('fy'):
@@ -551,7 +579,7 @@ class FallbackOrderByTest(TestCase):
             # should use the 'default' fallback chain
             with override('fr'):
                 qs = TestObj.objects.all().order_by('title_i18n')
-                self.assertEquals(key(qs, 'title_i18n'), ['Falcon', 'Fox', 'Gecko', 'Gerbil', 'Grenouilles', 'Vautour'])
+                self.assertEquals(key(qs, 'title_i18n', sep=' '), 'Falcon Fox Gecko Gerbil Grenouilles Vautour')
 
 
 class FilteredOrderByTest(TestCase):
