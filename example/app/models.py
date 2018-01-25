@@ -2,10 +2,11 @@
 from __future__ import unicode_literals
 
 from django.db import models
-
+from django.utils.encoding import python_2_unicode_compatible
 from modeltrans.fields import TranslationField
 
 
+@python_2_unicode_compatible
 class Category(models.Model):
     name = models.CharField(max_length=255)
 
@@ -14,10 +15,11 @@ class Category(models.Model):
     class Meta:
         verbose_name_plural = 'categories'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name_i18n
 
 
+@python_2_unicode_compatible
 class Blog(models.Model):
     title = models.CharField(max_length=255)
     body = models.TextField(null=True, blank=True)
@@ -26,5 +28,5 @@ class Blog(models.Model):
 
     i18n = TranslationField(fields=('title', 'body', ))
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title_i18n
