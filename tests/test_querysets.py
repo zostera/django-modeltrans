@@ -2,7 +2,7 @@
 from __future__ import print_function, unicode_literals
 
 import pickle
-from unittest import skipIf, skip
+from unittest import skipIf
 
 import django
 from django.db import models
@@ -17,7 +17,7 @@ from .app.models import Attribute, Blog, BlogAttr, Category, MetaOrderingModel, 
 from .utils import CreateTestModel, load_wiki
 
 
-def key(queryset, key, sep=None):
+def key(queryset, key, sep=' '):
     items = list([getattr(model, key) for model in queryset])
     if sep is not None:
         items = sep.join(items)
@@ -303,33 +303,33 @@ class SimpleOrderByTest(TestCase):
     def test_regular_fields(self):
         qs = Blog.objects.all().order_by('-title')
 
-        self.assertEqual(key(qs, 'title', sep=' '), 'G F E D C B A')
+        self.assertEqual(key(qs, 'title'), 'G F E D C B A')
 
     def test_order_by_two_fields(self):
         '''Multiple translated fields should work too'''
         qs = Blog.objects.all().order_by('-title_fr', 'title_nl')
 
-        self.assertEqual(key(qs, 'title_nl', sep=' '), 'X Y Z A B C D')
+        self.assertEqual(key(qs, 'title_nl'), 'X Y Z A B C D')
 
     def test_order_asc(self):
         qs = Blog.objects.all().order_by('title_nl')
 
-        self.assertEqual(key(qs, 'title_nl'), sorted(self.NL))
-        self.assertEqual(key(qs, 'title', sep=' '), 'A B C D G F E')
+        self.assertEqual(key(qs, 'title_nl'), 'A B C D X Y Z')
+        self.assertEqual(key(qs, 'title'), 'A B C D G F E')
 
     def test_order_desc(self):
         qs = Blog.objects.all().order_by('-title_nl')
-        self.assertEqual(key(qs, 'title_nl'), sorted(self.NL, reverse=True))
+        self.assertEqual(key(qs, 'title_nl'), 'Z Y X D C B A')
 
         qs = Blog.objects.all().order_by('-title')
-        self.assertEqual(key(qs, 'title'), sorted(self.EN, reverse=True))
+        self.assertEqual(key(qs, 'title'), 'G F E D C B A')
 
     def test_order_by_i18n(self):
         Blog.objects.create(title='H')
         with override('nl'):
             qs = Blog.objects.all().order_by('title_i18n')
 
-            self.assertEqual(key(qs, 'title_i18n', sep=' '), 'A B C D H X Y Z')
+            self.assertEqual(key(qs, 'title_i18n'), 'A B C D H X Y Z')
 
 
 class AnnotateTest(TestCase):
@@ -371,10 +371,7 @@ class AnnotateTest(TestCase):
         qs = Blog.objects.annotate(
             e=models.functions.Coalesce('title_nl', models.Value('EMPTY'))
         )
-        self.assertEqual(
-            list(qs.values_list('e', flat=True)),
-            ['Valk', 'EMPTY', 'EMPTY', 'EMPTY', 'Zebra']
-        )
+        self.assertEqual(key(qs, 'e'), 'Valk EMPTY EMPTY EMPTY Zebra')
 
     def test_annotate_substr(self):
         qs = Blog.objects.annotate(e=models.functions.Substr('title_nl', 1, 3))
@@ -388,10 +385,7 @@ class AnnotateTest(TestCase):
         with override('nl'):
             qs = Blog.objects.annotate(e=models.functions.Upper('title_i18n'))
 
-            self.assertEqual(
-                list(qs.values_list('e', flat=True)),
-                ['VALK', 'VULTURE', 'BAT', 'DOLFIN', 'ZEBRA']
-            )
+            self.assertEqual(key(qs, 'e'), 'VALK VULTURE BAT DOLFIN ZEBRA')
 
     def test_annotate_length(self):
         with override('nl'):
@@ -441,10 +435,10 @@ class OrderByTest(TestCase):
     def test_order_by_related_field(self):
         expected = 'Zebra Dolfin Bat Vulture Falcon'
         qs = Blog.objects.filter(category__isnull=False).order_by('-category__name_i18n', '-title')
-        self.assertEqual(key(qs, 'title', sep=' '), expected)
+        self.assertEqual(key(qs, 'title'), expected)
 
         qs = Blog.objects.filter(category__isnull=False).order_by('-category__name_nl', '-title')
-        self.assertEqual(key(qs, 'title', sep=' '), expected)
+        self.assertEqual(key(qs, 'title'), expected)
 
     def test_order_by_lower(self):
         '''
@@ -460,21 +454,21 @@ class OrderByTest(TestCase):
 
         # order by title should result in aA because it is case sensitive.
         qs = filtered.order_by('title', 'title_nl')
-        self.assertEqual(key(qs, 'title', sep=''), 'aA')
+        self.assertEqual(key(qs, 'title'), 'a A')
 
         # order by Lower('title') should result in Aa because lower('A') == lower('A')
         # so the title_nl field should determine the sorting
         qs = filtered.order_by(Lower('title'), 'title_nl')
-        self.assertEqual(key(qs, 'title', sep=''), 'aA')
+        self.assertEqual(key(qs, 'title'), 'a A')
 
         # applying lower to title_nl should not matter since it is not the same letter
         qs = filtered.order_by(Lower('title_nl'))
-        self.assertEqual(key(qs, 'title', sep=''), 'aA')
+        self.assertEqual(key(qs, 'title'), 'a A')
 
         # should be the same as previous
         with override('nl'):
             qs = filtered.order_by(Lower('title_i18n'))
-            self.assertEqual(key(qs, 'title', sep=''), 'aA')
+            self.assertEqual(key(qs, 'title'), 'a A')
 
     def test_order_by_two_virtual_fields(self):
         ca = Category.objects.create(name='foo a', title='test a', title_nl='testje a')
@@ -494,15 +488,15 @@ class OrderByTest(TestCase):
             '-category__title_nl',
             '-title_nl'
         )
-        self.assertEqual(key(qs, 'title', sep=' '), 'a b c x y z')
+        self.assertEqual(key(qs, 'title'), 'a b c x y z')
 
     def test_order_by_annotation(self):
         qs = Category.objects.annotate(num_blogs=models.Count('blog__title'))
 
-        self.assertEqual(key(qs.order_by('num_blogs'), 'name', sep=' '), 'Birds Mammals')
-        self.assertEqual(key(qs.order_by('-num_blogs'), 'name', sep=' '), 'Mammals Birds')
+        self.assertEqual(key(qs.order_by('num_blogs'), 'name'), 'Birds Mammals')
+        self.assertEqual(key(qs.order_by('-num_blogs'), 'name'), 'Mammals Birds')
 
-    @skip
+    @skipIf(True, 'Needs a solution')
     def test_order_by_distinct(self):
         '''
         Postgres requires the distict expression to match the order_by expression.
@@ -523,11 +517,11 @@ class OrderByTest(TestCase):
 
         with override('en'):
             qs = Blog.objects.filter(category__name_i18n='Birds').order_by('title_i18n').distinct('title')
-            self.assertEqual(key(qs, 'title_i18n', sep=' '), 'Falcon Vulture')
+            self.assertEqual(key(qs, 'title_i18n'), 'Falcon Vulture')
 
         with override('nl'):
             qs = Blog.objects.filter(category__name_i18n='Vogels').order_by('title_i18n').distinct('title_i18n')
-            self.assertEqual(key(qs, 'title_i18n', sep=' '), 'Valk Gier')
+            self.assertEqual(key(qs, 'title_i18n'), 'Valk Gier')
 
 
 class FallbackOrderByTest(TestCase):
@@ -564,22 +558,20 @@ class FallbackOrderByTest(TestCase):
             # should use the 'default' fallback chain
             with override('nl'):
                 qs = TestObj.objects.all().order_by('title_i18n')
-                self.assertEqual(key(qs, 'title_i18n', sep=' '), 'Gecko Gerbil Gier Kikker Valk Vos')
+                self.assertEqual(key(qs, 'title_i18n'), 'Gecko Gerbil Gier Kikker Valk Vos')
 
             # should use the 'fy' fallback chain
             with override('fy'):
-                expected = ['Foks', 'Frosk', 'Gecko', 'Gerbil', 'Gier', 'Valk']
                 qs = TestObj.objects.all().order_by('title_i18n')
-                self.assertEqual(key(qs, 'title_i18n'), expected)
+                self.assertEqual(key(qs, 'title_i18n'), 'Foks Frosk Gecko Gerbil Gier Valk')
 
-                expected.reverse()
                 qs = TestObj.objects.all().order_by('-title_i18n')
-                self.assertEqual(key(qs, 'title_i18n'), expected)
+                self.assertEqual(key(qs, 'title_i18n'), 'Valk Gier Gerbil Gecko Frosk Foks')
 
             # should use the 'default' fallback chain
             with override('fr'):
                 qs = TestObj.objects.all().order_by('title_i18n')
-                self.assertEqual(key(qs, 'title_i18n', sep=' '), 'Falcon Fox Gecko Gerbil Grenouilles Vautour')
+                self.assertEqual(key(qs, 'title_i18n'), 'Falcon Fox Gecko Gerbil Grenouilles Vautour')
 
 
 class FilteredOrderByTest(TestCase):
@@ -594,19 +586,19 @@ class FilteredOrderByTest(TestCase):
         ])
 
         qs = Blog.objects.filter(title_en__contains='F').order_by('title_nl')
-        self.assertEqual(key(qs, 'title_nl'), ['Kikker', 'Valk', 'Vos'])
+        self.assertEqual(key(qs, 'title_nl'), 'Kikker Valk Vos')
 
         qs = Blog.objects.filter(title_en__contains='G').order_by('title_en')
-        self.assertEqual(key(qs, 'title'), ['Gecko', 'Gerbil'])
+        self.assertEqual(key(qs, 'title'), 'Gecko Gerbil')
 
         with override('nl'):
             qs = Blog.objects.filter(title_i18n__contains='G').order_by('title_i18n')
-            self.assertEqual(key(qs, 'title_i18n'), ['Gecko', 'Gerbil', 'Gier'])
+            self.assertEqual(key(qs, 'title_i18n'), 'Gecko Gerbil Gier')
 
         with override('en'):
             qs = Blog.objects.filter(title_i18n__contains='G').order_by('-title_i18n')
 
-            self.assertEqual(key(qs, 'title_i18n'), ['Gerbil', 'Gecko'])
+            self.assertEqual(key(qs, 'title_i18n'), 'Gerbil Gecko')
             self.assertTrue('annotation' not in str(qs.query))
 
 
@@ -624,7 +616,7 @@ class ModelMetaOrderByTest(TestCase):
             MetaOrderingModel.objects.create(first_name=first, last_name=last)
 
         qs = MetaOrderingModel.objects.all()
-        self.assertEqual(key(qs, 'first_name'), 'Josip,Jaïr,Berry,Hakki'.split(','))
+        self.assertEqual(key(qs, 'first_name'), 'Josip Jaïr Berry Hakki')
 
 
 class ValuesTest(TestCase):
