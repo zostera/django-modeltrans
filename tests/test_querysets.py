@@ -676,7 +676,6 @@ class ValuesTest(TestCase):
             [('Falcon', 'Birds'), ('Frog', 'Amphibians'), ('Gecko', 'Reptiles')]
         )
 
-    @skipIf(django.VERSION < (1, 11), '**expressions only supported in Django 1.11 and later')
     def test_values_kwarg_lower(self):
         from django.db.models.functions import Lower
 
