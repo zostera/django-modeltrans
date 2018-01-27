@@ -3,23 +3,24 @@ from __future__ import unicode_literals
 
 import json
 
+import django_tables2 as tables
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.utils.translation import ugettext_lazy as _
 from django.views.generic import DetailView
 from django.views.generic.edit import UpdateView
-
-import django_tables2 as tables
 from django_filters import FilterSet
 from django_filters.views import FilterView
 
-from .models import Blog
+from .models import Blog, Category
 
 
 class BlogTable(tables.Table):
     edit = tables.TemplateColumn(
         template_code='''<a href="{% url 'blog-edit' pk=record.pk %}" class="btn btn-sm btn-primary">edit</a>''',
         empty_values=(),
-        orderable=False
+        orderable=False,
+        verbose_name=_('edit')
     )
 
     class Meta:
@@ -35,8 +36,8 @@ class BlogTable(tables.Table):
             'category.name_i18n',
 
             'edit',
+            'i18n',
             'category.i18n',
-            'i18n'
         )
 
 
@@ -78,11 +79,19 @@ class BlogUpdateView(UpdateView):
 
 
 def fixtures(request):
+
     Blog.objects.all().delete()
+    Category.objects.all().delete()
+
     with open('data/species.json') as f:
         data = json.load(f)
 
-        for item in data:
-            Blog.objects.create(title=item['title'], i18n=item.get('i18n', None))
+        for category_item in data:
+            blog_items = category_item.pop('items')
+            category, _ = Category.objects.get_or_create(**category_item)
+
+            for blog_item in blog_items:
+                blog_item.update({'category': category})
+                Blog.objects.create(**blog_item)
 
     return redirect('blogs')

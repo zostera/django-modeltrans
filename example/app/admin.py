@@ -12,7 +12,7 @@ admin.site.has_permission = disable_admin_login()
 
 
 @admin.register(Blog)
-class BlogAdmin(admin.ModelAdmin):
+class BlogAdmin(ActiveLanguageMixin, admin.ModelAdmin):
     pass
 
 

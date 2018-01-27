@@ -15,7 +15,7 @@ urlpatterns = [
     url(r'^blog/(?P<pk>\d+)/', BlogView.as_view(), name='blog'),
 
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', admin.site.urls),
 
     url(r'^media/(?P<path>.*)$', static.serve, {
         'document_root': settings.MEDIA_ROOT,

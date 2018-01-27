@@ -1,10 +1,47 @@
 [
-    {"title": "Falcon", "i18n": {"title_nl": "Valk"}},
-    {"title": "Frog", "i18n": {"title_nl": "Kikker"}},
-    {"title": "Toad", "i18n": {"title_nl": "Pad"}},
-    {"title": "Duck", "i18n": {"title_nl": "Eend"}},
-    {"title": "Dragonfly", "i18n": {"title_nl": "Libellen"}},
-    {"title": "Crayfish"},
-    {"title": "Cod", "i18n": {"title_de": "Kabeljau", "title_fr": "Morue"}},
-    {"title": "Dolphin", "i18n": {"title_nl": "Dolfijn", "title_de": "Delfine"}}
+    {
+        "name": "Birds",
+        "name_nl": "Vogels",
+        "name_de": "Vögel",
+        "items": [
+            {"title": "Falcon", "title_nl": "Valk", "title_de": "Falk"},
+            {"title": "Duck", "title_nl": "Eend", "title_fr": "Canard"},
+            {"title": "Red-kneed dotterel", "title_nl": "Roodknieplevier"}
+        ]
+    },
+    {
+        "name": "Mammals",
+        "name_nl": "Zoogdieren",
+        "items": [
+            {"title": "Dolphin", "title_nl": "Dolfijn", "title_de": "Delfine"},
+            {"title": "Zebra", "title_nl": "Zebra"}
+        ]
+    },
+    {
+        "name": "Amphibians",
+        "items": [
+            {"title": "Frog", "title_nl": "Kikker"},
+            {"title": "Toad", "title_nl": "Pad"}
+
+        ]
+    },
+    {
+        "name": "Insects",
+        "items": [
+            {"title": "Dragonfly", "title_nl": "Libellen"}
+        ]
+    },
+    {
+        "name": "Invertebrates",
+        "items": [
+            {"title": "Crayfish"},
+            {"title": "Crab", "title_nl": "Krab"}
+        ]
+    },
+    {
+        "name": "Fish",
+        "items": [
+            {"title": "Cod", "title_de": "Kabeljau", "title_fr": "Morue"}
+        ]
+    }
 ]
