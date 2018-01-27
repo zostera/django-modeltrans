@@ -23,7 +23,7 @@ Queryset/Manager and most of them can be considered TODO.
 - Using translated fields in `Manager` methods `.distinct()`, `.extra()`, `.aggregate()`, `.update()` is not supported.
 - Behaviour is tested using `CharField()` en `TextField()`, as these make most sense for translated values.
 - Any ordering using `i18n`-fields defined in `Model.Meta.ordering` is only translated in django 2.0 and later ([django/django#8473](https://github.com/django/django/pull/8673) is required).
-- Lookups (`<field>_i18n`) are translated when the line the queryset is defined on is executed. Might be prolem for code not running in the request/response cycle, for example the `queryset` argument to `ModelChoiceField()`. See issue [#34](https://github.com/zostera/django-modeltrans/issues/34)
+- Lookups (`<field>_i18n`) are translated when the line the queryset is defined on is executed. Might be a problem for code not running in the request/response cycle, for example the `queryset` argument to `ModelChoiceField()`. See issue [#34](https://github.com/zostera/django-modeltrans/issues/34)
 
 # Running the tests
 
