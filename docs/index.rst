@@ -26,6 +26,7 @@ Table of contents
     pages/getting-started
     pages/performance
     pages/inner-workings
+    pages/known-issues
     pages/related-packages
     pages/management
     pages/admin

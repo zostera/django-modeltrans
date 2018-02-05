@@ -1,3 +1,5 @@
+.. _inner_workings:
+
 Inner workings
 ==============
 

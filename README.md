@@ -14,17 +14,6 @@ Translates Django model fields in a `JSONField` using a registration approach.
 - [Available on pypi](https://pypi.python.org/pypi/django-modeltrans)
 - [Documentation](http://django-modeltrans.readthedocs.io/en/latest/)
 
-# Known issues
-
-Below is a list of things not yet implemented/catched into the
-Queryset/Manager and most of them can be considered TODO.
-
-- If the field `'i18n'` is added to `.defer()`, augmentation will likely not work at all. Adding translated fields (`title_nl`) to `.defer()` will likely yield error messages, and doesn't make sense as they are stored in `i18n`.
-- Using translated fields in `Manager` methods `.distinct()`, `.extra()`, `.aggregate()`, `.update()` is not supported.
-- Behaviour is tested using `CharField()` en `TextField()`, as these make most sense for translated values.
-- Any ordering using `i18n`-fields defined in `Model.Meta.ordering` is only translated in django 2.0 and later ([django/django#8473](https://github.com/django/django/pull/8673) is required).
-- Lookups (`<field>_i18n`) are translated when the line the queryset is defined on is executed. Might be a problem for code not running in the request/response cycle, for example the `queryset` argument to `ModelChoiceField()`. See issue [#34](https://github.com/zostera/django-modeltrans/issues/34)
-
 # Running the tests
 
 `tox`
@@ -41,7 +30,7 @@ We started this solution at Zostera because we did not like:
 when adding a language);
  - The unpredictability of the original field.
 
-Since JSONB is supported by Postgres now, we developed this approach.
+Since `JSONB` is supported by Postgres now, we developed this approach.
 
 # Relevant 3rd party documentation
 
