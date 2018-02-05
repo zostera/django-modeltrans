@@ -35,6 +35,7 @@ class GetFieldTest(TestCase):
         self.assertEqual(lookup_type, expected_lookup_type)
 
     def test_bare_field(self):
+        self.assert_lookup('pk', 'id')
         self.assert_lookup('title', 'title')
         self.assert_lookup('title_nl', 'title_nl')
         self.assert_lookup('category__name', 'name')

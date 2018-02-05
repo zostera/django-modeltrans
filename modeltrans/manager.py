@@ -107,12 +107,16 @@ class MultilingualQuerySet(models.query.QuerySet):
         Return the Django model field for a lookup plus the remainder of the lookup,
         which should be the lookup type.
         '''
+        model = self.model
+
         field = None
         lookup_type = None
 
+        if lookup == 'pk':
+            return model._meta.get_field('id'), None
+
         bits = lookup.split(LOOKUP_SEP)
 
-        model = self.model
         for i, bit in enumerate(bits):
             try:
                 field = model._meta.get_field(bit)
@@ -135,11 +139,6 @@ class MultilingualQuerySet(models.query.QuerySet):
         _rewrite_filter_clause('title_nl__like', 'va') would be called.
         '''
         value = self._rewrite_expression(value)
-
-        # pk not a field, but shorthand for the primary key column.
-        if lookup == 'pk':
-            return lookup, value
-
         field, lookup_type = self._get_field(lookup)
 
         if not isinstance(field, TranslatedVirtualField):
