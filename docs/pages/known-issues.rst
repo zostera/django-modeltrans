@@ -2,7 +2,7 @@ Known issues
 ============
 
 We use django-modeltrans in production, but some aspects of it's API might be a bit surprising.
-This pages lists the issue we are aware of.
+This page lists the issue we are aware of.
 Some might get fixed at some point, some are just the result of database or Django implementations.
 
 Reading the explanation of the :ref:`inner_workings` might also help to understand some of these issues.
@@ -27,7 +27,7 @@ Django 2.0 and later (`django/django#8473 <https://github.com/django/django/pull
 
 Context of 'current language'
 -----------------------------
-Lookups (`<field>_i18n`) are translated when the line the queryset is defined on is executed::
+Lookups (`<field>_i18n`) are translated when the line they are defined on is executed::
 
     class Foo():
         qs = Blog.objects.filter(title_i18n__contains='foo')
