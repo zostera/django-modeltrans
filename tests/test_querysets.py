@@ -630,8 +630,8 @@ class FilteredOrderByTest(TestCase):
             self.assertTrue('annotation' not in str(qs.query))
 
 
+@skipIf(django.VERSION < (2, 0), 'Only supported in Django 2.0 and later')
 class ModelMetaOrderByTest(TestCase):
-    @skipIf(django.VERSION < (2, 0), 'Only supported in Django 2.0 and later')
     def test_meta_ordering(self):
         from .app.models import MetaOrderingModel
         TEST_NAMES = (
@@ -646,6 +646,9 @@ class ModelMetaOrderByTest(TestCase):
 
         qs = MetaOrderingModel.objects.all()
         self.assertEqual(key(qs, 'first_name'), 'Josip Jaïr Berry Hakki')
+
+        # overridden:
+        self.assertEqual(key(qs.order_by('first_name'), 'first_name'), 'Berry Hakki Jaïr Josip')
 
 
 class ValuesTest(TestCase):
