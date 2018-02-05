@@ -246,6 +246,17 @@ class TranslatedFieldTest(TestCase):
         with override('fr'):
             self.assertEqual(b.title_i18n, 'Buse')
 
+    def test_defer_i18n(self):
+        Blog.objects.create(title='Buzzard', title_nl='Buizerd')
+
+        qs = Blog.objects.defer('i18n')
+
+        blog = qs[0]
+        self.assertEqual(blog.get_deferred_fields(), {'i18n'})
+
+        with self.assertRaises(ValueError):
+            blog.title_i18n
+
 
 class RefreshFromDbTest(TestCase):
     def test_refresh_from_db(self):

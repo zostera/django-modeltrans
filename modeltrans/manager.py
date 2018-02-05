@@ -7,7 +7,7 @@ from django.db.models.functions import Cast
 from django.utils import six
 
 from .conf import get_default_language
-from .fields import TranslatedVirtualField, TranslationField
+from .fields import TranslatedVirtualField
 
 
 def transform_translatable_fields(model, fields):
@@ -26,18 +26,22 @@ def transform_translatable_fields(model, fields):
         return fields
 
     ret = {
-        'i18n': fields.get('i18n', {})
+        'i18n': fields.pop('i18n', {})
     }
+
+    # keep track of translated fields, and do not return an `i18n` key if no
+    # translated fields are found.
+    has_translated_fields = (len(ret['i18n'].items()) > 0)
+
     for field_name, value in fields.items():
         try:
             field = model._meta.get_field(field_name)
         except FieldDoesNotExist:
             ret[field_name] = value
             continue
-        if isinstance(field, TranslationField):
-            continue
 
         if isinstance(field, TranslatedVirtualField):
+            has_translated_fields = True
             if field.get_language() == get_default_language():
                 if field.original_name in fields:
                     raise ValueError(
@@ -49,6 +53,9 @@ def transform_translatable_fields(model, fields):
                 ret['i18n'][field.name] = value
         else:
             ret[field_name] = value
+
+    if not has_translated_fields:
+        return fields
 
     return ret
 

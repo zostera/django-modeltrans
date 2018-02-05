@@ -85,6 +85,12 @@ class TranslatedVirtualField(object):
         if instance is None:
             return
 
+        if 'i18n' in instance.get_deferred_fields():
+            raise ValueError(
+                "Getting translated values on a model fetched with defer('i18n')"
+                "is not supported."
+            )
+
         language = self.get_language()
         if language == DEFAULT_LANGUAGE:
             return getattr(instance, self.original_name)
