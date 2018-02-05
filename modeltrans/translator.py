@@ -82,10 +82,9 @@ def validate(Model):
             )
 
     if i18n_field.required_languages:
-        if isinstance(i18n_field.required_languages, (tuple, list)):
-            check_languages(i18n_field.required_languages, Model)
-        else:
-            check_languages(i18n_field.required_languages.keys(), Model)
+        if not isinstance(i18n_field.required_languages, (tuple, list, set)):
+            raise ImproperlyConfigured('"required_languages" must be a tuple, list or set')
+        check_languages(i18n_field.required_languages, Model)
 
         for fieldnames in i18n_field.required_languages:
             if field not in i18n_field.fields:

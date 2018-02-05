@@ -48,6 +48,19 @@ class Translating_utils(TestCase):
 
 
 class TranslateModelTest(TestCase):
+    def test_translate_bad_required_language_type(self):
+        class BadRequiredLanguagesType(models.Model):
+            title = models.CharField(max_length=100)
+
+            i18n = TranslationField(fields=('title', ), required_languages=('es'))
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+
+        expected_message = '"required_languages" must be a tuple, list or set'
+        with self.assertRaisesMessage(ImproperlyConfigured, expected_message):
+            translate_model(BadRequiredLanguagesType)
+
     def test_translate_bad_required_language(self):
         class A(models.Model):
             title = models.CharField(max_length=100)
