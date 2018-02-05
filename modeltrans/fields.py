@@ -2,7 +2,7 @@
 
 from django.contrib.postgres.fields.jsonb import JSONField, KeyTextTransform
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models import fields
+from django.db.models import F, fields
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import ugettext_lazy as _
 
@@ -183,13 +183,13 @@ class TranslatedVirtualField(object):
         i18n_lookup = bare_lookup.replace(self.name, 'i18n')
         return KeyTextTransform(name, i18n_lookup)
 
-    def as_sql(self, bare_lookup, fallback=True):
+    def as_expression(self, bare_lookup, fallback=True):
         '''
-        Compose the sql lookup to get the value for this virtual field in a query.
+        Compose an expression to get the value for this virtual field in a query.
         '''
         language = self.get_language()
         if language == DEFAULT_LANGUAGE:
-            return self._localized_lookup(language, bare_lookup)
+            return F(self._localized_lookup(language, bare_lookup))
 
         if not fallback:
             i18n_lookup = self._localized_lookup(language, bare_lookup)

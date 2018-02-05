@@ -13,7 +13,7 @@ from django.utils.translation import override
 from modeltrans.fields import TranslationField
 from modeltrans.translator import translate_model
 
-from .app.models import Attribute, Blog, BlogAttr, Category, MetaOrderingModel, Site
+from .app.models import Attribute, Blog, BlogAttr, Category, Site
 from .utils import CreateTestModel, load_wiki
 
 
@@ -34,8 +34,27 @@ class GetFieldTest(TestCase):
         self.assertEqual(field.name, expected_fieldname)
         self.assertEqual(lookup_type, expected_lookup_type)
 
-    def test_bare_field(self):
+    def test_pk(self):
         self.assert_lookup('pk', 'id')
+
+    def test_non_id_pk(self):
+        '''This model doesn't have a id column'''
+        class NonIdPrimaryKeyModel(models.Model):
+            slug = models.SlugField(primary_key=True)
+            title = models.CharField(max_length=100)
+            i18n = TranslationField(fields=('title', ))
+
+            class Meta:
+                app_label = 'django-modeltrans_tests'
+
+        translate_model(NonIdPrimaryKeyModel)
+
+        with CreateTestModel(NonIdPrimaryKeyModel):
+            field, lookup_type = NonIdPrimaryKeyModel.objects.all()._get_field('pk')
+
+            self.assertEqual(field.name, 'slug')
+
+    def test_bare_field(self):
         self.assert_lookup('title', 'title')
         self.assert_lookup('title_nl', 'title_nl')
         self.assert_lookup('category__name', 'name')
@@ -174,6 +193,9 @@ class FilterTest(TestCase):
     def test_filter_Q_object(self):
         b = Blog.objects.get(Q(title_nl__contains='al'))
         self.assertEqual(b.title, 'Falcon')
+
+        b = Blog.objects.get(Q(title_en__contains='Fro'))
+        self.assertEqual(b.title, 'Frog')
 
         qs = Blog.objects.filter(Q(title_nl__contains='al') | Q(title_en__contains='Fro'))
         self.assertEqual({m.title for m in qs}, {'Falcon', 'Frog'})
@@ -349,14 +371,14 @@ class AnnotateTest(TestCase):
         ])
 
     def test_annotate_normal_count(self):
-        qs = Category.objects.annotate(
-            num_blogs=models.Count('blog__title')
-        )
+        qs = Category.objects.annotate(num_blogs=models.Count('blog__title'))
 
         self.assertEqual(
             {(m.name, m.num_blogs) for m in qs},
             {('Mammals', 3), ('Birds', 2)}
         )
+
+    # def test_more_complex_counts(self):
 
     def test_annotate_count_i18n_field(self):
         qs = Category.objects.annotate(
@@ -497,6 +519,11 @@ class OrderByTest(TestCase):
         self.assertEqual(key(qs.order_by('num_blogs'), 'name'), 'Birds Mammals')
         self.assertEqual(key(qs.order_by('-num_blogs'), 'name'), 'Mammals Birds')
 
+    def test_order_by_expression(self):
+        qs = Category.objects.order_by(F('name_i18n').desc())
+
+        self.assertEqual(key(qs, 'name'), 'Mammals Birds')
+
     @skipIf(True, 'Needs a solution')
     def test_order_by_distinct(self):
         '''
@@ -606,6 +633,7 @@ class FilteredOrderByTest(TestCase):
 class ModelMetaOrderByTest(TestCase):
     @skipIf(django.VERSION < (2, 0), 'Only supported in Django 2.0 and later')
     def test_meta_ordering(self):
+        from .app.models import MetaOrderingModel
         TEST_NAMES = (
             ('Jaïr', 'Kleinsma'),
             ('Hakki', 'van Velsen'),

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import django
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.test import TestCase
@@ -34,17 +35,16 @@ class Translating_utils(TestCase):
         self.assertEqual(get_i18n_field(I18nFieldTestModel2), None)
 
     def test_get_translated_models(self):
-        i18n_models = set(get_translated_models('app'))
+        expected = {
+            app_models.Blog, app_models.Category,
+            app_models.Person,
+            app_models.TextModel, app_models.NullableTextModel,
+            app_models.Attribute, app_models.Choice
+        }
+        if django.VERSION >= (2, 0):
+            expected.add(app_models.MetaOrderingModel)
 
-        self.assertEqual(
-            i18n_models,
-            {
-                app_models.Blog, app_models.Category,
-                app_models.Person, app_models.MetaOrderingModel,
-                app_models.TextModel, app_models.NullableTextModel,
-                app_models.Attribute, app_models.Choice
-            }
-        )
+        self.assertEqual(set(get_translated_models('app')), expected)
 
 
 class TranslateModelTest(TestCase):
