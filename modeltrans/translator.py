@@ -231,11 +231,8 @@ def translate_meta_ordering(Model):
     one of it's fields is a translated field. If that's the case,
     add the expression to get the value from the i18n-field.
     '''
-
-    ordering = Model._meta.ordering
-
-    if len(ordering) == 0:
+    if len(Model._meta.ordering) == 0:
         return
     queryset = Model.objects.get_queryset()
 
-    Model._meta.ordering = queryset._rewrite_ordering(ordering)
+    Model._meta.ordering = queryset._rewrite_ordering(Model._meta.ordering)

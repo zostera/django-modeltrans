@@ -524,6 +524,15 @@ class OrderByTest(TestCase):
 
         self.assertEqual(key(qs, 'name'), 'Mammals Birds')
 
+    def test_order_by_textfield(self):
+        Blog.objects.create(title='Wolf', body='Wolf print found in dirtroad')
+        Blog.objects.create(title='Wolf2', body='A Wolf print found in dirtroad')
+
+        with override('nl'):
+            qs = Blog.objects.filter(body_i18n__contains='olf').order_by('-body')
+
+            self.assertEqual(key(qs, 'title'), 'Wolf Wolf2')
+
     @skipIf(True, 'Needs a solution')
     def test_order_by_distinct(self):
         '''

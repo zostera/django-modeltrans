@@ -176,9 +176,7 @@ class MultilingualQuerySet(QuerySet):
         This current way of doing this is bound to lag behind any new things implemented in Django.
         It would be really nice to have a better/more generic way of doing this.
         '''
-        if expr is None:
-            return None
-        elif isinstance(expr, F):
+        if isinstance(expr, F):
             field, _ = self._get_field(expr.name)
             if not isinstance(field, TranslatedVirtualField):
                 return expr
@@ -233,10 +231,7 @@ class MultilingualQuerySet(QuerySet):
             assert lookup_type is None, '{} is not a valid order_by lookup'.format(field_name)
 
             sort_field = field.as_expression(bare_lookup=field_name)
-            if isinstance(sort_field, six.string_types):
-                new_field_names.append(sort_order + sort_field)
-                continue
-            elif sort_order == '-':
+            if sort_order == '-':
                 sort_field = sort_field.desc()
 
             new_field_names.append(sort_field)
