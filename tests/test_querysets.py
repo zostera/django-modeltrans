@@ -45,7 +45,7 @@ class GetFieldTest(TestCase):
             i18n = TranslationField(fields=('title', ))
 
             class Meta:
-                app_label = 'django-modeltrans_tests'
+                app_label = 'tests'
 
         translate_model(NonIdPrimaryKeyModel)
 
@@ -578,7 +578,7 @@ class FallbackOrderByTest(TestCase):
             i18n = TranslationField(fields=('title', ))
 
             class Meta:
-                app_label = 'django-modeltrans_tests'
+                app_label = 'tests'
 
         translate_model(TestObj)
 
@@ -642,7 +642,22 @@ class FilteredOrderByTest(TestCase):
 @skipIf(django.VERSION < (2, 0), 'Only supported in Django 2.0 and later')
 class ModelMetaOrderByTest(TestCase):
     def test_meta_ordering(self):
-        from .app.models import MetaOrderingModel
+        '''
+        This needs expressions in Model.Meta.ordering, added in django 2.0
+        https://github.com/django/django/pull/8673
+        '''
+
+        class MetaOrderingModel(models.Model):
+            # doesn't make sense to translate names, but it serves as a test.
+            first_name = models.CharField(max_length=100)
+            last_name = models.CharField(max_length=100)
+
+            i18n = TranslationField(fields=('last_name', 'first_name'))
+
+            class Meta:
+                ordering = ('last_name_i18n', 'first_name_i18n', )
+                app_label = 'tests'
+
         TEST_NAMES = (
             ('Jaïr', 'Kleinsma'),
             ('Hakki', 'van Velsen'),
@@ -650,14 +665,16 @@ class ModelMetaOrderByTest(TestCase):
             ('Berry', 'Reuver')
         )
 
-        for first, last in TEST_NAMES:
-            MetaOrderingModel.objects.create(first_name=first, last_name=last)
+        translate_model(MetaOrderingModel)
+        with CreateTestModel(MetaOrderingModel):
+            for first, last in TEST_NAMES:
+                MetaOrderingModel.objects.create(first_name=first, last_name=last)
 
-        qs = MetaOrderingModel.objects.all()
-        self.assertEqual(key(qs, 'first_name'), 'Josip Jaïr Berry Hakki')
+            qs = MetaOrderingModel.objects.all()
+            self.assertEqual(key(qs, 'first_name'), 'Josip Jaïr Berry Hakki')
 
-        # overridden:
-        self.assertEqual(key(qs.order_by('first_name'), 'first_name'), 'Berry Hakki Jaïr Josip')
+            # overridden:
+            self.assertEqual(key(qs.order_by('first_name'), 'first_name'), 'Berry Hakki Jaïr Josip')
 
 
 class ValuesTest(TestCase):

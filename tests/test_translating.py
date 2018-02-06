@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import django
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.test import TestCase
@@ -41,9 +40,6 @@ class Translating_utils(TestCase):
             app_models.TextModel, app_models.NullableTextModel,
             app_models.Attribute, app_models.Choice
         }
-        if django.VERSION >= (2, 0):
-            expected.add(app_models.MetaOrderingModel)
-
         self.assertEqual(set(get_translated_models('app')), expected)
 
 

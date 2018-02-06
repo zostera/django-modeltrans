@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import django
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -136,15 +135,3 @@ def createBaseAttr(model):
 
 class BlogAttr(createBaseAttr(Blog)):
     pass
-
-
-if django.VERSION >= (2, 0):
-    class MetaOrderingModel(models.Model):
-        # doesn't make sense to translate names, but it serves as a test.
-        first_name = models.CharField(max_length=100)
-        last_name = models.CharField(max_length=100)
-
-        i18n = TranslationField(fields=('last_name', 'first_name'))
-
-        class Meta:
-            ordering = ('last_name_i18n', 'first_name_i18n', )
