@@ -10,8 +10,8 @@ It rewrites queries in order to return the current language, but the
 `contents of the original field are undetermined <http://django-modeltranslation.readthedocs.io/en/latest/usage.html#the-state-of-the-original-field>`_
 if a field is translated.
 
-`django-nence <https://github.com/tatterdemalion/django-nece/>`_
-----------------------------------------------------------------
+`django-nece <https://github.com/tatterdemalion/django-nece/>`_
+---------------------------------------------------------------
 
 Also uses a `jsonb` PostgreSQL field, but has a bunch of custom `QuerySet` and `Model`
 methods to get translated values.
