@@ -1,3 +1,5 @@
 default_app_config = 'modeltrans.apps.RegistrationConfig'
 
 __version__ = '0.2.1'
+
+from .lookups import I18nTransform
