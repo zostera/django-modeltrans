@@ -19,8 +19,10 @@ class CategoryQueryset(models.QuerySet):
 class Category(models.Model):
     name = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
+    slug = models.SlugField()
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True)
 
-    i18n = TranslationField(fields=('name', 'title'))
+    i18n = TranslationField(fields=('name', 'title', 'slug'))
 
     objects = CategoryQueryset.as_manager()
 
@@ -43,6 +45,8 @@ class Blog(models.Model):
 
     category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.CASCADE)
     site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.CASCADE)
+
+    is_active = models.BooleanField(default=True)
 
     i18n = TranslationField(
         fields=('title', 'body'),

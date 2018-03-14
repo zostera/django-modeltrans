@@ -1,6 +1,9 @@
+from __future__ import print_function
+
 import json
 import os
 
+import sqlparse
 from django.db import connection
 
 from .app.models import Blog, Category
@@ -59,3 +62,12 @@ def load_wiki():
                 kwargs['body' + lang] = item['body']
 
             Blog.objects.create(category=wiki, **kwargs)
+
+
+def debug_queryset(qs):
+    print('result:', qs)
+    sql, params = qs.query.sql_with_params()
+    cursor = connection.cursor()
+    query = cursor.mogrify(sql, params)
+
+    print(sqlparse.format(query, reindent=True, wrap_after=120))

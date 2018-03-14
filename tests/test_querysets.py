@@ -14,7 +14,7 @@ from modeltrans.fields import TranslationField
 from modeltrans.translator import translate_model
 
 from .app.models import Attribute, Blog, BlogAttr, Category, Site
-from .utils import CreateTestModel, load_wiki
+from .utils import CreateTestModel, debug_queryset, load_wiki
 
 
 def key(queryset, key, sep=' '):
@@ -119,7 +119,14 @@ class FilterTest(TestCase):
 
     @classmethod
     def setUpTestData(self):
-        birds = Category.objects.create(name='Birds', name_nl='Vogels')
+        ornithurae = Category.objects.create(name='Ornithurae')
+        birds = Category.objects.create(
+            name='Birds',
+            name_nl='Vogels',
+            slug='birds',
+            slug_nl='vogels',
+            parent=ornithurae
+        )
 
         for title, title_nl, category in FilterTest.data:
             b = Blog.objects.create(title=title, i18n={'title_nl': title_nl})
@@ -206,6 +213,27 @@ class FilterTest(TestCase):
         with override('nl'):
             b = Blog.objects.get(Q(title_i18n='Kikker'))
             self.assertEqual(b.title, 'Frog')
+
+    def test_filter_Q_object_or(self):
+
+        def qs(slug, active=True):
+            qs = Blog.objects.filter(
+                Q(category__slug_i18n=slug) |
+                Q(category__parent__slug_i18n=slug),
+                is_active=active
+            ).order_by('title')
+            debug_queryset(qs)
+            return qs
+
+        expected = 'Duck Falcon'
+        with override('en'):
+            print('language = en')
+            self.assertEqual(key(qs('birds'), 'title'), expected)
+
+        with override('nl'):
+            print('\nlanguage = nl')
+            self.assertEqual(key(qs('birds'), 'title'), expected)
+            self.assertEqual(key(qs('vogels'), 'title'), expected)
 
     def test_filter_F_expression(self):
         Blog.objects.create(title='foo', title_nl=20, title_fr=10)
