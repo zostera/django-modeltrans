@@ -1,7 +1,9 @@
 {% extends "index.html" %}
+{% load i18n %}
 
 {% block body %}
 <h2>{{ blog.title_i18n }}</h2>
+<a class="btn btn-primary btn-xs" href="{% url 'blog-edit' pk=blog.pk %}">{% trans 'edit' %}</a>
 <p>
     {{ blog.body }}
 </p>

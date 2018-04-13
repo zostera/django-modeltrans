@@ -5,6 +5,18 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils import six
 
 
+def get_modeltrans_setting(key):
+    modeltrans_settings = {
+        'MODELTRANS_AVAILABLE_LANGUAGES': get_available_languages(),
+        'MODELTRANS_FALLBACK': getattr(settings, 'MODELTRANS_FALLBACK', {
+            'default': (get_default_language(), )
+        }),
+        'MODELTRANS_CREATE_GIN': getattr(settings, 'MODELTRANS_CREATE_GIN', True),
+        'MODELTRANS_ADD_FIELD_HELP_TEXT': getattr(settings, 'MODELTRANS_ADD_FIELD_HELP_TEXT', True),
+    }
+    return modeltrans_settings.get(key)
+
+
 def get_default_language():
     return settings.LANGUAGE_CODE
 
@@ -27,12 +39,6 @@ def get_available_languages_setting():
     return (lang for lang in languages if lang != get_default_language())
 
 
-def get_fallback_setting():
-    return getattr(settings, 'MODELTRANS_FALLBACK', {
-        'default': (get_default_language(), )
-    })
-
-
 def get_available_languages(include_default=True):
     '''
     Returns a tuple of available languages for django-modeltrans.
@@ -48,7 +54,7 @@ def get_available_languages(include_default=True):
 
 
 def check_fallback_chain():
-    MODELTRANS_FALLBACK = get_fallback_setting()
+    MODELTRANS_FALLBACK = get_modeltrans_setting('MODELTRANS_FALLBACK')
     MODELTRANS_AVAILABLE_LANGUAGES = get_available_languages(include_default=True)
 
     if 'default' not in MODELTRANS_FALLBACK:
@@ -80,13 +86,9 @@ def get_fallback_chain(lang):
            'fy': ('nl', 'en')
         }
     '''
-    MODELTRANS_FALLBACK = get_fallback_setting()
+    MODELTRANS_FALLBACK = get_modeltrans_setting('MODELTRANS_FALLBACK')
 
     if lang not in MODELTRANS_FALLBACK.keys():
         lang = 'default'
 
     return MODELTRANS_FALLBACK[lang]
-
-
-def get_create_gin_setting():
-    return getattr(settings, 'MODELTRANS_CREATE_GIN', True)

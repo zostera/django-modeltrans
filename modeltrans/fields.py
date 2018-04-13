@@ -6,7 +6,7 @@ from django.db.models import F, fields
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import ugettext_lazy as _
 
-from .conf import get_create_gin_setting, get_default_language, get_fallback_chain
+from .conf import get_default_language, get_fallback_chain, get_modeltrans_setting
 from .utils import build_localized_fieldname, get_i18n_index_name, get_language
 
 SUPPORTED_FIELDS = (
@@ -54,10 +54,19 @@ class TranslatedVirtualField(object):
         self.null = kwargs['null']
 
         self.concrete = False
+        self._help_text = kwargs.pop('help_text', None)
 
     @property
     def original_name(self):
         return self.original_field.name
+
+    @property
+    def help_text(self):
+        if self._help_text is not None:
+            return self._help_text
+
+        if get_modeltrans_setting('MODELTRANS_ADD_FIELD_HELP_TEXT') and self.language is None:
+            return _('current language: {}').format(get_language())
 
     def contribute_to_class(self, cls, name):
         self.model = cls
@@ -252,7 +261,7 @@ class TranslationField(JSONField):
         if name != 'i18n':
             raise ImproperlyConfigured('{} must have name "i18n"'.format(self.__class__.__name__))
 
-        if get_create_gin_setting():
+        if get_modeltrans_setting('MODELTRANS_CREATE_GIN'):
             from django.contrib.postgres.indexes import GinIndex
             index_name = get_i18n_index_name(cls)
             cls._meta.indexes.append(GinIndex(fields=['i18n'], name=index_name))

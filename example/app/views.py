@@ -5,7 +5,6 @@ import json
 
 import django_tables2 as tables
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import DetailView
 from django.views.generic.edit import UpdateView
@@ -16,6 +15,7 @@ from .models import Blog, Category
 
 
 class BlogTable(tables.Table):
+    title_i18n = tables.LinkColumn('blog_detail', args=(tables.A('pk'), ))
     edit = tables.TemplateColumn(
         template_code='''<a href="{% url 'blog-edit' pk=record.pk %}" class="btn btn-sm btn-primary">edit</a>''',
         empty_values=(),
@@ -26,7 +26,7 @@ class BlogTable(tables.Table):
     class Meta:
         model = Blog
         fields = (
-            # this field should fallback to LANGUAGE_CODE
+            # this field should use the active language (from LANGUAGE_CODE)
             'title_i18n',
             'title_en',
             'title_nl',
@@ -71,11 +71,11 @@ class BlogView(DetailView):
 
 class BlogUpdateView(UpdateView):
     model = Blog
-    fields = ['title', 'title_nl', 'body', 'category']
+    fields = ['title_en', 'title_i18n', 'body_en', 'body_i18n', 'category']
     template_name = 'blog_update_form.html'
     template_name_suffix = '_update_form'
 
-    success_url = reverse_lazy('blogs')
+    # success_url = reverse_lazy('blogs')
 
 
 def fixtures(request):

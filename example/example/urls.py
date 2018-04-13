@@ -12,7 +12,7 @@ urlpatterns = [
     url(r'^blogs/', BlogListView.as_view(), name='blogs'),
     url(r'^blogs-filter/', FilteredBlogListView.as_view(), name='blogs'),
     url(r'^blog/(?P<pk>\d+)/edit/', BlogUpdateView.as_view(), name='blog-edit'),
-    url(r'^blog/(?P<pk>\d+)/', BlogView.as_view(), name='blog'),
+    url(r'^blog/(?P<pk>\d+)/', BlogView.as_view(), name='blog_detail'),
 
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/', admin.site.urls),

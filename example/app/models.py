@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.urls import reverse
 from django.utils.encoding import python_2_unicode_compatible
 
 from modeltrans.fields import TranslationField
@@ -31,3 +32,6 @@ class Blog(models.Model):
 
     def __str__(self):
         return self.title_i18n
+
+    def get_absolute_url(self):
+        return reverse('blog_detail', args=(self.pk, ))
