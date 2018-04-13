@@ -1,10 +1,11 @@
 # django-modeltrans change log
 
-## master
+## 0.2.2 (2018-03-13)
  - Hide original field with `ActiveLanguageMixin`.
  - Raise an `ValueError` on accessing translated fields on a model fetched with `.defer('i18n')`.
  - do not accidentally add `i18n` to __dict__ in Model.create
  - Improve handling of explicit pks and expression rewriting code.
+ - Add help_text to virtual fields with language=None.
 
 ## 0.2.1 (2018-01-24)
  - Dropped support for Django 1.9 and 1.10.
