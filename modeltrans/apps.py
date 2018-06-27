@@ -9,8 +9,8 @@ from .translator import translate_model
 
 
 class RegistrationConfig(AppConfig):
-    name = 'modeltrans'
-    verbose_name = 'Django modeltrans using a registry.'
+    name = "modeltrans"
+    verbose_name = "Django modeltrans using a registry."
 
     def ready(self):
         check_fallback_chain()

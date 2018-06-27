@@ -9,19 +9,14 @@ from app.views import BlogListView, BlogUpdateView, BlogView, FilteredBlogListVi
 admin.autodiscover()
 
 urlpatterns = [
-    url(r'^blogs/', BlogListView.as_view(), name='blogs'),
-    url(r'^blogs-filter/', FilteredBlogListView.as_view(), name='blogs'),
-    url(r'^blog/(?P<pk>\d+)/edit/', BlogUpdateView.as_view(), name='blog-edit'),
-    url(r'^blog/(?P<pk>\d+)/', BlogView.as_view(), name='blog_detail'),
-
-    url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-    url(r'^admin/', admin.site.urls),
-
-    url(r'^media/(?P<path>.*)$', static.serve, {
-        'document_root': settings.MEDIA_ROOT,
-    }),
-    url(r'fixtures/', fixtures, name='fixtures'),
-    url(r'^i18n/', include('django.conf.urls.i18n')),
-
-    url(r'$', BlogListView.as_view(), name='index'),
+    url(r"^blogs/", BlogListView.as_view(), name="blogs"),
+    url(r"^blogs-filter/", FilteredBlogListView.as_view(), name="blogs"),
+    url(r"^blog/(?P<pk>\d+)/edit/", BlogUpdateView.as_view(), name="blog-edit"),
+    url(r"^blog/(?P<pk>\d+)/", BlogView.as_view(), name="blog_detail"),
+    url(r"^admin/doc/", include("django.contrib.admindocs.urls")),
+    url(r"^admin/", admin.site.urls),
+    url(r"^media/(?P<path>.*)$", static.serve, {"document_root": settings.MEDIA_ROOT}),
+    url(r"fixtures/", fixtures, name="fixtures"),
+    url(r"^i18n/", include("django.conf.urls.i18n")),
+    url(r"$", BlogListView.as_view(), name="index"),
 ]

@@ -17,10 +17,11 @@ class BlogAdmin(ActiveLanguageMixin, admin.ModelAdmin):
 
 
 class DefaultAdminCategory(Category):
-    '''
+    """
     Proxy model to have both the unlimited version of the ModelAdmin and
     a limited version
-    '''
+    """
+
     class Meta:
         proxy = True
 

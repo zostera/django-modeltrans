@@ -12,10 +12,10 @@ from modeltrans.fields import TranslationField
 class Category(models.Model):
     name = models.CharField(max_length=255)
 
-    i18n = TranslationField(fields=('name', ))
+    i18n = TranslationField(fields=("name",))
 
     class Meta:
-        verbose_name_plural = 'categories'
+        verbose_name_plural = "categories"
 
     def __str__(self):
         return self.name_i18n
@@ -28,10 +28,10 @@ class Blog(models.Model):
 
     category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.CASCADE)
 
-    i18n = TranslationField(fields=('title', 'body', ))
+    i18n = TranslationField(fields=("title", "body"))
 
     def __str__(self):
         return self.title_i18n
 
     def get_absolute_url(self):
-        return reverse('blog_detail', args=(self.pk, ))
+        return reverse("blog_detail", args=(self.pk,))

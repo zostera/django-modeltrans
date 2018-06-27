@@ -17,34 +17,33 @@ def get_output(migration):
 
 
 class I18nMigrationsTest(TestCase):
-
     def test_I18nDataMigration(self):
-        m = I18nDataMigration('test_app')
-        m.add_model(Blog, ('title_nl', 'title_fr', 'body_nl', 'body_fr'))
-        m.add_model(Category, ('name_nl', 'name_fr'))
+        m = I18nDataMigration("test_app")
+        m.add_model(Blog, ("title_nl", "title_fr", "body_nl", "body_fr"))
+        m.add_model(Category, ("name_nl", "name_fr"))
 
         output = get_output(m)
-        self.assertTrue('Blog' in output)
-        self.assertTrue('title_nl' in output)
-        self.assertTrue('title_fr' in output)
-        self.assertTrue('migrations.RunPython(forwards, migrations.RunPython.noop)' in output)
+        self.assertTrue("Blog" in output)
+        self.assertTrue("title_nl" in output)
+        self.assertTrue("title_fr" in output)
+        self.assertTrue("migrations.RunPython(forwards, migrations.RunPython.noop)" in output)
 
     def test_I18nIndexMigration(self):
-        m = I18nIndexMigration('test_app')
-        m.add_model(Blog, ('title_nl', 'title_fr', 'body_nl', 'body_fr'))
-        m.add_model(Category, ('name_nl', 'name_fr'))
+        m = I18nIndexMigration("test_app")
+        m.add_model(Blog, ("title_nl", "title_fr", "body_nl", "body_fr"))
+        m.add_model(Category, ("name_nl", "name_fr"))
 
         output = get_output(m)
-        self.assertTrue('app_category_i18n_gin' in output)
-        self.assertTrue('app_blog_i18n_gin' in output)
+        self.assertTrue("app_category_i18n_gin" in output)
+        self.assertTrue("app_blog_i18n_gin" in output)
 
     def test_get_translatable_models(self):
-        '''
+        """
         get_translatable_models() Should only work if django-modeltranslation is
         available.
         So if this test fails in your dev environment, you probably have
         django-modeltranslation installed
-        '''
+        """
 
         with self.assertRaises(ImproperlyConfigured):
             get_translatable_models()
