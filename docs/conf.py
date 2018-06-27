@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath('../'))
 
 project = 'django-modeltrans'
 with open('../modeltrans/__init__.py', 'rb') as f:
-    release = str(re.search('__version__ = \'(.+?)\'', f.read().decode('utf-8')).group(1))
+    release = str(re.search('__version__ = "(.+?)"', f.read().decode('utf-8')).group(1))
 version = release.rpartition('.')[0]
 
 
