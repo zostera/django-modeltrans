@@ -9,10 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from .conf import get_default_language, get_fallback_chain, get_modeltrans_setting
 from .utils import build_localized_fieldname, get_i18n_index_name, get_language
 
-SUPPORTED_FIELDS = (
-    fields.CharField,
-    fields.TextField,
-)
+SUPPORTED_FIELDS = (fields.CharField, fields.TextField)
 
 DEFAULT_LANGUAGE = get_default_language()
 
@@ -20,26 +17,27 @@ DEFAULT_LANGUAGE = get_default_language()
 def translated_field_factory(original_field, language=None, *args, **kwargs):
     if not isinstance(original_field, SUPPORTED_FIELDS):
         raise ImproperlyConfigured(
-            '{} is not supported by django-modeltrans.'.format(original_field.__class__.__name__)
+            "{} is not supported by django-modeltrans.".format(original_field.__class__.__name__)
         )
 
     class Specific(TranslatedVirtualField, original_field.__class__):
         pass
 
-    Specific.__name__ = 'Translated{}'.format(original_field.__class__.__name__)
+    Specific.__name__ = "Translated{}".format(original_field.__class__.__name__)
 
     return Specific(original_field, language, *args, **kwargs)
 
 
 class TranslatedVirtualField(object):
-    '''
+    """
     A field representing a single field translated to a specific language.
 
     Arguments:
         original_field: The original field to be translated
         language: The lanuage to translate to, or `None` to track the current
             active Django language.
-    '''
+    """
+
     # Implementation inspired by HStoreVirtualMixin from:
     # https://github.com/djangonauts/django-hstore/blob/master/django_hstore/virtual.py
 
@@ -50,11 +48,11 @@ class TranslatedVirtualField(object):
         self.original_field = original_field
         self.language = language
 
-        self.blank = kwargs['blank']
-        self.null = kwargs['null']
+        self.blank = kwargs["blank"]
+        self.null = kwargs["null"]
 
         self.concrete = False
-        self._help_text = kwargs.pop('help_text', None)
+        self._help_text = kwargs.pop("help_text", None)
 
     @property
     def original_name(self):
@@ -65,8 +63,8 @@ class TranslatedVirtualField(object):
         if self._help_text is not None:
             return self._help_text
 
-        if get_modeltrans_setting('MODELTRANS_ADD_FIELD_HELP_TEXT') and self.language is None:
-            return _('current language: {}').format(get_language())
+        if get_modeltrans_setting("MODELTRANS_ADD_FIELD_HELP_TEXT") and self.language is None:
+            return _("current language: {}").format(get_language())
 
     def contribute_to_class(self, cls, name):
         self.model = cls
@@ -78,7 +76,7 @@ class TranslatedVirtualField(object):
         # Use a translated verbose name:
         translated_field_name = _(self.original_field.verbose_name)
         if self.language is not None:
-            translated_field_name += ' ({})'.format(self.language.upper())
+            translated_field_name += " ({})".format(self.language.upper())
         self.verbose_name = translated_field_name
 
         setattr(cls, name, self)
@@ -94,7 +92,7 @@ class TranslatedVirtualField(object):
         if instance is None:
             return
 
-        if 'i18n' in instance.get_deferred_fields():
+        if "i18n" in instance.get_deferred_fields():
             raise ValueError(
                 "Getting translated values on a model fetched with defer('i18n')"
                 "is not supported."
@@ -148,35 +146,35 @@ class TranslatedVirtualField(object):
                 instance.i18n[field_name] = value
 
     def get_field_name(self):
-        '''
+        """
         Returns the field name for the current virtual field.
 
         The field name is ``<original_field_name>_<language>`` in case of a specific
         translation or ``<original_field_name>_i18n`` for the currently active language.
-        '''
+        """
         if self.language is None:
-            lang = 'i18n'
+            lang = "i18n"
         else:
             lang = self.get_language()
 
         return build_localized_fieldname(self.original_name, lang)
 
     def get_language(self):
-        '''
+        """
         Returns the language for this field.
 
         In case of an explicit language (title_en), it returns 'en', in case of
         `title_i18n`, it returns the currently active Django language.
-        '''
+        """
         return self.language if self.language is not None else get_language()
 
     def output_field(self):
-        '''
+        """
         The type of field used to Cast/Coalesce to.
 
         Mainly because a max_length argument is required for CharField
         until this PR is merged: https://github.com/django/django/pull/8758
-        '''
+        """
         Field = self.original_field.__class__
         if isinstance(self.original_field, fields.CharField):
             return Field(max_length=self.original_field.max_length)
@@ -189,13 +187,13 @@ class TranslatedVirtualField(object):
 
         name = build_localized_fieldname(self.original_name, language)
 
-        i18n_lookup = bare_lookup.replace(self.name, 'i18n')
+        i18n_lookup = bare_lookup.replace(self.name, "i18n")
         return KeyTextTransform(name, i18n_lookup)
 
     def as_expression(self, bare_lookup, fallback=True):
-        '''
+        """
         Compose an expression to get the value for this virtual field in a query.
-        '''
+        """
         language = self.get_language()
         if language == DEFAULT_LANGUAGE:
             return F(self._localized_lookup(language, bare_lookup))
@@ -209,14 +207,12 @@ class TranslatedVirtualField(object):
         lookups = [self._localized_lookup(language, bare_lookup)]
         # and now, add the list of fallback languages to the lookup list
         for fallback_language in fallback_chain:
-            lookups.append(
-                self._localized_lookup(fallback_language, bare_lookup)
-            )
+            lookups.append(self._localized_lookup(fallback_language, bare_lookup))
         return Coalesce(*lookups, output_field=self.output_field())
 
 
 class TranslationField(JSONField):
-    '''
+    """
     This model field is used to store the translations in the translated model.
 
     Arguments:
@@ -226,44 +222,46 @@ class TranslationField(JSONField):
             translated values with.
             Set to `True` during migration from django-modeltranslation to prevent
             collisions with it's database fields while having the `i18n` field available.
-    '''
-    description = 'Translation storage for a model'
+    """
+
+    description = "Translation storage for a model"
 
     def __init__(self, fields=None, required_languages=None, virtual_fields=True, *args, **kwargs):
         self.fields = fields or ()
         self.required_languages = required_languages or ()
         self.virtual_fields = virtual_fields
 
-        kwargs['editable'] = False
-        kwargs['null'] = True
+        kwargs["editable"] = False
+        kwargs["null"] = True
         super(TranslationField, self).__init__(*args, **kwargs)
 
     def deconstruct(self):
         name, path, args, kwargs = super(TranslationField, self).deconstruct()
 
-        del kwargs['editable']
-        del kwargs['null']
-        kwargs['fields'] = self.fields
-        kwargs['required_languages'] = self.required_languages
-        kwargs['virtual_fields'] = self.virtual_fields
+        del kwargs["editable"]
+        del kwargs["null"]
+        kwargs["fields"] = self.fields
+        kwargs["required_languages"] = self.required_languages
+        kwargs["virtual_fields"] = self.virtual_fields
 
         return name, path, args, kwargs
 
     def get_translated_fields(self):
-        '''
+        """
         Return a generator for all translated fields.
-        '''
+        """
         for field in self.model._meta.get_fields():
             if isinstance(field, TranslatedVirtualField):
                 yield field
 
     def contribute_to_class(self, cls, name):
-        if name != 'i18n':
+        if name != "i18n":
             raise ImproperlyConfigured('{} must have name "i18n"'.format(self.__class__.__name__))
 
-        if get_modeltrans_setting('MODELTRANS_CREATE_GIN'):
+        if get_modeltrans_setting("MODELTRANS_CREATE_GIN"):
             from django.contrib.postgres.indexes import GinIndex
+
             index_name = get_i18n_index_name(cls)
-            cls._meta.indexes.append(GinIndex(fields=['i18n'], name=index_name))
+            cls._meta.indexes.append(GinIndex(fields=["i18n"], name=index_name))
 
         super(TranslationField, self).contribute_to_class(cls, name)

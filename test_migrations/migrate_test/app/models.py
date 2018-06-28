@@ -12,7 +12,7 @@ class Category(models.Model):
     # i18n = TranslationField(fields=('name', ), virtual_fields=False)
 
     class Meta:
-        verbose_name_plural = 'categories'
+        verbose_name_plural = "categories"
 
     def __str__(self):
         return self.name

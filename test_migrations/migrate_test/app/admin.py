@@ -8,7 +8,7 @@ from .models import Blog, Category
 
 @admin.register(Blog)
 class BlogAdmin(admin.ModelAdmin):
-    list_display = ('title', 'category', )
+    list_display = ("title", "category")
 
 
 @admin.register(Category)

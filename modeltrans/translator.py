@@ -10,11 +10,11 @@ from .manager import MultilingualManager, transform_translatable_fields
 
 
 def get_i18n_field(Model):
-    '''
+    """
     Return the i18n field if the model has it, else None.
-    '''
+    """
     try:
-        i18n_field = Model._meta.get_field('i18n')
+        i18n_field = Model._meta.get_field("i18n")
     except FieldDoesNotExist:
         return
 
@@ -25,9 +25,9 @@ def get_i18n_field(Model):
 
 
 def get_translated_models(app_name):
-    '''
+    """
     Return models having a i18n = TranslationField() for given app_name.
-    '''
+    """
     app = apps.get_app_config(app_name)
     for model in app.get_models():
         i18n_field = get_i18n_field(model)
@@ -63,22 +63,22 @@ def check_languages(languages, model):
         if l not in get_available_languages():
             raise ImproperlyConfigured(
                 'Language "{}" is in required_languages on Model "{}" but '
-                'not in settings.MODELTRANS_AVAILABLE_LANGUAGES.'.format(l, model.__name__)
+                "not in settings.MODELTRANS_AVAILABLE_LANGUAGES.".format(l, model.__name__)
             )
 
 
 def validate(Model):
-    '''
+    """
     Perform validation of the arguments to TranslationField
-    '''
-    i18n_field = Model._meta.get_field('i18n')
+    """
+    i18n_field = Model._meta.get_field("i18n")
     for field in i18n_field.fields:
         try:
             Model._meta.get_field(field)
         except FieldDoesNotExist:
             raise ImproperlyConfigured(
                 'Argument "fields" to TranslationField contains an item "{}", '
-                'which is not a field (missing a comma?).'.format(field)
+                "which is not a field (missing a comma?).".format(field)
             )
 
     if i18n_field.required_languages:
@@ -105,16 +105,14 @@ def raise_if_field_exists(Model, field_name):
 
     raise ImproperlyConfigured(
         'Error adding translation field. Model "{}" already contains '
-        'a field named "{}".'.format(
-            Model._meta.object_name, field_name
-        )
+        'a field named "{}".'.format(Model._meta.object_name, field_name)
     )
 
 
 def add_virtual_fields(Model, fields, required_languages):
-    '''
+    """
     Adds newly created translation fields to the given translation options.
-    '''
+    """
     # proxy fields to assign and get values from.
     for field_name in fields:
         original_field = Model._meta.get_field(field_name)
@@ -122,10 +120,7 @@ def add_virtual_fields(Model, fields, required_languages):
         # first, add a `<original_field_name>_i18n` virtual field to get the currently
         # active translation for a field
         field = translated_field_factory(
-            original_field=original_field,
-            blank=True,
-            null=True,
-            editable=False  # disable in admin
+            original_field=original_field, blank=True, null=True, editable=False  # disable in admin
         )
 
         raise_if_field_exists(Model, field.get_field_name())
@@ -152,26 +147,26 @@ def add_virtual_fields(Model, fields, required_languages):
                 original_field=original_field,
                 language=language,
                 blank=blank_allowed,
-                null=blank_allowed
+                null=blank_allowed,
             )
             raise_if_field_exists(Model, field.get_field_name())
             field.contribute_to_class(Model, field.get_field_name())
 
 
 def has_custom_queryset(manager):
-    '''
+    """
     Check whether manager (or its parents) has declared some custom get_queryset method.
-    '''
-    return getattr(manager, 'get_queryset', None) != getattr(Manager, 'get_queryset', None)
+    """
+    return getattr(manager, "get_queryset", None) != getattr(Manager, "get_queryset", None)
 
 
 def add_manager(model):
-    '''
+    """
     Monkey patches the original model to use MultilingualManager instead of
     default managers (not only ``objects``, but also every manager defined and inherited).
 
     Custom managers are merged with MultilingualManager.
-    '''
+    """
     if model._meta.abstract:
         return
 
@@ -181,16 +176,18 @@ def add_manager(model):
         if manager.__class__ is Manager:
             manager.__class__ = MultilingualManager
         else:
+
             class NewMultilingualManager(MultilingualManager, manager.__class__):
                 use_for_related_fields = getattr(
-                    manager.__class__, 'use_for_related_fields', not has_custom_queryset(manager))
+                    manager.__class__, "use_for_related_fields", not has_custom_queryset(manager)
+                )
                 _old_module = manager.__module__
                 _old_class = manager.__class__.__name__
 
                 def deconstruct(self):
                     return (
                         False,  # as_manager
-                        '%s.%s' % (self._old_module, self._old_class),  # manager_class
+                        "%s.%s" % (self._old_module, self._old_class),  # manager_class
                         None,  # qs_class
                         self._constructor_args[0],  # args
                         self._constructor_args[1],  # kwargs
@@ -210,27 +207,28 @@ def add_manager(model):
             # share the same class.
             model._default_manager.__class__ = current_manager.__class__
     patch_manager_class(model._base_manager)
-    if hasattr(model._meta, '_expire_cache'):
+    if hasattr(model._meta, "_expire_cache"):
         model._meta._expire_cache()
 
 
 def patch_constructor(model):
-    '''
+    """
     Monkey patches the original model to rewrite fields names in __init__
-    '''
+    """
     old_init = model.__init__
 
     def patched_init(self, *args, **kwargs):
         old_init(self, *args, **transform_translatable_fields(self.__class__, kwargs))
+
     model.__init__ = patched_init
 
 
 def translate_meta_ordering(Model):
-    '''
+    """
     If a model has ``Meta.ordering`` defined, we check if
     one of it's fields is a translated field. If that's the case,
     add the expression to get the value from the i18n-field.
-    '''
+    """
     if len(Model._meta.ordering) == 0:
         return
     queryset = Model.objects.get_queryset()

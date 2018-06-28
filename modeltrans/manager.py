@@ -12,27 +12,25 @@ from .fields import TranslatedVirtualField
 
 
 def transform_translatable_fields(model, fields):
-    '''
+    """
     Transform the kwargs for a <Model>.objects.create() or <Model>()
     to allow passing translated field names.
 
     Arguments:
         fields (dict): kwargs to a model __init__ or Model.objects.create() method
             for which the field names need to be translated to values in the i18n field
-    '''
+    """
     # If the current model does have the TranslationField, we must not apply
     # any transformation for it will result in a:
     # TypeError: 'i18n' is an invalid keyword argument for this function
-    if not hasattr(model, 'i18n'):
+    if not hasattr(model, "i18n"):
         return fields
 
-    ret = {
-        'i18n': fields.pop('i18n', {})
-    }
+    ret = {"i18n": fields.pop("i18n", {})}
 
     # keep track of translated fields, and do not return an `i18n` key if no
     # translated fields are found.
-    has_translated_fields = (len(ret['i18n'].items()) > 0)
+    has_translated_fields = len(ret["i18n"].items()) > 0
 
     for field_name, value in fields.items():
         try:
@@ -47,11 +45,11 @@ def transform_translatable_fields(model, fields):
                 if field.original_name in fields:
                     raise ValueError(
                         'Attempted override of "{}" with "{}". '
-                        'Only one of the two is allowed.'.format(field.original_name, field_name)
+                        "Only one of the two is allowed.".format(field.original_name, field_name)
                     )
                 ret[field.original_name] = value
             else:
-                ret['i18n'][field.name] = value
+                ret["i18n"][field.name] = value
         else:
             ret[field_name] = value
 
@@ -62,7 +60,7 @@ def transform_translatable_fields(model, fields):
 
 
 class MultilingualQuerySet(QuerySet):
-    '''
+    """
     Extends `~django.db.models.query.Queryset` and makes the translated versions of fields
     accessible through the normal queryset methods, analogous to the virtual fields added
     to a translated model:
@@ -74,10 +72,12 @@ class MultilingualQuerySet(QuerySet):
 
     When adding the `modeltrans.fields.TranslationField` to a model, MultilingualManager is automatically
     mixed in to the manager class of that model.
-    '''
+    """
 
-    def _add_i18n_annotation(self, virtual_field=None, fallback=True, bare_lookup=None, annotation_name=None):
-        '''
+    def _add_i18n_annotation(
+        self, virtual_field=None, fallback=True, bare_lookup=None, annotation_name=None
+    ):
+        """
         Private method to add an annotation to the query to extract the translated
         version of a field from the jsonb field to allow filtering and ordering.
 
@@ -92,31 +92,31 @@ class MultilingualQuerySet(QuerySet):
 
         Returns:
             the name of the annotation created.
-        '''
+        """
         expression = virtual_field.as_expression(fallback=fallback, bare_lookup=bare_lookup)
 
         if isinstance(expression, F):
             return expression.name
 
         if annotation_name is None:
-            annotation_name = '{}_annotation'.format(virtual_field.name)
+            annotation_name = "{}_annotation".format(virtual_field.name)
 
         self.query.add_annotation(expression, annotation_name)
         return annotation_name
 
     def _get_field(self, lookup):
-        '''
+        """
         Return the Django model field for a lookup plus the remainder of the lookup,
         which should be the lookup type.
-        '''
+        """
         model = self.model
         lookup_type = None
 
         # pk is not an actual field, but an alias for the implicit id field.
-        if lookup == 'pk':
+        if lookup == "pk":
             key = None
             for field in model._meta.get_fields():
-                if getattr(field, 'primary_key', False):
+                if getattr(field, "primary_key", False):
                     key = field
             return key, None
 
@@ -130,20 +130,20 @@ class MultilingualQuerySet(QuerySet):
                 lookup_type = LOOKUP_SEP.join(bits[i:])
                 break
 
-            if hasattr(field, 'remote_field'):
-                rel = getattr(field, 'remote_field', None)
-                model = getattr(rel, 'model', model)
+            if hasattr(field, "remote_field"):
+                rel = getattr(field, "remote_field", None)
+                model = getattr(rel, "model", model)
 
         return field, lookup_type
 
     def _rewrite_filter_clause(self, lookup, value):
-        '''
+        """
         private method which rewrites a filter clause passed to filter()/exclude()
         etc., for example:
 
         for title_nl__like='va'
         _rewrite_filter_clause('title_nl__like', 'va') would be called.
-        '''
+        """
         value = self._rewrite_expression(value)
         field, lookup_type = self._get_field(lookup)
 
@@ -151,14 +151,12 @@ class MultilingualQuerySet(QuerySet):
             return lookup, value
 
         if lookup_type is not None:
-            bare_lookup = lookup[0:-(len(LOOKUP_SEP + lookup_type))]
+            bare_lookup = lookup[0 : -(len(LOOKUP_SEP + lookup_type))]
         else:
             bare_lookup = lookup
 
         filter_field_name = self._add_i18n_annotation(
-            virtual_field=field,
-            bare_lookup=bare_lookup,
-            fallback=field.language is None
+            virtual_field=field, bare_lookup=bare_lookup, fallback=field.language is None
         )
 
         # re-add lookup type
@@ -168,14 +166,14 @@ class MultilingualQuerySet(QuerySet):
         return filter_field_name, value
 
     def _rewrite_expression(self, expr):
-        '''
+        """
         Rewrite expressions.
 
         https://docs.djangoproject.com/en/2.0/ref/models/expressions/
 
         This current way of doing this is bound to lag behind any new things implemented in Django.
         It would be really nice to have a better/more generic way of doing this.
-        '''
+        """
         if isinstance(expr, F):
             field, _ = self._get_field(expr.name)
             if not isinstance(field, TranslatedVirtualField):
@@ -188,7 +186,9 @@ class MultilingualQuerySet(QuerySet):
         elif isinstance(expr, Count):
             expr.source_expressions[0] = self._rewrite_expression(expr.source_expressions[0])
         elif isinstance(expr, Func):
-            expr.source_expressions = list([self._rewrite_expression(e) for e in expr.source_expressions])
+            expr.source_expressions = list(
+                [self._rewrite_expression(e) for e in expr.source_expressions]
+            )
         elif isinstance(expr, OrderBy):
             expr.expression = self._rewrite_expression(expr.expression)
         return expr
@@ -198,7 +198,7 @@ class MultilingualQuerySet(QuerySet):
             return Q._new_instance(
                 list(self._rewrite_Q(child) for child in q.children),
                 connector=q.connector,
-                negated=q.negated
+                negated=q.negated,
             )
         if isinstance(q, (list, tuple)):
             return self._rewrite_filter_clause(*q)
@@ -212,13 +212,13 @@ class MultilingualQuerySet(QuerySet):
                 continue
 
             # remove descending prefix, not relevant for the annotation
-            sort_order = ''
-            if field_name[0] == '-':
+            sort_order = ""
+            if field_name[0] == "-":
                 field_name = field_name[1:]
-                sort_order = '-'
+                sort_order = "-"
 
-            if field_name == 'pk':
-                new_field_names.append(sort_order + 'pk')
+            if field_name == "pk":
+                new_field_names.append(sort_order + "pk")
                 continue
 
             field, lookup_type = self._get_field(field_name)
@@ -228,10 +228,10 @@ class MultilingualQuerySet(QuerySet):
                 new_field_names.append(sort_order + field_name)
                 continue
 
-            assert lookup_type is None, '{} is not a valid order_by lookup'.format(field_name)
+            assert lookup_type is None, "{} is not a valid order_by lookup".format(field_name)
 
             sort_field = field.as_expression(bare_lookup=field_name)
-            if sort_order == '-':
+            if sort_order == "-":
                 sort_field = sort_field.desc()
 
             new_field_names.append(sort_field)
@@ -239,29 +239,29 @@ class MultilingualQuerySet(QuerySet):
         return new_field_names
 
     def annotate(self, *args, **kwargs):
-        '''
+        """
         Patch annotate to allow the use of translated field names in annotations.
 
         https://docs.djangoproject.com/en/stable/ref/models/querysets/#annotate
-        '''
+        """
         args = [self._rewrite_expression(a) for a in args]
         kwargs = {alias: self._rewrite_expression(expr) for alias, expr in kwargs.items()}
 
         return super(MultilingualQuerySet, self).annotate(*args, **kwargs)
 
     def create(self, **kwargs):
-        '''
+        """
         Patch the create method to allow adding the value for a translated field
         using `Model.objects.create(..., title_nl='...')`.
 
         https://docs.djangoproject.com/en/stable/ref/models/querysets/#create
-        '''
+        """
         return super(MultilingualQuerySet, self).create(
             **transform_translatable_fields(self.model, kwargs)
         )
 
     def order_by(self, *field_names):
-        '''
+        """
         Annotate translated fields before sorting.
 
         Examples:
@@ -272,14 +272,14 @@ class MultilingualQuerySet(QuerySet):
         argument will be replaced by their annotated versions.
 
         https://docs.djangoproject.com/en/1.11/ref/models/querysets/#order_by
-        '''
+        """
 
         new_field_names = self._rewrite_ordering(field_names)
 
         return super(MultilingualQuerySet, self).order_by(*new_field_names)
 
     def _filter_or_exclude(self, negate, *args, **kwargs):
-        '''
+        """
         Annotate lookups for `filter()` and `exclude()`.
 
         Examples:
@@ -291,7 +291,7 @@ class MultilingualQuerySet(QuerySet):
 
         In all cases, the field part of the field lookup will be changed to use
         the annotated verion.
-        '''
+        """
         # handle Q expressions / args
         new_args = []
         for arg in args:
@@ -300,12 +300,12 @@ class MultilingualQuerySet(QuerySet):
         # handle the kwargs
         new_kwargs = {}
         for field, value in kwargs.items():
-            new_kwargs.update(dict((self._rewrite_filter_clause(field, value), )))
+            new_kwargs.update(dict((self._rewrite_filter_clause(field, value),)))
 
         return super(MultilingualQuerySet, self)._filter_or_exclude(negate, *new_args, **new_kwargs)
 
     def _values(self, *fields, **expressions):
-        '''
+        """
         Annotate lookups for `values()` and `values_list()`
 
         It must be possible to use:
@@ -313,7 +313,7 @@ class MultilingualQuerySet(QuerySet):
 
         But also spanning relations:
         `Blogs.objects.all().values_list('title_i18n', 'category__name__i18n')`
-        '''
+        """
         _fields = fields + tuple(expressions)
 
         for field_name in _fields:
@@ -331,34 +331,37 @@ class MultilingualQuerySet(QuerySet):
                     virtual_field=field,
                     fallback=fallback,
                     bare_lookup=field_name,
-                    annotation_name=field_name
+                    annotation_name=field_name,
                 )
 
         return super(MultilingualQuerySet, self)._values(*fields, **expressions)
 
     def __reduce__(self):
-        '''
+        """
         Make sure a dynamic version of this class can be pickled
-        '''
+        """
         return multilingual_queryset_factory, (self.__class__.__bases__[0],), self.__getstate__()
 
 
 def multilingual_queryset_factory(old_cls, instantiate=True):
-    '''Return a MultilingualQuerySet, or mix MultilingualQuerySet in custom QuerySets.'''
+    """Return a MultilingualQuerySet, or mix MultilingualQuerySet in custom QuerySets."""
     if old_cls == QuerySet:
         NewClass = MultilingualQuerySet
     else:
+
         class NewClass(old_cls, MultilingualQuerySet):
             pass
-        NewClass.__name__ = 'Multilingual%s' % old_cls.__name__
+
+        NewClass.__name__ = "Multilingual%s" % old_cls.__name__
     return NewClass() if instantiate else NewClass
 
 
 class MultilingualManager(Manager):
-    '''
+    """
     When adding the `modeltrans.fields.TranslationField` to a model, MultilingualManager is automatically
     mixed in to the manager class of that model.
-    '''
+    """
+
     use_for_related_fields = True
 
     def _patch_queryset(self, qs):
@@ -366,10 +369,10 @@ class MultilingualManager(Manager):
         return qs
 
     def get_queryset(self):
-        '''
+        """
         This method is repeated because some managers that don't use super() or alter queryset class
         may return queryset that is not subclass of MultilingualQuerySet.
-        '''
+        """
         qs = super(MultilingualManager, self).get_queryset()
         if isinstance(qs, MultilingualQuerySet):
             # Is already patched

@@ -13,28 +13,26 @@ class ModelFormTest(TestCase):
         class BlogForm(ModelForm):
             class Meta:
                 model = Blog
-                fields = ('title_i18n', 'body_i18n', )
+                fields = ("title_i18n", "body_i18n")
 
-        article = Blog(title='English', title_nl='Nederlands')
+        article = Blog(title="English", title_nl="Nederlands")
 
-        with override('nl'):
-            form = BlogForm(instance=article, data={
-                'title_i18n': 'Nederlandse taal',
-                'body_i18n': 'foo'
-            })
+        with override("nl"):
+            form = BlogForm(
+                instance=article, data={"title_i18n": "Nederlandse taal", "body_i18n": "foo"}
+            )
             form.save()
 
         article.refresh_from_db()
-        self.assertEqual(article.title_nl, 'Nederlandse taal')
-        self.assertEqual(article.title_en, 'English')
+        self.assertEqual(article.title_nl, "Nederlandse taal")
+        self.assertEqual(article.title_en, "English")
 
-        with override('en'):
-            form = BlogForm(instance=article, data={
-                'title_i18n': 'English language',
-                'body_i18n': 'foo'
-            })
+        with override("en"):
+            form = BlogForm(
+                instance=article, data={"title_i18n": "English language", "body_i18n": "foo"}
+            )
             form.save()
 
         article.refresh_from_db()
-        self.assertEqual(article.title_nl, 'Nederlandse taal')
-        self.assertEqual(article.title_en, 'English language')
+        self.assertEqual(article.title_nl, "Nederlandse taal")
+        self.assertEqual(article.title_en, "English language")
