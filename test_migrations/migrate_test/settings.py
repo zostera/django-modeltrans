@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "modeltranslation",
-    # 'modeltrans',
+    # "modeltrans",
     "migrate_test.app",
 ]
 
