@@ -44,11 +44,11 @@ def main():
 
     # 1. install django-modeltrans and add to installed apps.
     cmd("pip install -U ..")
-    cmd("""sed -i '' -e "s/# \\"modeltrans\\"/\\"modeltrans\\"/g" migrate_test/settings.py""")
+    replace_in_file("migrate_test/settings.py", '# "modeltrans"', '"modeltrans"')
 
     # 2. Uncomment modeltrans i18n-field in models.py
-    cmd("""sed -i '' -e "s/# from/from/g" {}""".format(MODELS_PY))
-    cmd("""sed -i '' -e "s/# i18n/i18n/g" {}""".format(MODELS_PY))
+    replace_in_file(MODELS_PY, "# from", "from")
+    replace_in_file(MODELS_PY, "# i18n", "i18n")
 
     # 3. make the migrations to add django-modeltrans json fields
     manage("makemigrations app")
@@ -59,9 +59,9 @@ def main():
     manage("migrate app")
 
     # 5. remove django-modeltranslation
-    cmd("""sed -i '' -e "s/\\"modeltranslation\\",//g" migrate_test/settings.py""")
+    replace_in_file("migrate_test/settings.py", '"modeltranslation",')
     cmd("rm -r migrate_test/app/translation.py")
-    cmd("sed -i " ' -e "s/, virtual_fields=False//g" {}'.format(MODELS_PY))
+    replace_in_file(MODELS_PY, ", virtual_fields=False")
 
     # 6. migrate once more to remove django-modeltranslation's fields
     manage("makemigrations app")
@@ -69,6 +69,14 @@ def main():
 
     # 6. run the post-migration tests
     run_test("post_migrate_tests")
+
+
+def replace_in_file(file, search, dest=""):
+    with open(file, "r") as f:
+        contents = f.read()
+
+    with open(file, "w") as f:
+        f.write(contents.replace(search, dest))
 
 
 def cmd(c):
