@@ -8,13 +8,12 @@ from .conf import get_available_languages, get_default_language
 
 def get_language():
     """
-    Return an active language code that is guaranteed to be in
-    settings.LANGUAGES (Django does not seem to guarantee this for us).
+    Return an active language code that is guaranteed to be in settings.LANGUAGES
+
+    (Django does not seem to guarantee this for us.)
     """
     lang = _get_language()
-    MODELTRANS_AVAILABLE_LANGUAGES = get_available_languages()
-
-    if lang in MODELTRANS_AVAILABLE_LANGUAGES:
+    if lang in get_available_languages():
         return lang
     return get_default_language()
 
@@ -30,16 +29,3 @@ def build_localized_fieldname(field_name, lang):
         # current naming scheme as Django foreign keys also add "id" suffix.
         lang = "ind"
     return str("{}_{}".format(field_name, lang.replace("-", "_")))
-
-
-def _hash_generator(*args):
-    """
-    Generate a 32-bit digest of a set of arguments that can be used to
-    shorten identifying names.
-
-    implementation form django.db.models.indexes
-    """
-    h = hashlib.md5()
-    for arg in args:
-        h.update(force_bytes(arg))
-    return h.hexdigest()[:6]
