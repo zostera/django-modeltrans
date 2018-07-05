@@ -216,9 +216,11 @@ class TranslationField(JSONField):
     This model field is used to store the translations in the translated model.
 
     Arguments:
-        fields (iterable): List of column names to make translatable.
-        required_languages (iterable): List of languages required for the model.
-        virtual_fields (bool): If False, do not add virtual fields to access
+        fields (iterable): List of model field names to make translatable.
+        required_languages (iterable or dict): List of languages required for the model.
+            If a dict is supplied, the keys must be translated field names with the value
+            containing a list of required languages for that specific field.
+        virtual_fields (bool): If `False`, do not add virtual fields to access
             translated values with.
             Set to `True` during migration from django-modeltranslation to prevent
             collisions with it's database fields while having the `i18n` field available.
