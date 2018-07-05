@@ -204,7 +204,7 @@ class Migration(migrations.Migration):
 
     def write_migration_file(self):
         """
-        Write the
+        Write the migration to file.
         """
         filename = get_next_migration_filename(self.app, migration_type=self.migration_type)
         with open(filename, "w") as f:
