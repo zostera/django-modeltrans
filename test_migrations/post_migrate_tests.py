@@ -37,7 +37,6 @@ class PostMigrateTest(TestCase):
             )
             indexes = {name: definition for name, definition in cursor.fetchall()}
 
-
         for name, definition in indexes.items():
             if name.startswith(index_prefix):
                 self.assertIn("_gin", name)

@@ -43,16 +43,3 @@ def _hash_generator(*args):
     for arg in args:
         h.update(force_bytes(arg))
     return h.hexdigest()[:6]
-
-
-def get_i18n_index_name(Model):
-    """
-    Returns the name for the gin index on the i18n field.
-
-    Limited to 30 charachters because Django doesn't allow longer names.
-    """
-    prefix = Model._meta.db_table
-    if len(prefix) > 20:
-        prefix = "{}_{}".format(Model._meta.app_label[:14], _hash_generator(prefix))
-
-    return "{}_i18n_gin".format(prefix)
