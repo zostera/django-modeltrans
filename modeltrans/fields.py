@@ -258,10 +258,4 @@ class TranslationField(JSONField):
         if name != "i18n":
             raise ImproperlyConfigured('{} must have name "i18n"'.format(self.__class__.__name__))
 
-        if get_modeltrans_setting("MODELTRANS_CREATE_GIN"):
-            from django.contrib.postgres.indexes import GinIndex
-
-            index_name = get_i18n_index_name(cls)
-            cls._meta.indexes.append(GinIndex(fields=["i18n"], name=index_name))
-
         super(TranslationField, self).contribute_to_class(cls, name)

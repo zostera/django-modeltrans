@@ -82,9 +82,13 @@ This is how to migrate from django-modeltranslation (version 0.12.1) to
             # adding manager allows queries like Site.objects.filter(blog__title_i18n__contains='modeltrans')
             objects = MultilingualManager()
 
+
         class Blog(models.Model):
             title = models.CharField(max_length=100)
             body = models.TextField()
 
             i18n = TranslationField(fields=('title', 'body'))
             site = models.ForeignKey(Site)
+
+            class Meta:
+                indexes = [GinIndex(fields=["i18n"]]

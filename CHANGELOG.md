@@ -1,5 +1,10 @@
 # django-modeltrans change log
 
+## master
+ - Adopted [black](https://github.com/ambv/black) code style.
+ - Removed auto-adding indexes, as it was unpredictable. You must add the `GinIndex` manually like described in the documentation on performance.
+
+
 ## 0.2.2 (2018-03-13)
  - Hide original field with `ActiveLanguageMixin`.
  - Raise an `ValueError` on accessing translated fields on a model fetched with `.defer('i18n')`.
