@@ -3,11 +3,14 @@ from __future__ import unicode_literals
 
 from django import VERSION as DJANGO_VERSION
 from django.core.exceptions import ValidationError
-from django.db import DataError, transaction
+from django.db import DataError, models, transaction
 from django.test import TestCase, override_settings
 from django.utils.translation import override
 
+from modeltrans.fields import TranslationField
 from tests.app.models import Blog, NullableTextModel, TextModel
+
+from .utils import CreateTestModel
 
 
 class TranslatedFieldTest(TestCase):
@@ -144,7 +147,7 @@ class TranslatedFieldTest(TestCase):
         with self.assertRaisesMessage(TypeError, expected_message):
             Blog.objects.create(title="Falcon", name_nl="Valk")
 
-    def test_clean(self):
+    def test_clean_required_languages_list(self):
         """
         Blog has required_languages=('nl', ), so this should raise an error
         if `title_nl` is not set.
@@ -166,6 +169,25 @@ class TranslatedFieldTest(TestCase):
         m.title_nl = "Paard"
         m.body_nl = "foo"
         m.full_clean()
+
+    def test_clean_required_languages_dict(self):
+        class Model(models.Model):
+            title = models.CharField(max_length=10)
+            i18n = TranslationField(fields=["title"], required_languages={"title": ["nl", "de"]})
+
+            class Meta:
+                app_label = "test"
+
+        with CreateTestModel(Model, translate=True):
+            m = Model(title_nl="foo", title="bar")
+
+        with self.assertRaises(ValidationError) as e:
+            m.full_clean()
+
+        self.assertEqual(
+            {(field, tuple(errors)) for field, errors in e.exception},
+            {("title_de", ("This field cannot be null.",))},
+        )
 
     def test_textfield(self):
         """

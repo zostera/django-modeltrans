@@ -3,6 +3,8 @@ import os
 
 from django.db import connection
 
+from modeltrans.translator import translate_model
+
 from .app.models import Blog, Category
 
 
@@ -26,8 +28,11 @@ class CreateTestModel:
                     self.assertEquals(m.title, 'foo')
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args, translate=False):
         self.models = args
+        if translate:
+            for Model in self.models:
+                translate_model(Model)
 
     def __enter__(self):
         """

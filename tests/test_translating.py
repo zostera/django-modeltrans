@@ -48,7 +48,7 @@ class Translating_utils(TestCase):
 
 
 class TranslateModelTest(TestCase):
-    def test_translate_bad_required_language_type(self):
+    def test_translate_bad_required_languages_type(self):
         class BadRequiredLanguagesType(models.Model):
             title = models.CharField(max_length=100)
 
@@ -57,9 +57,39 @@ class TranslateModelTest(TestCase):
             class Meta:
                 app_label = "django-modeltrans_tests"
 
-        expected_message = '"required_languages" must be a tuple, list or set'
+        expected_message = '"required_languages" must be a tuple, list, set or dict'
         with self.assertRaisesMessage(ImproperlyConfigured, expected_message):
             translate_model(BadRequiredLanguagesType)
+
+    def test_translate_required_languages_dict(self):
+        class RequiredLanguagesType_dict(models.Model):
+            title = models.CharField(max_length=100)
+            body = models.CharField(max_length=100)
+
+            i18n = TranslationField(
+                fields=("title", "body"), required_languages={"body": ["nl"], "title": ["fr", "nl"]}
+            )
+
+            class Meta:
+                app_label = "django-modeltrans_tests"
+
+        translate_model(RequiredLanguagesType_dict)
+
+    def test_translate_required_languages_dict_bad_value(self):
+        class BadRequiredLanguagesType_dict(models.Model):
+            title = models.CharField(max_length=100)
+            body = models.CharField(max_length=100)
+
+            i18n = TranslationField(
+                fields=("title", "body"), required_languages={"body": ["nl"], "title": "es"}
+            )
+
+            class Meta:
+                app_label = "django-modeltrans_tests"
+
+        expected_message = 'required_languages["title"] must be a tuple, list or set'
+        with self.assertRaisesMessage(ImproperlyConfigured, expected_message):
+            translate_model(BadRequiredLanguagesType_dict)
 
     def test_translate_bad_required_language(self):
         class A(models.Model):

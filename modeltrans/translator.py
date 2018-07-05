@@ -82,16 +82,24 @@ def validate(Model):
             )
 
     if i18n_field.required_languages:
-        if not isinstance(i18n_field.required_languages, (tuple, list, set)):
-            raise ImproperlyConfigured('"required_languages" must be a tuple, list or set')
-        check_languages(i18n_field.required_languages, Model)
-
-        for fieldnames in i18n_field.required_languages:
-            if field not in i18n_field.fields:
-                raise ImproperlyConfigured(
-                    'Fieldname "{}" in required_languages which is not '
-                    'defined as translatable for Model "{}".'.format(field, Model.__name__)
-                )
+        required_languages = i18n_field.required_languages
+        allowed_types = (tuple, list, set)
+        if isinstance(required_languages, allowed_types):
+            check_languages(required_languages, Model)
+        elif isinstance(required_languages, dict):
+            for fieldname, languages in required_languages.items():
+                if fieldname not in i18n_field.fields:
+                    raise ImproperlyConfigured(
+                        'Fieldname "{}" in required_languages which is not '
+                        'defined as translatable in "{}.i18n".'.format(field, Model.__name__)
+                    )
+                if not isinstance(languages, allowed_types):
+                    raise ImproperlyConfigured(
+                        'required_languages["{}"] must be a tuple, list or set'.format(fieldname)
+                    )
+                check_languages(languages, Model)
+        else:
+            raise ImproperlyConfigured('"required_languages" must be a tuple, list, set or dict')
 
 
 def raise_if_field_exists(Model, field_name):
@@ -113,8 +121,15 @@ def add_virtual_fields(Model, fields, required_languages):
     """
     Adds newly created translation fields to the given translation options.
     """
-    # proxy fields to assign and get values from.
+    # Add virtual/proxy fields to assign values to and get values from.
     for field_name in fields:
+        # if required_languages is dict, it contains an iterable of required languages
+        # for each field.
+        if isinstance(required_languages, dict):
+            field_required_languages = required_languages.get(field_name, ())
+        else:
+            field_required_languages = required_languages
+
         original_field = Model._meta.get_field(field_name)
 
         # first, add a `<original_field_name>_i18n` virtual field to get the currently
@@ -142,7 +157,7 @@ def add_virtual_fields(Model, fields, required_languages):
         # that specific langauge
         # <original_field_name>_<language>
         for language in get_available_languages(include_default=False):
-            blank_allowed = language not in required_languages
+            blank_allowed = language not in field_required_languages
             field = translated_field_factory(
                 original_field=original_field,
                 language=language,
