@@ -18,7 +18,7 @@ Getting started
         title = models.CharField(max_length=255)
         body = models.TextField(null=True)
 
-        i18n = TranslationField(fields=('title', 'body'))
+        i18n = TranslationField(fields=("title", "body"))
 
  - Run ``./manage.py makemigrations`` to add the ``i18n`` JSONField to each model containing
    translations.
@@ -31,7 +31,7 @@ Getting started
 
 The above could be used in a Django shell like this::
 
-    >>> b = Blog.objects.create(title='Falcon', title_nl='Valk')
+    >>> b = Blog.objects.create(title="Falcon", title_nl="Valk")
     >>> b.title
     'Falcon'
     >>> b.title_nl
@@ -45,15 +45,15 @@ The above could be used in a Django shell like this::
     'Valk'
     # translations are stored in the field ``i18n`` in each model:
     >>> b.i18n
-    {u'title_nl': u'Valk'}
+    {'title_nl': 'Valk'}
     # if a translation is not available, None is returned.
     >>> print(b.title_de)
     None
     # fallback to the default language
-    >>> with override('de'):
+    >>> with override("de"):
     ...     b.title_i18n
     'Falcon'
-    # now, if we set the German tranlation, it it is returned from title_i18n:
+    # now, if we set the German translation, it it is returned from ``title_i18n``:
     >>> b.title_de = 'Falk'
     >>> with override('de'):
     ...     b.title_i18n

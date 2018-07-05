@@ -13,13 +13,13 @@ The inner workings are illustrated using this model::
         title = models.CharField(max_length=255)
         body = models.TextField(null=True)
 
-        i18n = TranslationField(fields=('title', 'body'))
+        i18n = TranslationField(fields=("title", "body"))
 
 When creating an object, translated fields in the constructor are transformed
 into a value in the i18n field. So the following two calls are equivalent::
 
-    Blog.objects.create(title='Falcon', title_nl='Valk', title_de='Falk')
-    Blog.objects.create(title='Falcon', i18n={'title_nl': 'Valk', 'title_de': 'Falk'})
+    Blog.objects.create(title="Falcon", title_nl="Valk", title_de="Falk")
+    Blog.objects.create(title="Falcon", i18n={"title_nl": "Valk", "title_de": "Falk"})
 
 So adding a translated field does not need any migrations: it just requires
 adding a key to the ``i18n`` field.
@@ -27,10 +27,10 @@ adding a key to the ``i18n`` field.
 When selecting objects django-modeltrans replaces any occurrence of a translated
 field with the appropriate jsonb key get operation::
 
-    Blog.objects.filter(title_nl='Valk')
+    Blog.objects.filter(title_nl="Valk")
     # SELECT ... FROM "app_blog" WHERE (app_blog.i18n->>'title_nl')::varchar(255) = 'Valk'
 
-    Blog.objects.filter(title_nl__contains='a')
+    Blog.objects.filter(title_nl__contains="a")
     # SELECT ... FROM "app_blog" WHERE (app_blog.i18n->>'title_nl')::varchar(255) LIKE '%a%'
 
 In addition to that, you can use ``<fieldname>_i18n`` to filter on. That will use
@@ -39,8 +39,8 @@ language::
 
     from django.utils.translation import override
 
-    with override('nl'):
-        Blog.objects.filter(title_i18n='Valk')
+    with override("nl"):
+        Blog.objects.filter(title_i18n="Valk")
 
     # SELECT ... FROM "app_blog"
     # WHERE COALESCE((app_blog.i18n->>'title_nl'), "app_blog"."title") = 'Valk'
@@ -78,15 +78,15 @@ language is defined::
 The virtual field ``<field>_i18n`` returns the translated value for the current
 active language and falls back to the language in ``LANGUAGE_CODE``::
 
-    with override('nl'):
+    with override("nl"):
         print(b.title_i18n)
     # 'Valk'
 
-    with override('de'):
+    with override("de"):
         print(b.title_i18n)
     # 'Falk'
 
-    with override('fr'):
+    with override("fr"):
         print(b.title_i18n)
     # 'Falcon' (no french translation available, falls back to LANGUAGE_CODE)
 
@@ -94,8 +94,8 @@ Django-modeltrans also allows ordering on translated values. Ordering on
 ``<field>_i18n`` probably makes most sense, as it more likely that there is a
 value to order by::
 
-    with override('de'):
-        qs = Blog.objects.order_by('title_i18n')
+    with override("de"):
+        qs = Blog.objects.order_by("title_i18n")
 
     # SELECT ...,
     # FROM "app_blog"

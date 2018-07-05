@@ -49,6 +49,7 @@ def main():
     # 2. Uncomment modeltrans i18n-field in models.py
     replace_in_file(MODELS_PY, "# from", "from")
     replace_in_file(MODELS_PY, "# i18n", "i18n")
+    replace_in_file(MODELS_PY, "# indexes", "indexes")
 
     # 3. make the migrations to add django-modeltrans json fields
     manage("makemigrations app")

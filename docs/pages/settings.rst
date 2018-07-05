@@ -37,15 +37,6 @@ If configured like this::
     }
 
 
-``MODELTRANS_CREATE_GIN``
--------------------------
-Boolean signalling django-modeltrans to create a `GinIndex <https://docs.djangoproject.com/en/stable/ref/contrib/postgres/indexes/#ginindex>`_
-for each ``i18n`` field.
-Can be disabled to allow customization.
-
-``True`` by default.
-
-
 ``MODELTRANS_ADD_FIELD_HELP_TEXT``
 ----------------------------------
 If ``True``, the ``<name>_i18n`` fields with empty ``help_text``s will get a ``help_text`` like::

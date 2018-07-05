@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django import VERSION as DJANGO_VERSION
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.test import TestCase
@@ -190,7 +191,10 @@ class TranslateModelTest(TestCase):
         self.assertFalse(hasattr(m, "title_i18n"))
         self.assertFalse(hasattr(m, "title_en"))
 
-        expected_message = "'title_nl' is an invalid keyword argument for this function"
+        if DJANGO_VERSION < (2, 2):
+            expected_message = "'title_nl' is an invalid keyword argument for this function"
+        else:
+            expected_message = "TestModel4() got an unexpected keyword argument 'title_nl'"
 
         with self.assertRaisesMessage(TypeError, expected_message):
             TestModel4(title="bar", title_nl="foo")

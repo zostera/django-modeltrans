@@ -20,7 +20,9 @@ This is how to migrate from django-modeltranslation (version 0.12.1) to
    for now (``virtual_fields=False``)::
 
     # models.py
+    from django.contrib.postgres.indexes import GinIndex
     from django.db import models
+
     from modeltrans.fields import TranslationField
 
     class Blog(models.Model):
@@ -29,6 +31,10 @@ This is how to migrate from django-modeltranslation (version 0.12.1) to
 
         # add this field, containing the TranslationOptions attributes as arguments:
         i18n = TranslationField(fields=('title', 'body'), virtual_fields=False)
+
+        # add the GinIndex
+        class Meta:
+            indexes = [GinIndex(fields=["i18n"])]
 
 
     # translation.py
@@ -72,9 +78,12 @@ This is how to migrate from django-modeltranslation (version 0.12.1) to
    - If you use lookups containing translated fields from non-translated models, you should add
      ``MultilingualManager()`` to your models as a manager::
 
+        from django.contrib.postgres.indexes import GinIndex
         from django.db import models
+
         from modeltrans.fields TranslationField
         from modeltrans.manager import MultilingualManager
+
 
         class Site(models.Model):
             title = models.CharField(max_length=100)
@@ -82,9 +91,13 @@ This is how to migrate from django-modeltranslation (version 0.12.1) to
             # adding manager allows queries like Site.objects.filter(blog__title_i18n__contains='modeltrans')
             objects = MultilingualManager()
 
+
         class Blog(models.Model):
             title = models.CharField(max_length=100)
             body = models.TextField()
 
             i18n = TranslationField(fields=('title', 'body'))
             site = models.ForeignKey(Site)
+
+            class Meta:
+                indexes = [GinIndex(fields=["i18n"]]

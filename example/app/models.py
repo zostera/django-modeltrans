@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from django.urls import reverse
 from django.utils.encoding import python_2_unicode_compatible
@@ -15,6 +16,7 @@ class Category(models.Model):
     i18n = TranslationField(fields=("name",))
 
     class Meta:
+        indexes = [GinIndex(fields=["i18n"])]
         verbose_name_plural = "categories"
 
     def __str__(self):
@@ -29,6 +31,9 @@ class Blog(models.Model):
     category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.CASCADE)
 
     i18n = TranslationField(fields=("title", "body"))
+
+    class Meta:
+        indexes = [GinIndex(fields=["i18n"])]
 
     def __str__(self):
         return self.title_i18n

@@ -14,7 +14,7 @@ from django.utils.timezone import now
 
 from . import __version__ as VERSION
 from .conf import get_default_language
-from .utils import get_i18n_index_name, split_translated_fieldname
+from .utils import split_translated_fieldname
 
 try:
     from modeltranslation.translator import translator
@@ -141,7 +141,7 @@ from __future__ import print_function, unicode_literals
 
 from django.db import migrations
 
-DEFAULT_LANGUAGE = '{DEFAULT_LANGUAGE}'
+DEFAULT_LANGUAGE = "{DEFAULT_LANGUAGE}"
 
 {helpers}
 
@@ -149,7 +149,7 @@ DEFAULT_LANGUAGE = '{DEFAULT_LANGUAGE}'
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('{app}', '{last_migration}'),
+        ("{app}", "{last_migration}"),
     ]
 
     operations = [
@@ -204,31 +204,13 @@ class Migration(migrations.Migration):
 
     def write_migration_file(self):
         """
-        Write the
+        Write the migration to file.
         """
         filename = get_next_migration_filename(self.app, migration_type=self.migration_type)
         with open(filename, "w") as f:
             self.write(f)
 
         return filename
-
-
-class I18nIndexMigration(I18nMigration):
-    migration_type = "index"
-    index_template = """
-    migrations.RunSQL(
-        [('CREATE INDEX IF NOT EXISTS {index_name} ON {table} USING gin (i18n);', None)],
-        [('DROP INDEX {index_name};', None)],
-    ),"""
-
-    def get_operations(self):
-        indexes = [
-            self.index_template.format(
-                table=Model._meta.db_table, index_name=get_i18n_index_name(Model)
-            )
-            for Model, _ in self.models
-        ]
-        return "\n".join(indexes)
 
 
 class I18nDataMigration(I18nMigration):

@@ -11,7 +11,6 @@ def get_modeltrans_setting(key):
         "MODELTRANS_FALLBACK": getattr(
             settings, "MODELTRANS_FALLBACK", {"default": (get_default_language(),)}
         ),
-        "MODELTRANS_CREATE_GIN": getattr(settings, "MODELTRANS_CREATE_GIN", True),
         "MODELTRANS_ADD_FIELD_HELP_TEXT": getattr(settings, "MODELTRANS_ADD_FIELD_HELP_TEXT", True),
     }
     return modeltrans_settings.get(key)

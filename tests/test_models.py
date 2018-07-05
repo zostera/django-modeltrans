@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django import VERSION as DJANGO_VERSION
 from django.core.exceptions import ValidationError
 from django.db import DataError, transaction
 from django.test import TestCase, override_settings
@@ -128,12 +129,18 @@ class TranslatedFieldTest(TestCase):
         Blogs have titles, not names, so trying to add something with a name
         should raise an eror.
         """
-        expected_message = "'name' is an invalid keyword argument for this function"
+        if DJANGO_VERSION < (2, 2):
+            expected_message = "'name' is an invalid keyword argument for this function"
+        else:
+            expected_message = "Blog() got an unexpected keyword argument 'name'"
 
         with self.assertRaisesMessage(TypeError, expected_message):
             Blog.objects.create(name="Falcon")
 
-        expected_message = "'name_nl' is an invalid keyword argument for this function"
+        if DJANGO_VERSION < (2, 2):
+            expected_message = "'name_nl' is an invalid keyword argument for this function"
+        else:
+            expected_message = "Blog() got an unexpected keyword argument 'name_nl'"
         with self.assertRaisesMessage(TypeError, expected_message):
             Blog.objects.create(title="Falcon", name_nl="Valk")
 

@@ -29,7 +29,7 @@ class PostMigrateTest(TestCase):
         Check if the i18n column has the gin index.
         """
         db_table = Blog._meta.db_table
-        expected_name = "{}_i18n_gin".format(db_table)
+        index_prefix = "{}_i18n".format(db_table)
 
         with connection.cursor() as cursor:
             cursor.execute(
@@ -37,4 +37,7 @@ class PostMigrateTest(TestCase):
             )
             indexes = {name: definition for name, definition in cursor.fetchall()}
 
-        self.assertIn(expected_name, indexes)
+        for name, definition in indexes.items():
+            if name.startswith(index_prefix):
+                self.assertIn("_gin", name)
+                self.assertIn("USING gin", definition)
