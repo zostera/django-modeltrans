@@ -18,4 +18,4 @@ allows to define indexes, they should be added manually::
         i18n = TranslationField(fields=("name",))
 
         class Meta:
-            indexes = [GinIndex(fields=["i18n"]]
+            indexes = [GinIndex(fields=["i18n"]), ]
