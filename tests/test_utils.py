@@ -5,11 +5,7 @@ from django.db import models
 from django.test import TestCase
 
 from modeltrans.manager import transform_translatable_fields
-from modeltrans.utils import (
-    build_localized_fieldname,
-    get_i18n_index_name,
-    split_translated_fieldname,
-)
+from modeltrans.utils import build_localized_fieldname, split_translated_fieldname
 from tests.app.models import Blog
 
 
@@ -29,18 +25,3 @@ class UtilsTest(TestCase):
     def test_build_localized_fieldname(self):
         self.assertEqual(build_localized_fieldname("title", "nl"), "title_nl")
         self.assertEqual(build_localized_fieldname("category__name", "nl"), "category__name_nl")
-
-    def test_get_i18n_index_name(self):
-        self.assertEqual(get_i18n_index_name(Blog), "app_blog_i18n_gin")
-
-        class LongDBTableModel(models.Model):
-            class Meta:
-                app_label = "test_app"
-
-        self.assertEqual(get_i18n_index_name(LongDBTableModel), "test_app_7ed506_i18n_gin")
-
-        class LongAppnameModel(models.Model):
-            class Meta:
-                app_label = "app_name_is_very_long"
-
-        self.assertEqual(get_i18n_index_name(LongAppnameModel), "app_name_is_ve_4fab22_i18n_gin")

@@ -14,7 +14,7 @@ from django.utils.timezone import now
 
 from . import __version__ as VERSION
 from .conf import get_default_language
-from .utils import get_i18n_index_name, split_translated_fieldname
+from .utils import split_translated_fieldname
 
 try:
     from modeltranslation.translator import translator
@@ -141,7 +141,7 @@ from __future__ import print_function, unicode_literals
 
 from django.db import migrations
 
-DEFAULT_LANGUAGE = '{DEFAULT_LANGUAGE}'
+DEFAULT_LANGUAGE = "{DEFAULT_LANGUAGE}"
 
 {helpers}
 
@@ -149,7 +149,7 @@ DEFAULT_LANGUAGE = '{DEFAULT_LANGUAGE}'
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('{app}', '{last_migration}'),
+        ("{app}", "{last_migration}"),
     ]
 
     operations = [
@@ -211,3 +211,38 @@ class Migration(migrations.Migration):
             self.write(f)
 
         return filename
+
+
+class I18nDataMigration(I18nMigration):
+    migration_type = "data"
+    helper_functions = (split_translated_fieldname, copy_translations)
+
+    forwards_template = """
+def forwards(apps, schema_editor):
+    app = '{app}'
+    todo = (
+        {todo},
+    )
+
+    for model, fields in todo:
+        Model = apps.get_model(app, model)
+
+        copy_translations(Model, fields)
+"""
+
+    def get_extra_helper_functions(self):
+        yield self.forwards_template.format(
+            todo=",\n        ".join(
+                [str((Model.__name__, fields)) for Model, fields in self.models]
+            ),
+            app=self.app,
+        )
+
+    def get_operations(self):
+        return """
+        # The copying of values is (sort of) reversable by a no-op:
+        #  - values are copied into i18n (which is not used by anything but django-modeltrans)
+        #  - the default language is copied to the orignal field, which was not used
+        #    with django-modeltrans.
+        migrations.RunPython(forwards, migrations.RunPython.noop),
+"""

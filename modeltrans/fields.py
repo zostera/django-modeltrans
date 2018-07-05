@@ -7,7 +7,7 @@ from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import ugettext_lazy as _
 
 from .conf import get_default_language, get_fallback_chain, get_modeltrans_setting
-from .utils import build_localized_fieldname, get_i18n_index_name, get_language
+from .utils import build_localized_fieldname, get_language
 
 SUPPORTED_FIELDS = (fields.CharField, fields.TextField)
 

@@ -5,7 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 from django.utils.six import StringIO
 
-from modeltrans.migration import I18nDataMigration, I18nIndexMigration, get_translatable_models
+from modeltrans.migration import I18nDataMigration, get_translatable_models
 
 from .app.models import Blog, Category
 
@@ -27,15 +27,6 @@ class I18nMigrationsTest(TestCase):
         self.assertTrue("title_nl" in output)
         self.assertTrue("title_fr" in output)
         self.assertTrue("migrations.RunPython(forwards, migrations.RunPython.noop)" in output)
-
-    def test_I18nIndexMigration(self):
-        m = I18nIndexMigration("test_app")
-        m.add_model(Blog, ("title_nl", "title_fr", "body_nl", "body_fr"))
-        m.add_model(Category, ("name_nl", "name_fr"))
-
-        output = get_output(m)
-        self.assertTrue("app_category_i18n_gin" in output)
-        self.assertTrue("app_blog_i18n_gin" in output)
 
     def test_get_translatable_models(self):
         """
