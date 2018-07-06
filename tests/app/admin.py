@@ -10,7 +10,8 @@ from .models import Blog, Category, Site
 
 @admin.register(Blog)
 class BlogAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("title_i18n", "category")
+    search_fields = ("title_i18n", "category__name_i18n", "site__name")
 
 
 @admin.register(Category)

@@ -48,3 +48,18 @@ class AdminTest(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
+
+    def test_search(self):
+        def url(q):
+            return "{}?q={}".format(reverse("admin:app_blog_changelist"), q)
+
+        with override("nl"):
+            response = self.client.get(url("kker"))
+            self.assertContains(response, "Kikkers")
+
+        with override("en"):
+            response = self.client.get(url("kker"))
+            self.assertNotContains(response, "Kikkers")
+
+            response = self.client.get(url("frog"))
+            self.assertContains(response, "Frog")

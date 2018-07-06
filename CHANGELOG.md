@@ -4,6 +4,7 @@
  - Adopted [black](https://github.com/ambv/black) code style.
  - Removed auto-adding indexes, as it was unpredictable. You must add the `GinIndex` manually like described in the documentation on performance.
  - Support dict for required_languages argument to TranslationField, to allow more fine-grained mapping of field names to required languages.
+ - `ActiveLanguageMixin` does not use the `<field>_i18n` version of the field, but rather the virtual field with the current active language. This makes sure no fallback values are accidentally saved for another langauge.
 
 
 ## 0.2.2 (2018-03-13)

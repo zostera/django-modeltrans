@@ -1,6 +1,3 @@
-import hashlib
-
-from django.utils.encoding import force_bytes
 from django.utils.translation import get_language as _get_language
 
 from .conf import get_available_languages, get_default_language

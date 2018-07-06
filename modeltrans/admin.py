@@ -5,16 +5,15 @@ from .utils import get_language
 
 class ActiveLanguageMixin(object):
     """
-    Add this mixin to your admin class to hide the untranslated field and all
-    translated fields, except:
+    Add this mixin to your admin class to exclude all virtual fields, except:
 
-     - The field for the default language (settings.LANGUAGE_CODE)
-     - The field for the currently active language.
+     - The original field (for the default language, settings.LANGUAGE_CODE)
+     - The field for the currently active language, without fallback.
     """
 
     def get_exclude(self, request, obj=None):
-        # use default implementation for models without i18n-field
         i18n_field = get_i18n_field(self.model)
+        # use default implementation for models without i18n-field
         if i18n_field is None:
             return super(ActiveLanguageMixin, self).get_exclude(request)
 
@@ -24,12 +23,13 @@ class ActiveLanguageMixin(object):
 
         excludes = []
         for field in i18n_field.get_translated_fields():
-            if field.language is None or field.language == language:
+            # Not excluded:
+            # - language is None: the _i18n-version of the field.
+            # - language equals the current language
+            if field.language == language:
                 continue
-            excludes.append(field.name)
 
-            # also add the name of the original field, as it is added
-            excludes.append(field.original_field.name)
+            excludes.append(field.name)
 
         # de-duplicate
         return list(set(excludes))
