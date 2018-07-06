@@ -34,14 +34,17 @@ class AdminTest(TestCase):
         for url in urls:
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
+            self.assertContains(response, self.wikipedia.name)
 
             with override("nl"):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 200)
+                self.assertContains(response, self.wikipedia.name)
 
             with override("de"):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 200)
+                self.assertContains(response, self.wikipedia.name)
 
     def test_non_translated_admin(self):
         url = reverse("admin:app_site_change", args=(self.site.pk,))
