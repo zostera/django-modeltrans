@@ -28,9 +28,9 @@ class CreateTestModel:
                     self.assertEquals(m.title, 'foo')
     """
 
-    def __init__(self, *args, translate=False):
+    def __init__(self, *args, **kwargs):
         self.models = args
-        if translate:
+        if kwargs.get("translate", False):
             for Model in self.models:
                 translate_model(Model)
 
