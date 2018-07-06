@@ -32,6 +32,7 @@ matrix:
     - { python: 3.6, env: TOXENV=py36-master }
     - { python: 3.7-dev, env: TOXENV=py37-2.1 }
     - { python: 3.7-dev, env: TOXENV=py37-master }
+    - { python: 3.6, env: TOXENV=flake8 }
     - { python: 3.6, env: TOXENV=isort }
     - { python: 3.6, env: TOXENV=migrate }
     - { python: 3.6, env: TOXENV=docs }
