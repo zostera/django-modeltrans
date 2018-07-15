@@ -25,7 +25,7 @@ So adding a translated field does not need any migrations: it just requires
 adding a key to the ``i18n`` field.
 
 When selecting objects django-modeltrans replaces any occurrence of a translated
-field with the appropriate jsonb key get operation::
+field with the appropriate JSONB key get operation::
 
     Blog.objects.filter(title_nl="Valk")
     # SELECT ... FROM "app_blog" WHERE (app_blog.i18n->>'title_nl')::varchar(255) = 'Valk'

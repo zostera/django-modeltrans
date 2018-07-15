@@ -1,7 +1,7 @@
 Settings Reference
 ==================
 
-django-modeltrans allows some configuration to define it's behaviour.
+django-modeltrans allows some configuration to define its behavior.
 By default, it tries to use sensible defaults derived from the default django settings.
 
 ``MODELTRANS_AVAILABLE_LANGUAGES``

@@ -7,6 +7,10 @@ addons:
     # 9.4 supports JSONB fields, but 9.5 adds the ability to do
     # CREATE INDEX IF NOT EXISTS
     postgresql: "9.5"
+    apt:
+       packages:
+           - enchant
+           - myspell-en-us
 
 before_install:
   - psql --version

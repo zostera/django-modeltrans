@@ -11,7 +11,7 @@
  - Hide original field with `ActiveLanguageMixin`.
  - Raise an `ValueError` on accessing translated fields on a model fetched with `.defer('i18n')`.
  - do not accidentally add `i18n` to __dict__ in Model.create
- - Improve handling of explicit pks and expression rewriting code.
+ - Improve handling of explicit PK's and expression rewriting code.
  - Add help_text to virtual fields with language=None.
 
 ## 0.2.1 (2018-01-24)
@@ -56,7 +56,7 @@
  - Also fall back to `DEFAULT_LANGUAGE` if the value for a key in the translations dict is falsy.
 
 ## 0.0.5 (2017-07-26)
- - Removed registration in favour of adding the `TranslationField` to a model you need to translated.
+ - Removed registration in favor of adding the `TranslationField` to a model you need to translated.
  - Created documentation.
 
 ## 0.0.4 (2017-05-19)

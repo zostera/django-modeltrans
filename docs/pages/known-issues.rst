@@ -15,7 +15,7 @@ Using translated fields in ``QuerySet``/``Manager`` methods
 
 Fields supported
 ----------------
-Behaviour is tested using ``CharField()`` en ``TextField()``, as these make most sense for translated values.
+Behavior is tested using ``CharField()`` en ``TextField()``, as these make most sense for translated values.
 Additional fields could make sense, and will likely work, but need extra test coverage.
 
 
