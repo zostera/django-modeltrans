@@ -17,3 +17,6 @@ modeltranslation
 nl
 subqueries
 TextField
+lookup
+lookups
+psycopg
