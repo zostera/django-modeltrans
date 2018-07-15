@@ -61,8 +61,8 @@ def transform_translatable_fields(model, fields):
 
 class MultilingualQuerySet(QuerySet):
     """
-    Extends `~django.db.models.query.Queryset` and makes the translated versions of fields
-    accessible through the normal queryset methods, analogous to the virtual fields added
+    Extends ``~django.db.models.query.QuerySet`` and makes the translated versions of fields
+    accessible through the normal QuerySet methods, analogous to the virtual fields added
     to a translated model:
 
      - `<field>` allow getting/setting the default language
@@ -360,6 +360,24 @@ class MultilingualManager(Manager):
     """
     When adding the `modeltrans.fields.TranslationField` to a model, MultilingualManager is automatically
     mixed in to the manager class of that model.
+
+    If you want to use translated fields when building the query from a related model, you need to add
+    ``objects = MultilingualManager()`` to the model you want to build the query from.
+
+    For example, ``Category`` needs ``objects = MultilingualManager()`` in order to allow
+    ``Category.objects.filter(blog__title_i18n__icontains='django')``:
+
+        class Category(models.Model):
+            title = models.CharField(max_length=255)
+
+            objects = MultilingualManager()  # required to use translated fields of Blog.
+
+        class Blog(models.Model):
+            title = models.CharField(max_length=255)
+            body = models.TextField(null=True)
+            category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.CASCADE)
+
+            i18n = TranslationField(fields=("title", "body"))
     """
 
     use_for_related_fields = True
@@ -370,8 +388,8 @@ class MultilingualManager(Manager):
 
     def get_queryset(self):
         """
-        This method is repeated because some managers that don't use super() or alter queryset class
-        may return queryset that is not subclass of MultilingualQuerySet.
+        This method is repeated because some managers that don't use super() or alter the QuerySet class
+        may return QuerySet that is not subclass of MultilingualQuerySet.
         """
         qs = super(MultilingualManager, self).get_queryset()
         if isinstance(qs, MultilingualQuerySet):

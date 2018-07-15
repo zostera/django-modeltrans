@@ -34,7 +34,7 @@ class TranslatedVirtualField(object):
 
     Arguments:
         original_field: The original field to be translated
-        language: The lanuage to translate to, or `None` to track the current
+        language: The language to translate to, or `None` to track the current
             active Django language.
     """
 
