@@ -365,7 +365,7 @@ class MultilingualManager(Manager):
     ``objects = MultilingualManager()`` to the model you want to build the query from.
 
     For example, ``Category`` needs ``objects = MultilingualManager()`` in order to allow
-    ``Category.objects.filter(blog__title_i18n__icontains='django')``:
+    ``Category.objects.filter(blog__title_i18n__icontains='django')``::
 
         class Category(models.Model):
             title = models.CharField(max_length=255)
