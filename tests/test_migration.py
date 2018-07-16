@@ -65,7 +65,6 @@ class I18nMigrationsTest(TestCase):
             m = TestModel.objects.create(
                 title="Falcon-gibberish", title_en="Falcon", title_nl="Valk"
             )
-            print(m.title, m.title_en, m.title_nl)
 
             copy_translations(TestModel, ("title_en", "title_nl", "body_en", "body_nl"))
 

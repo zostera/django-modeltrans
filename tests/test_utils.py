@@ -3,10 +3,11 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 from django.utils.translation import override
-from tests.app.models import Blog
 
 from modeltrans.manager import transform_translatable_fields
 from modeltrans.utils import build_localized_fieldname, get_language, split_translated_fieldname
+
+from .app.models import Blog
 
 
 class UtilsTest(TestCase):
