@@ -2,12 +2,15 @@
 from __future__ import unicode_literals
 
 from django.core.exceptions import ImproperlyConfigured
+from django.db import models
 from django.test import TestCase
 from django.utils.six import StringIO
 
-from modeltrans.migration import I18nDataMigration, get_translatable_models
+from modeltrans.fields import TranslationField
+from modeltrans.migration import I18nDataMigration, copy_translations, get_translatable_models
 
 from .app.models import Blog, Category
+from .utils import CreateTestModel
 
 
 def get_output(migration):
@@ -38,3 +41,34 @@ class I18nMigrationsTest(TestCase):
 
         with self.assertRaises(ImproperlyConfigured):
             get_translatable_models()
+
+    def test_copy_translations(self):
+        """
+        This model looks like the state in which copy_translations is called during the data migration
+        """
+
+        class TestModel(models.Model):
+            title = models.CharField(max_length=255)
+            title_en = models.CharField(max_length=255)
+            title_nl = models.CharField(max_length=255)
+
+            body = models.TextField(null=True)
+            body_en = models.TextField(null=True)
+            body_nl = models.TextField(null=True)
+
+            i18n = TranslationField(fields=("title", "body"), virtual_fields=False)
+
+            class Meta:
+                app_label = "tests"
+
+        with CreateTestModel(TestModel):
+            m = TestModel.objects.create(
+                title="Falcon-gibberish", title_en="Falcon", title_nl="Valk"
+            )
+            print(m.title, m.title_en, m.title_nl)
+
+            copy_translations(TestModel, ("title_en", "title_nl", "body_en", "body_nl"))
+
+            m.refresh_from_db()
+            self.assertEqual(m.title_en, "Falcon")
+            self.assertEqual(m.i18n, {"title_nl": "Valk"})
