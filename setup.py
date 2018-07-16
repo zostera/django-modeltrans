@@ -26,6 +26,8 @@ setup(
     name="django-modeltrans",
     version=VERSION,
     description="Model translations in a jsonb field",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     author="Jan Pieter Waagmeester",
     author_email="jieter@zostera.nl",
     license="Simplified BSD",

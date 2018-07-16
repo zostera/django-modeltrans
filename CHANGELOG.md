@@ -1,5 +1,8 @@
 # django-modeltrans change log
 
+## 0.3.1 (2018-07-16)
+ - Added `long_description` to `setup.py`, no functional changes.
+
 ## 0.3.0 (2018-07-15)
  - Adopted [black](https://github.com/ambv/black) code style.
  - Removed auto-adding indexes, as it was unpredictable. You must add the `GinIndex` manually like described in the documentation on performance.
