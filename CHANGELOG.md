@@ -1,7 +1,7 @@
 # django-modeltrans change log
 
 ## 0.3.2 (2018-07-18)
- - Removed `encoding` kwarg to `open()` in `setup.py` to fix py27 install.
+ - Removed `encoding` kwarg to `open()` in `setup.py` to fix python 2.7 install.
 
 ## 0.3.1 (2018-07-16)
  - Added `long_description` to `setup.py`, no functional changes.
