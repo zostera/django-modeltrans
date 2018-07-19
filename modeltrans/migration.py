@@ -126,9 +126,9 @@ def get_next_migration_filename(app_name, connection=None, migration_type="data"
     next_migration_name = "{0:04d}_i18n_{1}_migration.py".format(
         int(latest_migration_name[0:4]) + 1, migration_type
     )
-    app_path = os.path.join(*apps.get_app_config(app_name).name.split("."))
+    app_base_path = os.path.dirname(apps.get_app_config(app_name).module.__file__)
 
-    return os.path.join(settings.BASE_DIR, app_path, "migrations", next_migration_name)
+    return os.path.join(app_base_path, "migrations", next_migration_name)
 
 
 class I18nMigration(object):
