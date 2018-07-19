@@ -1,5 +1,10 @@
 # django-modeltrans change log
 
+## 0.3.3 (2018-07-19)
+ - Add instruction to remove `virtual_fields=True` to migration guide, fixes #45
+ - Use `AppConfig` to compute path to app dir, fixes #46
+ - Do not copy empty fields into i18n field, fixes #47
+
 ## 0.3.2 (2018-07-18)
  - Removed `encoding` kwarg to `open()` in `setup.py` to fix python 2.7 install.
 
