@@ -51,6 +51,7 @@ class I18nMigrationsTest(TestCase):
             title = models.CharField(max_length=255)
             title_en = models.CharField(max_length=255)
             title_nl = models.CharField(max_length=255)
+            title_de = models.CharField(max_length=255)
 
             body = models.TextField(null=True)
             body_en = models.TextField(null=True)
@@ -70,4 +71,9 @@ class I18nMigrationsTest(TestCase):
 
             m.refresh_from_db()
             self.assertEqual(m.title_en, "Falcon")
+            self.assertEqual(m.i18n, {"title_nl": "Valk"})
+
+            m = TestModel.objects.create(title_en="Falcon", title_nl="Valk", title_de="")
+            copy_translations(TestModel, ("title_en", "title_nl", "title_de"))
+            m.refresh_from_db()
             self.assertEqual(m.i18n, {"title_nl": "Valk"})

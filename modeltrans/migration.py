@@ -75,7 +75,7 @@ def copy_translations(Model, fields):
         m.i18n = {}
         for field in fields:
             value = getattr(m, field)
-            if value is None:
+            if value in (None, ""):
                 continue
 
             original_field, lang = split_translated_fieldname(field)
