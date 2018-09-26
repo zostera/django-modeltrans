@@ -17,5 +17,5 @@ the currently active language. Use like this::
 
 
     @admin.register(Blog)
-    class BlogAdmin(ActiveLanguageMixin, admin.ModelAdmin)
+    class BlogAdmin(ActiveLanguageMixin, admin.ModelAdmin):
         pass
