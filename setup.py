@@ -34,7 +34,7 @@ setup(
     url="https://github.com/zostera/django-modeltrans/",
     packages=find_packages(exclude=["tests.*", "tests", "example.*", "example"]),
     include_package_data=True,  # declarations in MANIFEST.in
-    install_requires=["Django>=1.11"],
+    install_requires=["Django>=1.11.15"],
     classifiers=[
         "Environment :: Web Environment",
         "Framework :: Django",
