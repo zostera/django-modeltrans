@@ -229,7 +229,7 @@ class FilterTest(TestCase):
         whale = Blog.objects.create(title="Blue Whale", title_nl="Blauwe vinvis")
 
         BlogAttr.objects.create(object=dog, attribute=mass, value=17)
-        BlogAttr.objects.create(object=dog, attribute=length, value=.50)
+        BlogAttr.objects.create(object=dog, attribute=length, value=0.50)
         BlogAttr.objects.create(object=whale, attribute=mass, value=181000)
         BlogAttr.objects.create(object=whale, attribute=length, value=28)
 
