@@ -31,6 +31,20 @@ class UtilsTest(TestCase):
             {"i18n": {"title_nl": "foo"}, "title": "bar"},
         )
 
+    def test_transform_translatable_fields_without_translations(self):
+        self.assertEqual(
+            transform_translatable_fields(Blog, {"title": "bar", "title_nl": "foo", "i18n": None}),
+            {"i18n": {"title_nl": "foo"}, "title": "bar"},
+        )
+
+    def test_transform_translatable_fields_keep_translations(self):
+        self.assertEqual(
+            transform_translatable_fields(
+                Blog, {"title": "bar", "title_de": "das foo", "i18n": {"title_nl": "foo"}}
+            ),
+            {"i18n": {"title_nl": "foo", "title_de": "das foo"}, "title": "bar"},
+        )
+
     def test_build_localized_fieldname(self):
         self.assertEqual(build_localized_fieldname("title", "nl"), "title_nl")
         self.assertEqual(build_localized_fieldname("category__name", "nl"), "category__name_nl")
