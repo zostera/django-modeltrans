@@ -26,7 +26,7 @@ def transform_translatable_fields(model, fields):
     if not hasattr(model, "i18n"):
         return fields
 
-    ret = {"i18n": fields.pop("i18n", {})}
+    ret = {"i18n": fields.pop("i18n", None) or {}}
 
     # keep track of translated fields, and do not return an `i18n` key if no
     # translated fields are found.
