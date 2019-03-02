@@ -210,6 +210,9 @@ def add_manager(model):
 
             manager.__class__ = NewMultilingualManager
 
+    # Make all managers local for this model to fix patching parent model managers
+    model._meta.local_managers = model._meta.managers
+
     managers = model._meta.local_managers
     for current_manager in managers:
         prev_class = current_manager.__class__
