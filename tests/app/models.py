@@ -50,6 +50,12 @@ class Blog(models.Model):
         return self.title
 
 
+class SeoBlog(Blog):
+
+    seo_title = models.CharField(max_length=255)
+    i18n_fields = ["title", "body", "seo_title"]
+
+
 class Person(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)

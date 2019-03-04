@@ -52,7 +52,8 @@ def translate_model(Model):
     validate(Model)
 
     add_manager(Model)
-    add_virtual_fields(Model, i18n_field.fields, i18n_field.required_languages)
+    fields_to_translate = getattr(Model, "i18n_fields", i18n_field.fields)
+    add_virtual_fields(Model, fields_to_translate, i18n_field.required_languages)
     patch_constructor(Model)
 
     translate_meta_ordering(Model)

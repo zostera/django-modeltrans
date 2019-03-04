@@ -8,7 +8,7 @@ from django.test import TestCase, override_settings
 from django.utils.translation import override
 
 from modeltrans.fields import TranslationField
-from tests.app.models import Blog, NullableTextModel, TextModel
+from tests.app.models import Blog, NullableTextModel, SeoBlog, TextModel
 
 from .utils import CreateTestModel
 
@@ -266,6 +266,16 @@ class TranslatedFieldTest(TestCase):
 
         with self.assertRaises(ValueError):
             blog.title_i18n
+
+    def test_i18n_model_inheritance(self):
+        self.assertFalse(hasattr(Blog, "seo_title_nl"))
+        self.assertTrue(hasattr(SeoBlog, "seo_title_nl"))
+        blog = Blog.objects.create(title="Title", title_nl="Title NL")
+        seo_blog = SeoBlog.objects.create(
+            title="Title", title_nl="Title NL", seo_title="SEO Title", seo_title_nl="SEO Title NL"
+        )
+        self.assertFalse("seo_title_nl" in blog.i18n)
+        self.assertTrue("seo_title_nl" in seo_blog.i18n)
 
 
 class RefreshFromDbTest(TestCase):

@@ -37,6 +37,7 @@ class Translating_utils(TestCase):
     def test_get_translated_models(self):
         expected = {
             app_models.Blog,
+            app_models.SeoBlog,
             app_models.Category,
             app_models.Person,
             app_models.TextModel,
