@@ -36,6 +36,7 @@ class Translating_utils(TestCase):
 
     def test_get_translated_models(self):
         expected = {
+            app_models.Article,
             app_models.Blog,
             app_models.Category,
             app_models.Person,
@@ -178,6 +179,9 @@ class TranslateModelTest(TestCase):
 
         self.assertEqual(TestModel1.objects.custom_method(), "foo")
         self.assertIsInstance(TestModel1.objects.all(), MultilingualQuerySet)
+
+    def test_translate_abstract_model_with_custom_manager(self):
+        self.assertIsInstance(app_models.Article.objects, MultilingualManager)
 
     def test_translate_model_with_existing_field(self):
         class TestModel2(models.Model):

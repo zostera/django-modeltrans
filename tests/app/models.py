@@ -17,6 +17,7 @@ class CategoryQueryset(models.QuerySet):
 
 
 class Category(models.Model):
+
     name = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
 
@@ -130,4 +131,30 @@ def createBaseAttr(model):
 
 
 class BlogAttr(createBaseAttr(Blog)):
+    pass
+
+
+class ArticleQueryset(models.QuerySet):
+
+    pass
+
+
+class AbstractArticle(models.Model):
+    """
+    Abstract Article with custom manger required
+    to test patching of parent model managers.
+    """
+
+    title = models.CharField(max_length=255)
+
+    i18n = TranslationField(fields=("title",))
+
+    objects = ArticleQueryset.as_manager()
+
+    class Meta:
+        abstract = True
+
+
+class Article(AbstractArticle):
+
     pass
