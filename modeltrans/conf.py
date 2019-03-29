@@ -2,7 +2,8 @@ import itertools
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.utils import six
+
+from .utils import string_types
 
 
 def get_modeltrans_setting(key):
@@ -35,7 +36,7 @@ def get_available_languages_setting():
         )
     )
 
-    if not all(isinstance(x, six.string_types) for x in languages):
+    if not all(isinstance(x, string_types) for x in languages):
         raise ImproperlyConfigured(
             "MODELTRANS_AVAILABLE_LANGUAGES should be an iterable of strings"
         )

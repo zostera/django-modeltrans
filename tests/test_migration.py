@@ -4,10 +4,10 @@ from __future__ import unicode_literals
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.test import TestCase
-from django.utils.six import StringIO
 
 from modeltrans.fields import TranslationField
 from modeltrans.migration import I18nDataMigration, copy_translations, get_translatable_models
+from modeltrans.utils import StringIO
 
 from .app.models import Blog, Category
 from .utils import CreateTestModel
