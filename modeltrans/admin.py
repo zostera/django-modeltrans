@@ -33,3 +33,25 @@ class ActiveLanguageMixin(object):
 
         # de-duplicate
         return list(set(excludes))
+
+
+class AllLanguagesMixin(object):
+    """
+    Add this mixin to your admin class to exclude the field for the currently active language,
+    showing the base language and all possible translation languages.
+    """
+
+    def get_exclude(self, request, obj=None):
+        i18n_field = get_i18n_field(self.model)
+        # use default implementation for models without i18n-field
+        if i18n_field is None:
+            return super(ActiveLanguageMixin, self).get_exclude(request)
+
+        # exclude virtual fields representing the active language
+        excludes = (
+            field.name for field in i18n_field.get_translated_fields() if field.language is None
+        )
+        # add original fields
+        excludes = tuple(excludes) + i18n_field.fields
+        # de-duplicate
+        return list(set(excludes))

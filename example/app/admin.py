@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.contrib import admin
 
-from modeltrans.admin import ActiveLanguageMixin
+from modeltrans.admin import ActiveLanguageMixin, AllLanguagesMixin
 
 from .models import Blog, Category
 from .utils import disable_admin_login
@@ -33,5 +33,5 @@ class DefaultCategoryAdmin(admin.ModelAdmin):
 
 
 @admin.register(Category)
-class CategoryAdmin(ActiveLanguageMixin, admin.ModelAdmin):
+class CategoryAdmin(AllLanguagesMixin, admin.ModelAdmin):
     pass
