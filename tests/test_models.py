@@ -8,7 +8,7 @@ from django.test import TestCase, override_settings
 from django.utils.translation import override
 
 from modeltrans.fields import TranslationField
-from tests.app.models import Blog, NullableTextModel, SeoBlog, TextModel
+from tests.app.models import Article, Blog, ChildArticle, NullableTextModel, TextModel
 
 from .utils import CreateTestModel
 
@@ -267,15 +267,32 @@ class TranslatedFieldTest(TestCase):
         with self.assertRaises(ValueError):
             blog.title_i18n
 
-    def test_i18n_model_inheritance(self):
-        self.assertFalse(hasattr(Blog, "seo_title_nl"))
-        self.assertTrue(hasattr(SeoBlog, "seo_title_nl"))
-        blog = Blog.objects.create(title="Title", title_nl="Title NL")
-        seo_blog = SeoBlog.objects.create(
-            title="Title", title_nl="Title NL", seo_title="SEO Title", seo_title_nl="SEO Title NL"
-        )
-        self.assertFalse("seo_title_nl" in blog.i18n)
-        self.assertTrue("seo_title_nl" in seo_blog.i18n)
+
+class TranslatedFieldInheritanceTest(TestCase):
+    def test_child_model_i18n_fields(self):
+        self.assertFalse(hasattr(Article, "child_title_nl"))
+        self.assertTrue(hasattr(ChildArticle, "child_title_nl"))
+
+    def test_child_model_required_languages(self):
+        self.assertTrue(Article._meta.get_field("title_nl").blank)
+        self.assertFalse(ChildArticle._meta.get_field("title_nl").blank)
+
+    def test_diff_i18n_parent_child_models_instances(self):
+        """
+        Test different behavior of Article and ChildArticle instances
+        """
+        article = Article(title="Title")
+        article.full_clean()
+        article.save()
+        child_article = ChildArticle(title="Title", child_title="Child title")
+        with self.assertRaises(ValidationError):
+            child_article.full_clean()
+        child_article.title_nl = "Title NL"
+        child_article.child_title_nl = "Child title NL"
+        child_article.full_clean()
+        child_article.save()
+        self.assertFalse("child_title_nl" in article.i18n)
+        self.assertTrue("child_title_nl" in child_article.i18n)
 
 
 class RefreshFromDbTest(TestCase):

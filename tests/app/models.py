@@ -51,12 +51,6 @@ class Blog(models.Model):
         return self.title
 
 
-class SeoBlog(Blog):
-
-    seo_title = models.CharField(max_length=255)
-    i18n_fields = ["title", "body", "seo_title"]
-
-
 class Person(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
@@ -164,3 +158,12 @@ class AbstractArticle(models.Model):
 class Article(AbstractArticle):
 
     pass
+
+
+class ChildArticle(Article):
+    """
+    Child Article for Django Models Inheritance testing
+    """
+
+    child_title = models.CharField(max_length=255)
+    i18n_field_params = {"fields": ["title", "child_title"], "required_languages": ("nl",)}
