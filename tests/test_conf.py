@@ -1,7 +1,12 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 
-from modeltrans.conf import check_fallback_chain, get_available_languages_setting
+from modeltrans.conf import (
+    check_fallback_chain,
+    check_lang_code_duplicates,
+    get_available_languages,
+    get_available_languages_setting,
+)
 
 
 class FallbackConfTest(TestCase):
@@ -37,3 +42,14 @@ class FallbackConfTest(TestCase):
         message = "MODELTRANS_AVAILABLE_LANGUAGES should be an iterable of strings"
         with self.assertRaisesMessage(ImproperlyConfigured, message):
             get_available_languages_setting()
+
+    @override_settings(MODELTRANS_AVAILABLE_LANGUAGES=("nl", "nl", "de"))
+    def test_lang_code_duplicates_validation(self):
+        message = "Languages should not contains duplicates: {}".format(get_available_languages())
+        with self.assertRaisesMessage(ImproperlyConfigured, message):
+            check_lang_code_duplicates()
+
+    @override_settings(MODELTRANS_AVAILABLE_LANGUAGES=("nl", "bg", "ar"), LANGUAGE_CODE="en")
+    def test_languages_ordering(self):
+        self.assertEqual(("en", "nl", "bg", "ar"), get_available_languages())
+        self.assertEqual(("nl", "bg", "ar"), get_available_languages(include_default=False))

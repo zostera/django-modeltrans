@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
 
-import sqlparse
 from django import template
+
+import sqlparse
 
 register = template.Library()
 
