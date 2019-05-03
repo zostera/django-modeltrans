@@ -45,7 +45,9 @@ class FallbackConfTest(TestCase):
 
     @override_settings(MODELTRANS_AVAILABLE_LANGUAGES=("nl", "nl", "de"))
     def test_lang_code_duplicates_validation(self):
-        message = "Languages should not contains duplicates: {}".format(get_available_languages())
+        message = (
+            "MODELTRANS_AVAILABLE_LANGUAGES or LANGUAGES should not contain duplicates, current list: {}"
+        ).format(get_available_languages())
         with self.assertRaisesMessage(ImproperlyConfigured, message):
             check_lang_code_duplicates()
 

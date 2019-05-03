@@ -78,7 +78,10 @@ def check_lang_code_duplicates():
     available_languages = get_available_languages()
     if len(available_languages) != len(set(available_languages)):
         raise ImproperlyConfigured(
-            "Languages should not contains duplicates: {}".format(available_languages)
+            (
+                "MODELTRANS_AVAILABLE_LANGUAGES or LANGUAGES "
+                "should not contain duplicates, current list: {}"
+            ).format(available_languages)
         )
 
 
