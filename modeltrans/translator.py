@@ -4,7 +4,7 @@ from django.apps import apps
 from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.db.models import Manager
 
-from .conf import get_available_languages, get_default_language
+from .conf import get_available_languages
 from .fields import TranslationField, translated_field_factory
 from .manager import MultilingualManager, transform_translatable_fields
 
@@ -141,28 +141,17 @@ def add_virtual_fields(Model, fields, required_languages):
         raise_if_field_exists(Model, field.get_field_name())
         field.contribute_to_class(Model, field.get_field_name())
 
-        # add a virtual field pointing to the original field with name
-        # <original_field_name>_<LANGUAGE_CODE>
-        field = translated_field_factory(
-            original_field=original_field,
-            language=get_default_language(),
-            blank=True,
-            null=True,
-            editable=False,
-        )
-        raise_if_field_exists(Model, field.get_field_name())
-        field.contribute_to_class(Model, field.get_field_name())
-
         # now, for each language, add a virtual field to get the tranlation for
         # that specific langauge
         # <original_field_name>_<language>
-        for language in get_available_languages(include_default=False):
+        for language in get_available_languages():
             blank_allowed = language not in field_required_languages
             field = translated_field_factory(
                 original_field=original_field,
                 language=language,
                 blank=blank_allowed,
                 null=blank_allowed,
+                editable=original_field.editable,
             )
             raise_if_field_exists(Model, field.get_field_name())
             field.contribute_to_class(Model, field.get_field_name())
