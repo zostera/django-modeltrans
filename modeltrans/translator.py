@@ -35,6 +35,16 @@ def get_translated_models(app_name):
             yield model
 
 
+def get_i18n_field_param(Model, i18n_field, param_name):
+    """
+    Return i18n_param from Model.i18n_field_params dict if exists
+    or get param from i18n_field
+    """
+    if hasattr(Model, "i18n_field_params") and param_name in Model.i18n_field_params:
+        return Model.i18n_field_params[param_name]
+    return getattr(i18n_field, param_name)
+
+
 def translate_model(Model):
     i18n_field = get_i18n_field(Model)
 
@@ -52,7 +62,9 @@ def translate_model(Model):
     validate(Model)
 
     add_manager(Model)
-    add_virtual_fields(Model, i18n_field.fields, i18n_field.required_languages)
+    fields_to_translate = get_i18n_field_param(Model, i18n_field, "fields")
+    required_languages = get_i18n_field_param(Model, i18n_field, "required_languages")
+    add_virtual_fields(Model, fields_to_translate, required_languages)
     patch_constructor(Model)
 
     translate_meta_ordering(Model)

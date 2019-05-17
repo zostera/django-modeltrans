@@ -158,3 +158,12 @@ class AbstractArticle(models.Model):
 class Article(AbstractArticle):
 
     pass
+
+
+class ChildArticle(Article):
+    """
+    Child Article for Django Models Inheritance testing
+    """
+
+    child_title = models.CharField(max_length=255)
+    i18n_field_params = {"fields": ["title", "child_title"], "required_languages": ("nl",)}
