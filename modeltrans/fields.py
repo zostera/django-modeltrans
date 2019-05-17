@@ -52,6 +52,7 @@ class TranslatedVirtualField(object):
         self.null = kwargs["null"]
 
         self.concrete = False
+        self.editable = kwargs.pop("editable", True)
         self._help_text = kwargs.pop("help_text", None)
 
     @property
