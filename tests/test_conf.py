@@ -53,5 +53,8 @@ class FallbackConfTest(TestCase):
 
     @override_settings(MODELTRANS_AVAILABLE_LANGUAGES=("nl", "bg", "ar"), LANGUAGE_CODE="en")
     def test_languages_ordering(self):
+        """
+        Test.
+        """
         self.assertEqual(("en", "nl", "bg", "ar"), get_available_languages())
         self.assertEqual(("nl", "bg", "ar"), get_available_languages(include_default=False))
