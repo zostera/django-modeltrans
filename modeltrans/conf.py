@@ -26,12 +26,10 @@ def get_available_languages_setting():
     defaults to the list of language codes extracted from django setting LANGUAGES
     """
     languages = tuple(
-        set(
-            getattr(
-                settings,
-                "MODELTRANS_AVAILABLE_LANGUAGES",
-                (code for code, _ in getattr(settings, "LANGUAGES")),
-            )
+        getattr(
+            settings,
+            "MODELTRANS_AVAILABLE_LANGUAGES",
+            (code for code, _ in getattr(settings, "LANGUAGES")),
         )
     )
 
@@ -48,14 +46,13 @@ def get_available_languages(include_default=True):
     """
     Returns a tuple of available languages for django-modeltrans.
     """
-    MODELTRANS_AVAILABLE_LANGUAGES = get_available_languages_setting()
+    MODELTRANS_AVAILABLE_LANGUAGES = tuple(get_available_languages_setting())
 
     if include_default:
-        return tuple(
-            set(itertools.chain(MODELTRANS_AVAILABLE_LANGUAGES, (get_default_language(),)))
-        )
-    else:
-        return MODELTRANS_AVAILABLE_LANGUAGES
+        default_language = get_default_language()
+        if default_language not in MODELTRANS_AVAILABLE_LANGUAGES:
+            return tuple(itertools.chain((default_language,), MODELTRANS_AVAILABLE_LANGUAGES))
+    return MODELTRANS_AVAILABLE_LANGUAGES
 
 
 def check_fallback_chain():
@@ -75,6 +72,17 @@ def check_fallback_chain():
         for l in chain:
             if l not in MODELTRANS_AVAILABLE_LANGUAGES:
                 raise ImproperlyConfigured(message_fmt.format(l))
+
+
+def check_lang_code_duplicates():
+    available_languages = get_available_languages()
+    if len(available_languages) != len(set(available_languages)):
+        raise ImproperlyConfigured(
+            (
+                "MODELTRANS_AVAILABLE_LANGUAGES or LANGUAGES "
+                "should not contain duplicates, current list: {}"
+            ).format(available_languages)
+        )
 
 
 def get_fallback_chain(lang):

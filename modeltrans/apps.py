@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import django.apps
 from django.apps import AppConfig
 
-from .conf import check_fallback_chain
+from .conf import check_fallback_chain, check_lang_code_duplicates
 from .translator import translate_model
 
 
@@ -14,6 +14,7 @@ class RegistrationConfig(AppConfig):
 
     def ready(self):
         check_fallback_chain()
+        check_lang_code_duplicates()
 
         for Model in django.apps.apps.get_models():
             translate_model(Model)
