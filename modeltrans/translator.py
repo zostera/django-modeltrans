@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from django.apps import apps
 from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.db.models import Manager

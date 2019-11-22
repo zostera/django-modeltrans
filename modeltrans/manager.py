@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models import Count, Func, Manager, Q, QuerySet
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.expressions import CombinedExpression, F, OrderBy
 from django.db.models.functions import Cast
-from django.utils import six
 
 from .conf import get_default_language
 from .fields import TranslatedVirtualField
@@ -207,7 +204,7 @@ class MultilingualQuerySet(QuerySet):
         new_field_names = []
 
         for field_name in field_names:
-            if not isinstance(field_name, six.string_types):
+            if not isinstance(field_name, str):
                 new_field_names.append(self._rewrite_expression(field_name))
                 continue
 

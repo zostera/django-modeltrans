@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function, unicode_literals
-
 from collections import defaultdict
 
 from django.core.management.base import BaseCommand

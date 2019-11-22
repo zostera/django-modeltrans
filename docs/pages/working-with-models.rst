@@ -1,20 +1,20 @@
 Working with models recipes.
 ============================
 
-Inheritance of translation models.
-----------------------------------
+Inheritance of models with translated fields.
+---------------------------------------------
 
-In case when you are working with models Inheritance and you want to change
-behavior of TranslationField declared in parent model, you should use
-`i18n_field_params` attribute and declare there parameters
-for child model field.
+When working with model inheritance, you might want to have different parameters to the `i18n`-field for the
+parent and the child model. These parameters can be overridden using the `i18n_field_params` attribute and
+on the child class::
 
-Example of use: ::
+    from django.db import models
+    from modeltrans.fields import TranslationField
 
     class ParentModel(models.Model):
         info = models.CharField(max_length=255)
 
-        i18n = TranslationField(fields=("info", ), required_languages=("en",))
+        i18n = TranslationField(fields=("info",), required_languages=("en",))
 
 
     class ChildModel(ParentModel):
