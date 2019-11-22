@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
 from django.contrib.postgres.fields.jsonb import JSONField, KeyTextTransform
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import F, fields
 from django.db.models.functions import Cast, Coalesce
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .conf import get_default_language, get_fallback_chain, get_modeltrans_setting
 from .utils import build_localized_fieldname, get_language

@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from django import VERSION as DJANGO_VERSION
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
