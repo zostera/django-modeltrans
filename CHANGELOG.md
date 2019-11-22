@@ -1,8 +1,13 @@
 # django-modeltrans change log
 
+## 0.4.0 (2019-11-22)
+ - Drop python 2, Django 1.11 and Django 2.0 support #56
+ - Add option for `i18n` model fields inheritance #51
+ - Fix patching managers of models inheriting from an abstract models #50
+
 ## 0.3.4 (2019-01-15)
  - Fix exception on nullable i18n field #49
- 
+
 ## 0.3.3 (2018-07-19)
  - Add instruction to remove `virtual_fields=True` to migration guide, fixes #45
  - Use `AppConfig` to compute path to app dir, fixes #46
