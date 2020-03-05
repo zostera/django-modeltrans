@@ -1,9 +1,9 @@
-Django==1.11.14
+Django==3.0.*
 psycopg2-binary
-pytz==2018.5
-wheel==0.31.1
-django-tables2==2.0.0a4
-sqlparse==0.2.4
-django-bootstrap3==10.0.1
-django-filter==1.1.0,<2.0.0
-django-extensions==2.1.0
+pytz==2019.3
+wheel==0.34.2
+django-tables2==2.2.1
+sqlparse==0.3.1
+django-bootstrap3==12.0.3
+django-filter==2.2.0
+django-extensions==2.2.8

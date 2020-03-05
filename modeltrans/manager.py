@@ -244,7 +244,7 @@ class MultilingualQuerySet(QuerySet):
         args = [self._rewrite_expression(a) for a in args]
         kwargs = {alias: self._rewrite_expression(expr) for alias, expr in kwargs.items()}
 
-        return super(MultilingualQuerySet, self).annotate(*args, **kwargs)
+        return super().annotate(*args, **kwargs)
 
     def create(self, **kwargs):
         """
@@ -253,9 +253,7 @@ class MultilingualQuerySet(QuerySet):
 
         https://docs.djangoproject.com/en/stable/ref/models/querysets/#create
         """
-        return super(MultilingualQuerySet, self).create(
-            **transform_translatable_fields(self.model, kwargs)
-        )
+        return super().create(**transform_translatable_fields(self.model, kwargs))
 
     def order_by(self, *field_names):
         """
@@ -273,7 +271,7 @@ class MultilingualQuerySet(QuerySet):
 
         new_field_names = self._rewrite_ordering(field_names)
 
-        return super(MultilingualQuerySet, self).order_by(*new_field_names)
+        return super().order_by(*new_field_names)
 
     def _filter_or_exclude(self, negate, *args, **kwargs):
         """
@@ -299,7 +297,7 @@ class MultilingualQuerySet(QuerySet):
         for field, value in kwargs.items():
             new_kwargs.update(dict((self._rewrite_filter_clause(field, value),)))
 
-        return super(MultilingualQuerySet, self)._filter_or_exclude(negate, *new_args, **new_kwargs)
+        return super()._filter_or_exclude(negate, *new_args, **new_kwargs)
 
     def _values(self, *fields, **expressions):
         """
@@ -331,7 +329,7 @@ class MultilingualQuerySet(QuerySet):
                     annotation_name=field_name,
                 )
 
-        return super(MultilingualQuerySet, self)._values(*fields, **expressions)
+        return super()._values(*fields, **expressions)
 
     def __reduce__(self):
         """
@@ -388,7 +386,7 @@ class MultilingualManager(Manager):
         This method is repeated because some managers that don't use super() or alter the QuerySet class
         may return QuerySet that is not subclass of MultilingualQuerySet.
         """
-        qs = super(MultilingualManager, self).get_queryset()
+        qs = super().get_queryset()
         if isinstance(qs, MultilingualQuerySet):
             # Is already patched
             return qs
