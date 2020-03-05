@@ -2,7 +2,8 @@
 *.pyc
 
 .env
-
+.python-version
+pip-wheel-metadata
 .tox
 
 *.egg-info
