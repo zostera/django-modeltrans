@@ -15,7 +15,7 @@ class ActiveLanguageMixin(object):
         i18n_field = get_i18n_field(self.model)
         # use default implementation for models without i18n-field
         if i18n_field is None:
-            return super(ActiveLanguageMixin, self).get_exclude(request)
+            return super().get_exclude(request)
 
         language = get_language()
         if language == get_default_language():

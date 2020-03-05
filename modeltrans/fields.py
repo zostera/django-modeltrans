@@ -233,10 +233,10 @@ class TranslationField(JSONField):
 
         kwargs["editable"] = False
         kwargs["null"] = True
-        super(TranslationField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def deconstruct(self):
-        name, path, args, kwargs = super(TranslationField, self).deconstruct()
+        name, path, args, kwargs = super().deconstruct()
 
         del kwargs["editable"]
         del kwargs["null"]
@@ -258,4 +258,4 @@ class TranslationField(JSONField):
         if name != "i18n":
             raise ImproperlyConfigured('{} must have name "i18n"'.format(self.__class__.__name__))
 
-        super(TranslationField, self).contribute_to_class(cls, name)
+        super().contribute_to_class(cls, name)
