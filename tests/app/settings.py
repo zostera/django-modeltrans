@@ -85,11 +85,6 @@ DATABASES = {
         "CONN_MAX_AGE": 600,
     }
 }
-if "TRAVIS" in os.environ:
-    DATABASES["default"].update(
-        {"NAME": "travisci", "USER": "postgres", "PASSWORD": "", "HOST": "localhost", "PORT": ""}
-    )
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/

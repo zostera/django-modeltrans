@@ -71,9 +71,9 @@ def check_fallback_chain():
     for lang, chain in MODELTRANS_FALLBACK.items():
         if lang != "default" and lang not in MODELTRANS_AVAILABLE_LANGUAGES:
             raise ImproperlyConfigured(message_fmt.format(lang))
-        for l in chain:
-            if l not in MODELTRANS_AVAILABLE_LANGUAGES:
-                raise ImproperlyConfigured(message_fmt.format(l))
+        for lang in chain:
+            if lang not in MODELTRANS_AVAILABLE_LANGUAGES:
+                raise ImproperlyConfigured(message_fmt.format(lang))
 
 
 def get_fallback_chain(lang):

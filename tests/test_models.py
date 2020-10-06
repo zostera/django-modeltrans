@@ -5,8 +5,8 @@ from django.test import TestCase, override_settings
 from django.utils.translation import override
 
 from modeltrans.fields import TranslationField
-from tests.app.models import Article, Blog, ChildArticle, NullableTextModel, TextModel
 
+from .app.models import Article, Blog, ChildArticle, NullableTextModel, TextModel
 from .utils import CreateTestModel
 
 

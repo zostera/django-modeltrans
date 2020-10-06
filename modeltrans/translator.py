@@ -69,11 +69,11 @@ def translate_model(Model):
 
 
 def check_languages(languages, model):
-    for l in languages:
-        if l not in get_available_languages():
+    for lang in languages:
+        if lang not in get_available_languages():
             raise ImproperlyConfigured(
                 'Language "{}" is in required_languages on Model "{}" but '
-                "not in settings.MODELTRANS_AVAILABLE_LANGUAGES.".format(l, model.__name__)
+                "not in settings.MODELTRANS_AVAILABLE_LANGUAGES.".format(lang, model.__name__)
             )
 
 
