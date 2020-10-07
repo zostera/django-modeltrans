@@ -6,7 +6,14 @@ from django.utils.translation import override
 
 from modeltrans.fields import TranslationField
 
-from .app.models import Article, Blog, ChildArticle, NullableTextModel, TextModel
+from .app.models import (
+    Article,
+    Blog,
+    ChildArticle,
+    NullableTextModel,
+    TextModel,
+    CustomFallbackLanguage,
+)
 from .utils import CreateTestModel
 
 
@@ -263,6 +270,21 @@ class TranslatedFieldTest(TestCase):
 
         with self.assertRaises(ValueError):
             blog.title_i18n
+
+
+class CustomFallbackLanguageTest(TestCase):
+    def test_instance_fallback(self):
+
+        instance = CustomFallbackLanguage(
+            default_language="nl", title="Hurray", i18n={"title_nl": "Hoera"}
+        )
+
+        with override("de"):
+            self.assertEqual(instance.title_i18n, "Hoera")
+        with override("en"):
+            self.assertEqual(instance.title_i18n, "Hurray")
+        with override("nl"):
+            self.assertEqual(instance.title_i18n, "Hoera")
 
 
 class TranslatedFieldInheritanceTest(TestCase):

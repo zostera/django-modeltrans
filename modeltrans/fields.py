@@ -83,6 +83,17 @@ class TranslatedVirtualField(object):
     def db_type(self, connection):
         return None
 
+    def get_instance_fallback_chain(self, instance, language):
+        default = get_fallback_chain(language)
+
+        i18n_field = instance._meta.get_field("i18n")
+        if i18n_field.fallback_language_field:
+            custom_fallback = getattr(instance, i18n_field.fallback_language_field)
+            if custom_fallback:
+                return [custom_fallback] + [default]
+
+        return default
+
     def __get__(self, instance, instance_type=None):
         # this method is apparantly called with instance=None from django.
         # django-hstor raises AttributeError here, but that doesn't solve
@@ -117,7 +128,7 @@ class TranslatedVirtualField(object):
 
         # this is the _i18n version of the field, and the current language is not available,
         # so we walk the fallback chain:
-        for fallback_language in get_fallback_chain(language):
+        for fallback_language in self.get_instance_fallback_chain(instance, language):
             field_name = build_localized_fieldname(self.original_name, fallback_language)
 
             if has_field(field_name):
@@ -222,14 +233,28 @@ class TranslationField(JSONField):
             translated values with.
             Set to `True` during migration from django-modeltranslation to prevent
             collisions with it's database fields while having the `i18n` field available.
+        fallback_language_field: If not None, this should be the name of the field containing a
+            language code to use as the first language in any fallback chain.
+            For example: if you have a model instance with 'nl' as language_code, and set
+            fallback_language_field='language_code', nl will always be tried before any other language.
+
     """
 
     description = "Translation storage for a model"
 
-    def __init__(self, fields=None, required_languages=None, virtual_fields=True, *args, **kwargs):
+    def __init__(
+        self,
+        fields=None,
+        required_languages=None,
+        virtual_fields=True,
+        fallback_language_field=None,
+        *args,
+        **kwargs
+    ):
         self.fields = fields or ()
         self.required_languages = required_languages or ()
         self.virtual_fields = virtual_fields
+        self.fallback_language_field = fallback_language_field
 
         kwargs["editable"] = False
         kwargs["null"] = True
