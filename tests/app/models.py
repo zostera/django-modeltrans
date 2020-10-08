@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -172,7 +171,7 @@ class CustomFallbackLanguage(models.Model):
 
     title = models.CharField(max_length=255)
 
-    default_language = models.CharField(max_length=2, default=settings.LANGUAGE_CODE)
+    default_language = models.CharField(max_length=2, null=True, blank=True)
 
     i18n = TranslationField(fields=("title",), fallback_language_field="default_language")
 

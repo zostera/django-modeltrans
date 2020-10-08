@@ -291,7 +291,7 @@ class FilterTest(TestCase):
         self.assertEqual({m.name for m in qs}, {"Modeltrans blog"})
 
 
-class CustomFallbackLanguageTest(TestCase):
+class CustomFallbackTest(TestCase):
     def test_custom_fallback(self):
         instance = CustomFallbackLanguage.objects.create(
             default_language="nl", title="Hurray", i18n={"title_nl": "Hoera"}
@@ -300,7 +300,21 @@ class CustomFallbackLanguageTest(TestCase):
         with override("de"):
             qs = CustomFallbackLanguage.objects.filter(title_i18n="Hoera")
             self.assertCountEqual(qs, [instance])
+        with override("nl"):
+            qs = CustomFallbackLanguage.objects.filter(title_i18n="Hoera")
+            self.assertCountEqual(qs, [instance])
+        with override("en"):
+            qs = CustomFallbackLanguage.objects.filter(title_i18n="Hoera")
+            self.assertCountEqual(qs, [])
 
+    def test_custom_fallback_null(self):
+        instance = CustomFallbackLanguage.objects.create(
+            default_language=None, title="Hurray", i18n={"title_nl": "Hoera"}
+        )
+        with override("de"):
+            qs = CustomFallbackLanguage.objects.filter(title_i18n="Hoera")
+            print(qs.query)
+            self.assertCountEqual(qs, [])
         with override("nl"):
             qs = CustomFallbackLanguage.objects.filter(title_i18n="Hoera")
             self.assertCountEqual(qs, [instance])
