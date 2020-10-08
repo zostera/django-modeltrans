@@ -175,3 +175,6 @@ class CustomFallbackLanguage(models.Model):
     default_language = models.CharField(max_length=2, default=settings.LANGUAGE_CODE)
 
     i18n = TranslationField(fields=("title",), fallback_language_field="default_language")
+
+    def __str__(self):
+        return self.title_i18n

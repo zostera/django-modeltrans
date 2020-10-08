@@ -10,9 +10,9 @@ from .app.models import (
     Article,
     Blog,
     ChildArticle,
+    CustomFallbackLanguage,
     NullableTextModel,
     TextModel,
-    CustomFallbackLanguage,
 )
 from .utils import CreateTestModel
 

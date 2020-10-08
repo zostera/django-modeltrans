@@ -79,13 +79,12 @@ class MultilingualQuerySet(QuerySet):
         version of a field from the jsonb field to allow filtering and ordering.
 
         Arguments:
-            field (TranslatedVirtualField): the virtual field to create an annotation for.
+            virtual_field (TranslatedVirtualField): the virtual field to create an annotation for.
+            fallback (bool): If `True`, `COALESCE` will be used to get the value of the original
+                field if the requested translation is not in the `i18n` dict.
+            bare_lookup:
             annotation_name (str): name of the annotation, if None the default
-                `<original_field>_<lang>_annotation` will be used
-
-            fallback (bool): If `True`, `COALESCE` will be used to get the value
-                of the original field if the requested translation is not in the
-                `i18n` dict.
+                `<original_field>_<lang>_annotation` will be used.
 
         Returns:
             the name of the annotation created.
@@ -135,11 +134,12 @@ class MultilingualQuerySet(QuerySet):
 
     def _rewrite_filter_clause(self, lookup, value):
         """
-        private method which rewrites a filter clause passed to filter()/exclude()
-        etc., for example:
+        Rewrite a filter clause passed to filter()/exclude()/etc.
+
+        for example:
 
         for title_nl__like='va'
-        _rewrite_filter_clause('title_nl__like', 'va') would be called.
+        _rewrite_filter_clause('title_nl__like', 'va') should be called.
         """
         value = self._rewrite_expression(value)
         field, lookup_type = self._get_field(lookup)
@@ -166,7 +166,7 @@ class MultilingualQuerySet(QuerySet):
         """
         Rewrite expressions.
 
-        https://docs.djangoproject.com/en/2.0/ref/models/expressions/
+        https://docs.djangoproject.com/en/stable/ref/models/expressions/
 
         This current way of doing this is bound to lag behind any new things implemented in Django.
         It would be really nice to have a better/more generic way of doing this.

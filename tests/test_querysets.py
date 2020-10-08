@@ -10,7 +10,7 @@ from django.utils.translation import override
 from modeltrans.fields import TranslationField
 from modeltrans.translator import translate_model
 
-from .app.models import Attribute, Blog, BlogAttr, Category, Site
+from .app.models import Attribute, Blog, BlogAttr, Category, CustomFallbackLanguage, Site
 from .utils import CreateTestModel, load_wiki
 
 
@@ -289,6 +289,24 @@ class FilterTest(TestCase):
 
         qs = Site.objects.filter(blog__title_i18n__contains="modeltrans")
         self.assertEqual({m.name for m in qs}, {"Modeltrans blog"})
+
+
+class CustomFallbackLanguageTest(TestCase):
+    def test_custom_fallback(self):
+        instance = CustomFallbackLanguage.objects.create(
+            default_language="nl", title="Hurray", i18n={"title_nl": "Hoera"}
+        )
+
+        with override("de"):
+            qs = CustomFallbackLanguage.objects.filter(title_i18n="Hoera")
+            self.assertCountEqual(qs, [instance])
+
+        with override("nl"):
+            qs = CustomFallbackLanguage.objects.filter(title_i18n="Hoera")
+            self.assertCountEqual(qs, [instance])
+        with override("en"):
+            qs = CustomFallbackLanguage.objects.filter(title_i18n="Hoera")
+            self.assertCountEqual(qs, [])
 
 
 class FulltextSearch(TestCase):

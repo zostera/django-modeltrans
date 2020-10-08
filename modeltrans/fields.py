@@ -1,7 +1,9 @@
-from django.contrib.postgres.fields.jsonb import JSONField, KeyTextTransform
+from django.contrib.postgres.fields.jsonb import JSONField, KeyTransform
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models import F, fields
-from django.db.models.functions import Cast, Coalesce
+from django.db.models import F, Value, fields
+from django.db.models.expressions import Expression
+from django.db.models.functions import Cast, Coalesce, Concat
+from django.db.models.lookups import Transform
 from django.utils.translation import gettext_lazy as _
 
 from .conf import get_default_language, get_fallback_chain, get_modeltrans_setting
@@ -26,14 +28,50 @@ def translated_field_factory(original_field, language=None, *args, **kwargs):
     return Specific(original_field, language, *args, **kwargs)
 
 
-class TranslatedVirtualField(object):
+class I18nKeyTextTransform(Transform):
+    postgres_operator = "->>"
+
+    def __init__(self, key_name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.key_name = key_name
+
+    def preprocess_lhs(self, compiler, connection, lhs_only=False):
+        if not lhs_only:
+            key_transforms = [self.key_name]
+        previous = self.lhs
+        while isinstance(previous, KeyTransform):
+            if not lhs_only:
+                key_transforms.insert(0, previous.key_name)
+            previous = previous.lhs
+        lhs, params = compiler.compile(previous)
+        return (lhs, params, key_transforms) if not lhs_only else (lhs, params)
+
+    def as_postgresql(self, compiler, connection):
+        lhs, params, key_transforms = self.preprocess_lhs(compiler, connection)
+
+        try:
+            lookup = int(self.key_name)
+        except (ValueError, TypeError):
+            lookup = self.key_name
+
+        if isinstance(lookup, Expression):
+            rhs = lookup.resolve_expression(compiler.query)
+            rhs_sql, rhs_params = compiler.compile(rhs)
+            params.extend(rhs_params)
+
+            rhs_sql = "(%s)" % rhs_sql
+            return "(%s %s %s)" % (lhs, self.postgres_operator, rhs_sql), (params)
+        else:
+            return "(%s %s %%s)" % (lhs, self.postgres_operator), tuple(params) + (lookup,)
+
+
+class TranslatedVirtualField:
     """
     A field representing a single field translated to a specific language.
 
     Arguments:
         original_field: The original field to be translated
-        language: The language to translate to, or `None` to track the current
-            active Django language.
+        language: The language to translate to, or `None` to track the current active Django language.
     """
 
     # Implementation inspired by HStoreVirtualMixin from:
@@ -95,9 +133,8 @@ class TranslatedVirtualField(object):
         return default
 
     def __get__(self, instance, instance_type=None):
-        # this method is apparantly called with instance=None from django.
-        # django-hstor raises AttributeError here, but that doesn't solve
-        # our problem.
+        # This method is apparantly called with instance=None from django.
+        # django-hstor raises AttributeError here, but that doesn't solve our problem.
         if instance is None:
             return
 
@@ -120,7 +157,7 @@ class TranslatedVirtualField(object):
         def has_field(field_name):
             return field_name in instance.i18n and instance.i18n[field_name]
 
-        # in two cases, just return the value:
+        # In two cases, just return the value:
         #  - if this is an explicit field (<name>_<lang>)
         #  - if this is a implicit field (<name>_i18n) AND the value exists and is not Falsy
         if self.language is not None or has_field(field_name):
@@ -194,10 +231,17 @@ class TranslatedVirtualField(object):
         if language == DEFAULT_LANGUAGE:
             return bare_lookup.replace(self.name, self.original_name)
 
-        name = build_localized_fieldname(self.original_name, language)
+        # To support per-row fallback languages, an F-expression is passed as language parameter.
+        if isinstance(language, F):
+            # abuse build_localized_fieldname without language to get '<field>_'
+            name = Concat(Value(build_localized_fieldname(self.original_name, "")), language)
+        else:
+            name = build_localized_fieldname(self.original_name, language)
 
+        # When accessing a table directly, the i18_lookup will be just "i18n", while following relations
+        # they are in the lookup first.
         i18n_lookup = bare_lookup.replace(self.name, "i18n")
-        return KeyTextTransform(name, i18n_lookup)
+        return I18nKeyTextTransform(name, i18n_lookup)
 
     def as_expression(self, bare_lookup, fallback=True):
         """
@@ -214,6 +258,14 @@ class TranslatedVirtualField(object):
         fallback_chain = get_fallback_chain(language)
         # first, add the current language to the list of lookups
         lookups = [self._localized_lookup(language, bare_lookup)]
+
+        # optionnally add the lookup for the per-row fallback language
+        i18n_field = self.model._meta.get_field("i18n")
+        if i18n_field.fallback_language_field:
+            lookups.append(
+                self._localized_lookup(F(i18n_field.fallback_language_field), bare_lookup)
+            )
+
         # and now, add the list of fallback languages to the lookup list
         for fallback_language in fallback_chain:
             lookups.append(self._localized_lookup(fallback_language, bare_lookup))
@@ -249,7 +301,7 @@ class TranslationField(JSONField):
         virtual_fields=True,
         fallback_language_field=None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         self.fields = fields or ()
         self.required_languages = required_languages or ()
