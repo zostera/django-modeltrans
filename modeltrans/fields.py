@@ -282,8 +282,8 @@ class TranslationField(JSONField):
         fallback_language_field: If not None, this should be the name of the field containing a
             language code to use as the first language in any fallback chain.
             For example: if you have a model instance with 'nl' as language_code, and set
-            fallback_language_field='language_code', nl will always be tried before any other language.
-
+            fallback_language_field='language_code', 'nl' will always be tried after the current
+            language before any other language.
     """
 
     description = "Translation storage for a model"

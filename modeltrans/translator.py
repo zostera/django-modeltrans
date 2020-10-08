@@ -91,6 +91,15 @@ def validate(Model):
                 "which is not a field (missing a comma?).".format(field)
             )
 
+    if i18n_field.fallback_language_field:
+        try:
+            Model._meta.get_field(i18n_field.fallback_language_field)
+        except FieldDoesNotExist:
+            raise ImproperlyConfigured(
+                'Argument "fallback_language_field" to TranslationField is "{}", '
+                "which is not an existing field.".format(i18n_field.fallback_language_field)
+            )
+
     if i18n_field.required_languages:
         required_languages = i18n_field.required_languages
         allowed_types = (tuple, list, set)

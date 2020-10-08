@@ -313,7 +313,6 @@ class CustomFallbackTest(TestCase):
         )
         with override("de"):
             qs = CustomFallbackLanguage.objects.filter(title_i18n="Hoera")
-            print(qs.query)
             self.assertCountEqual(qs, [])
         with override("nl"):
             qs = CustomFallbackLanguage.objects.filter(title_i18n="Hoera")
