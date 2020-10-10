@@ -1,12 +1,11 @@
-from django.contrib.postgres.fields.jsonb import JSONField, KeyTextTransform, KeyTransform
+from django.contrib.postgres.fields.jsonb import JSONField, KeyTextTransform
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import F, fields
 from django.db.models.functions import Cast, Coalesce
-from django.db.models.lookups import Transform
 from django.utils.translation import gettext_lazy as _
 
 from .conf import get_default_language, get_fallback_chain, get_modeltrans_setting
-from .utils import build_localized_fieldname, get_language
+from .utils import FallbackTransform, build_localized_fieldname, get_language
 
 SUPPORTED_FIELDS = (fields.CharField, fields.TextField)
 
@@ -25,36 +24,6 @@ def translated_field_factory(original_field, language=None, *args, **kwargs):
     Specific.__name__ = "Translated{}".format(original_field.__class__.__name__)
 
     return Specific(original_field, language, *args, **kwargs)
-
-
-class FallbackTransform(Transform):
-    postgres_operator = ""
-
-    def __init__(self, field_prefix, language_expression, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.field_prefix = field_prefix
-        self.language_expression = language_expression
-
-    def preprocess_lhs(self, compiler, connection, lhs_only=False):
-        if not lhs_only:
-            key_transforms = [self.field_prefix]
-        previous = self.lhs
-        while isinstance(previous, KeyTransform):
-            if not lhs_only:
-                key_transforms.insert(0, previous.key_name)
-            previous = previous.lhs
-        lhs, params = compiler.compile(previous)
-        return (lhs, params, key_transforms) if not lhs_only else (lhs, params)
-
-    def as_postgresql(self, compiler, connection):
-        lhs, params, key_transforms = self.preprocess_lhs(compiler, connection)
-        params.extend([self.field_prefix])
-
-        rhs = self.language_expression.resolve_expression(compiler.query)
-        rhs_sql, rhs_params = compiler.compile(rhs)
-        params.extend(rhs_params)
-
-        return "(%s ->> (%%s || %s ))" % (lhs, rhs_sql), (params)
 
 
 class TranslatedVirtualField:
@@ -318,9 +287,7 @@ class TranslationField(JSONField):
         return name, path, args, kwargs
 
     def get_translated_fields(self):
-        """
-        Return a generator for all translated fields.
-        """
+        """Return a generator for all translated fields."""
         for field in self.model._meta.get_fields():
             if isinstance(field, TranslatedVirtualField):
                 yield field
