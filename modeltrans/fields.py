@@ -5,7 +5,12 @@ from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import gettext_lazy as _
 
 from .conf import get_default_language, get_fallback_chain, get_modeltrans_setting
-from .utils import FallbackTransform, build_localized_fieldname, get_language
+from .utils import (
+    FallbackTransform,
+    build_localized_fieldname,
+    get_instance_field_value,
+    get_language,
+)
 
 SUPPORTED_FIELDS = (fields.CharField, fields.TextField)
 
@@ -87,9 +92,11 @@ class TranslatedVirtualField:
 
         i18n_field = instance._meta.get_field("i18n")
         if i18n_field.fallback_language_field:
-            custom_fallback = getattr(instance, i18n_field.fallback_language_field)
-            if custom_fallback:
-                return [custom_fallback] + [default]
+            record_fallback_language = get_instance_field_value(
+                instance, i18n_field.fallback_language_field
+            )
+            if record_fallback_language:
+                return [record_fallback_language] + [default]
 
         return default
 
@@ -170,7 +177,7 @@ class TranslatedVirtualField:
         """
         Returns the language for this field.
 
-        In case of an explicit language (title_en), it returns 'en', in case of
+        In case of an explicit language (title_en), it returns "en", in case of
         `title_i18n`, it returns the currently active Django language.
         """
         return self.language if self.language is not None else get_language()
@@ -198,7 +205,7 @@ class TranslatedVirtualField:
 
         # To support per-row fallback languages, an F-expression is passed as language parameter.
         if isinstance(language, F):
-            # abuse build_localized_fieldname without language to get '<field>_'
+            # abuse build_localized_fieldname without language to get "<field>_"
             field_prefix = build_localized_fieldname(self.original_name, "")
             return FallbackTransform(field_prefix, language, i18n_lookup)
         else:

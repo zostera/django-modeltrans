@@ -9,8 +9,9 @@ from modeltrans.fields import TranslationField
 from .app.models import (
     Article,
     Blog,
+    Challenge,
+    ChallengeContent,
     ChildArticle,
-    CustomFallbackLanguage,
     NullableTextModel,
     TextModel,
 )
@@ -275,9 +276,7 @@ class TranslatedFieldTest(TestCase):
 class CustomFallbackLanguageTest(TestCase):
     def test_instance_fallback(self):
 
-        instance = CustomFallbackLanguage(
-            default_language="nl", title="Hurray", i18n={"title_nl": "Hoera"}
-        )
+        instance = Challenge(default_language="nl", title="Hurray", i18n={"title_nl": "Hoera"})
 
         with override("de"):
             self.assertEqual(instance.title_i18n, "Hoera")
@@ -285,6 +284,19 @@ class CustomFallbackLanguageTest(TestCase):
             self.assertEqual(instance.title_i18n, "Hurray")
         with override("nl"):
             self.assertEqual(instance.title_i18n, "Hoera")
+
+    def test_instance_fallback_follow_relation(self):
+        challenge = Challenge.objects.create(default_language="nl", title="Hurray")
+        content = ChallengeContent(
+            challenge=challenge, content="Congratulations", i18n={"content_nl": "Gefeliciteerd"}
+        )
+
+        with override("de"):
+            self.assertEqual(content.content_i18n, "Gefeliciteerd")
+        with override("en"):
+            self.assertEqual(content.content_i18n, "Congratulations")
+        with override("nl"):
+            self.assertEqual(content.content_i18n, "Gefeliciteerd")
 
 
 class TranslatedFieldInheritanceTest(TestCase):

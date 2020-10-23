@@ -17,6 +17,6 @@ notebook:
 	cd example && PYTHONPATH=.. ./manage.py shell_plus --notebook
 
 isort:
-	isort --recursive --diff --check modeltrans tests test_migrations example
+	isort --diff --check modeltrans tests test_migrations example
 
 .PHONY: test example

@@ -64,7 +64,7 @@ class MultilingualQuerySet(QuerySet):
 
      - `<field>` allow getting/setting the default language
      - ``<field>_<lang>`` (for example, `<field>_de`) allows getting/setting a specific language.
-       Note that if `LANGUAGE_CODE == 'en'`, `<field>_en` is mapped to `<field>`.
+       Note that if `LANGUAGE_CODE == "en"`, `<field>_en` is mapped to `<field>`.
      - `<field>_i18n` follows the currently active translation in Django, and falls back to the default language.
 
     When adding the `modeltrans.fields.TranslationField` to a model, MultilingualManager is automatically
@@ -138,8 +138,8 @@ class MultilingualQuerySet(QuerySet):
 
         for example:
 
-        for title_nl__like='va'
-        _rewrite_filter_clause('title_nl__like', 'va') should be called.
+        for title_nl__like="va"
+        _rewrite_filter_clause("title_nl__like", "va") should be called.
         """
         value = self._rewrite_expression(value)
         field, lookup_type = self._get_field(lookup)
@@ -249,7 +249,7 @@ class MultilingualQuerySet(QuerySet):
     def create(self, **kwargs):
         """
         Patch the create method to allow adding the value for a translated field
-        using `Model.objects.create(..., title_nl='...')`.
+        using `Model.objects.create(..., title_nl="...")`.
 
         https://docs.djangoproject.com/en/stable/ref/models/querysets/#create
         """
@@ -278,11 +278,11 @@ class MultilingualQuerySet(QuerySet):
         Annotate lookups for `filter()` and `exclude()`.
 
         Examples:
-            - `title_nl__contains='foo'` will add an annotation for `title_nl`
-            - `title_nl='bar'` will add an annotation for `title_nl`
-            - `title_i18n='foo'` will add an annotation for a coalesce of the
+            - `title_nl__contains="foo"` will add an annotation for `title_nl`
+            - `title_nl="bar"` will add an annotation for `title_nl`
+            - `title_i18n="foo"` will add an annotation for a coalesce of the
                current active language, and all items of the fallback chain.
-            - `Q(title_nl__contains='foo') will add an annotation for `title_nl`
+            - `Q(title_nl__contains="foo") will add an annotation for `title_nl`
 
         In all cases, the field part of the field lookup will be changed to use
         the annotated verion.
@@ -304,10 +304,10 @@ class MultilingualQuerySet(QuerySet):
         Annotate lookups for `values()` and `values_list()`
 
         It must be possible to use:
-        `Blogs.objects.all().values_list('title_i18n', 'title_nl', 'title_en')`
+        `Blogs.objects.all().values_list("title_i18n", "title_nl", "title_en")`
 
         But also spanning relations:
-        `Blogs.objects.all().values_list('title_i18n', 'category__name__i18n')`
+        `Blogs.objects.all().values_list("title_i18n", "category__name__i18n")`
         """
         _fields = fields + tuple(expressions)
 
@@ -360,7 +360,7 @@ class MultilingualManager(Manager):
     ``objects = MultilingualManager()`` to the model you want to build the query from.
 
     For example, ``Category`` needs ``objects = MultilingualManager()`` in order to allow
-    ``Category.objects.filter(blog__title_i18n__icontains='django')``::
+    ``Category.objects.filter(blog__title_i18n__icontains="django")``::
 
         class Category(models.Model):
             title = models.CharField(max_length=255)

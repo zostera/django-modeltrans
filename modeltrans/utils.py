@@ -1,4 +1,5 @@
 from django.contrib.postgres.fields.jsonb import KeyTransform
+from django.db.models.constants import LOOKUP_SEP
 from django.db.models.lookups import Transform
 from django.utils.translation import get_language as _get_language
 
@@ -28,6 +29,42 @@ def build_localized_fieldname(field_name, lang):
         # current naming scheme as Django foreign keys also add "id" suffix.
         lang = "ind"
     return "{}_{}".format(field_name, lang.replace("-", "_"))
+
+
+def get_model_field(model, path):
+    """
+    Return the django model field for model in context, following relations.
+    """
+    if not hasattr(model, "_meta"):
+        return
+
+    field = None
+    for bit in path.split(LOOKUP_SEP):
+        try:
+            field = model._meta.get_field(bit)
+        except FieldDoesNotExist:
+            break
+
+        if hasattr(field, "remote_field"):
+            rel = getattr(field, "remote_field", None)
+            model = getattr(rel, "model", model)
+
+    return field
+
+
+def get_instance_field_value(instance, path):
+    """
+    Return the value of a field or related field for a model instance.
+    """
+    value = instance
+    for bit in path.split(LOOKUP_SEP):
+        if hasattr(value, bit):
+            value = getattr(value, bit)
+
+        if value is None:
+            break
+
+    return value
 
 
 class FallbackTransform(Transform):

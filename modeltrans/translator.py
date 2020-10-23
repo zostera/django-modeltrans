@@ -5,6 +5,7 @@ from django.db.models import Manager
 from .conf import get_available_languages, get_default_language
 from .fields import TranslationField, translated_field_factory
 from .manager import MultilingualManager, transform_translatable_fields
+from .utils import get_model_field
 
 
 def get_i18n_field(Model):
@@ -92,9 +93,8 @@ def validate(Model):
             )
 
     if i18n_field.fallback_language_field:
-        try:
-            Model._meta.get_field(i18n_field.fallback_language_field)
-        except FieldDoesNotExist:
+        field = get_model_field(Model, i18n_field.fallback_language_field)
+        if field is None:
             raise ImproperlyConfigured(
                 'Argument "fallback_language_field" to TranslationField is "{}", '
                 "which is not an existing field.".format(i18n_field.fallback_language_field)
