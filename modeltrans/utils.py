@@ -1,4 +1,5 @@
 from django.contrib.postgres.fields.jsonb import KeyTransform
+from django.core.exceptions import FieldDoesNotExist
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.lookups import Transform
 from django.utils.translation import get_language as _get_language
@@ -35,15 +36,16 @@ def get_model_field(model, path):
     """
     Return the django model field for model in context, following relations.
     """
+
     if not hasattr(model, "_meta"):
-        return
+        raise ValueError("Argument 'Model' must be a django.db.models.Model instance.")
 
     field = None
     for bit in path.split(LOOKUP_SEP):
         try:
             field = model._meta.get_field(bit)
         except FieldDoesNotExist:
-            break
+            return None
 
         if hasattr(field, "remote_field"):
             rel = getattr(field, "remote_field", None)
@@ -58,11 +60,10 @@ def get_instance_field_value(instance, path):
     """
     value = instance
     for bit in path.split(LOOKUP_SEP):
-        if hasattr(value, bit):
+        try:
             value = getattr(value, bit)
-
-        if value is None:
-            break
+        except AttributeError:
+            return None
 
     return value
 
@@ -72,7 +73,7 @@ class FallbackTransform(Transform):
     Custom version of KeyTextTransform to use a database field as part of the key.
 
     For example: with default_language="nl", calling
-    `FallbackTransformb("title_", F("fallback_language"), "i18n")` becomes in SQL"
+    `FallbackTransform("title_", F("fallback_language"), "i18n")` becomes in SQL"
         `"i18n"->>('title_' || "fallback_language")`
     """
 

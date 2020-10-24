@@ -88,6 +88,12 @@ class TranslatedVirtualField:
         return None
 
     def get_instance_fallback_chain(self, instance, language):
+        """
+        Return the fallback chain for the instance.
+
+        Most of the time, it is just the configured fallback chain, but if the per-record-fallback feature
+        is used, the value of the field is added (if not None).
+        """
         default = get_fallback_chain(language)
 
         i18n_field = instance._meta.get_field("i18n")
@@ -95,6 +101,7 @@ class TranslatedVirtualField:
             record_fallback_language = get_instance_field_value(
                 instance, i18n_field.fallback_language_field
             )
+
             if record_fallback_language:
                 return [record_fallback_language] + [default]
 
@@ -226,10 +233,10 @@ class TranslatedVirtualField:
             return Cast(i18n_lookup, self.output_field())
 
         fallback_chain = get_fallback_chain(language)
-        # first, add the current language to the list of lookups
+        # First, add the current language to the list of lookups
         lookups = [self._localized_lookup(language, bare_lookup)]
 
-        # optionnally add the lookup for the per-row fallback language
+        # Optionnally add the lookup for the per-row fallback language
         i18n_field = self.model._meta.get_field("i18n")
         if i18n_field.fallback_language_field:
             lookups.append(

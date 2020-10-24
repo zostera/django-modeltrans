@@ -180,6 +180,8 @@ class Challenge(models.Model):
 
 
 class ChallengeContent(models.Model):
+    """Model using a custom fallback language on a related record."""
+
     challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE)
     content = models.TextField()
 

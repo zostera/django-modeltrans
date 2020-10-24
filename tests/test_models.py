@@ -298,6 +298,18 @@ class CustomFallbackLanguageTest(TestCase):
         with override("nl"):
             self.assertEqual(content.content_i18n, "Gefeliciteerd")
 
+    def test_instance_fallback_without_related_instance(self):
+        content = ChallengeContent(content="Congratulations", i18n={"content_nl": "Gefeliciteerd"})
+        self.assertEqual(content.content_nl, "Gefeliciteerd")
+        self.assertEqual(content.content_en, "Congratulations")
+
+        with override("de"):
+            self.assertEqual(content.content_i18n, "Congratulations")
+        with override("en"):
+            self.assertEqual(content.content_i18n, "Congratulations")
+        with override("nl"):
+            self.assertEqual(content.content_i18n, "Gefeliciteerd")
+
 
 class TranslatedFieldInheritanceTest(TestCase):
     def test_child_model_i18n_fields(self):
