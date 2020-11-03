@@ -103,7 +103,7 @@ class TranslatedVirtualField:
             )
 
             if record_fallback_language:
-                return [record_fallback_language] + [default]
+                return [record_fallback_language, *default]
 
         return default
 
