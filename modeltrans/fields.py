@@ -103,7 +103,7 @@ class TranslatedVirtualField:
             )
 
             if record_fallback_language:
-                return [record_fallback_language, *default]
+                return (record_fallback_language, *default)
 
         return default
 
@@ -115,13 +115,13 @@ class TranslatedVirtualField:
 
         if "i18n" in instance.get_deferred_fields():
             raise ValueError(
-                "Getting translated values on a model fetched with defer('i18n')"
-                "is not supported."
+                "Getting translated values on a model fetched with defer('i18n') is not supported."
             )
 
         language = self.get_language()
-        if language == DEFAULT_LANGUAGE:
-            return getattr(instance, self.original_name)
+        original_value = getattr(instance, self.original_name)
+        if language == DEFAULT_LANGUAGE and original_value:
+            return original_value
 
         # Make sure we test for containment in a dict, not in None
         if instance.i18n is None:
@@ -129,21 +129,21 @@ class TranslatedVirtualField:
 
         field_name = build_localized_fieldname(self.original_name, language)
 
-        def has_field(field_name):
-            return field_name in instance.i18n and instance.i18n[field_name]
-
-        # In two cases, just return the value:
-        #  - if this is an explicit field (<name>_<lang>)
-        #  - if this is a implicit field (<name>_i18n) AND the value exists and is not Falsy
-        if self.language is not None or has_field(field_name):
+        # Just return the value if this is an explicit field (<name>_<lang>)
+        if self.language is not None:
             return instance.i18n.get(field_name)
 
-        # this is the _i18n version of the field, and the current language is not available,
+        # This is the _i18n version of the field, and the current language is not available,
         # so we walk the fallback chain:
-        for fallback_language in self.get_instance_fallback_chain(instance, language):
-            field_name = build_localized_fieldname(self.original_name, fallback_language)
+        for fallback_language in (language,) + self.get_instance_fallback_chain(instance, language):
+            if fallback_language == DEFAULT_LANGUAGE:
+                if original_value:
+                    return original_value
+                else:
+                    continue
 
-            if has_field(field_name):
+            field_name = build_localized_fieldname(self.original_name, fallback_language)
+            if field_name in instance.i18n and instance.i18n[field_name]:
                 return instance.i18n.get(field_name)
 
         # finally, return the original field if all else fails.

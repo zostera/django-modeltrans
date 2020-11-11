@@ -285,6 +285,14 @@ class CustomFallbackLanguageTest(TestCase):
         with override("nl"):
             self.assertEqual(instance.title_i18n, "Hoera")
 
+    def test_empty_original_field(self):
+        instance = Challenge(default_language="nl", title="", i18n={"title_nl": "Hoera"})
+
+        with override("de"):
+            self.assertEqual(instance.title_i18n, "Hoera")
+        with override("en"):
+            self.assertEqual(instance.title_i18n, "Hoera")
+
     def test_instance_fallback_follow_relation(self):
         challenge = Challenge.objects.create(default_language="nl", title="Hurray")
         content = ChallengeContent(
