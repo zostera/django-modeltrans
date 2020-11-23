@@ -1,4 +1,8 @@
-# django-modeltrans change log
+django-modeltrans change log
+============================
+
+## 0.5.0 (2020-11-23)
+ - Add per-record fallback feature #63
 
 ## 0.4.0 (2019-11-22)
  - Drop python 2, Django 1.11 and Django 2.0 support #56
@@ -66,9 +70,10 @@
 ## 0.0.7 (2017-09-04)
  - Cleaned up the settings used by django-modeltrans [#19](https://github.com/zostera/django-modeltrans/pull/19).
    This might be a breaking change, depending on your configuration.
-    * `AVAILABLE_LANGUAGES` is now renamed to `MODELTRANS_AVAILABLE_LANGUAGES` and defaults to the language codes in the
+
+   - `AVAILABLE_LANGUAGES` is now renamed to `MODELTRANS_AVAILABLE_LANGUAGES` and defaults to the language codes in the
       django `LANGUAGES` setting.
-    * `DEFAULT_LANGUAGE` is removed, instead, django-modeltrans uses the django `LANGUAGE_CODE` setting.
+   - `DEFAULT_LANGUAGE` is removed, instead, django-modeltrans uses the django `LANGUAGE_CODE` setting.
  - Added per-language configurable fallback using the `MODELTRANS_FALLBACK` setting.
 
 ## 0.0.6 (2017-08-29)
