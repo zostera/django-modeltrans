@@ -6,10 +6,10 @@ Advanced usage
 Custom fallback language
 ------------------------
 
-By default, fallback is centrally configered with :ref:`settings_fallback`.
+By default, fallback is centrally configured with :ref:`settings_fallback`.
 That might not be sufficient, for example if part of the content is created for a single language which is not ``LANGUAGE_CODE``.
 
-In that case, it can be con configured per-record using the ``fallback_language_field`` argument to ``TranslationField``::
+In that case, it can be configured per-record using the ``fallback_language_field`` argument to ``TranslationField``::
 
     class NewsRoom(models.Model):
         name = models.CharField(max_length=255)
@@ -39,10 +39,10 @@ With the models above::
     )
 
     with override('de'):
-        # language 'de' not available, will fallback to the records default_language
+        # If language 'de' is not available, the records default_language will be used.
         print(nos.name)  # 'NOS (nl)'
 
-        # language 'de' not available, will fallback to the newsroom.default_language
+        #  If language 'de' is not available, the newsroom.default_language will be used.
         print(article.content)  # 'VS-Europeese oceaanbewakingssatelliet gelanceerd'
 
 
