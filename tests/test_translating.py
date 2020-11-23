@@ -42,6 +42,8 @@ class Translating_utils(TestCase):
             app_models.NullableTextModel,
             app_models.Attribute,
             app_models.Choice,
+            app_models.Challenge,
+            app_models.ChallengeContent,
         }
         self.assertEqual(set(get_translated_models("app")), expected)
 

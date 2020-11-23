@@ -6,7 +6,15 @@ from django.utils.translation import override
 
 from modeltrans.fields import TranslationField
 
-from .app.models import Article, Blog, ChildArticle, NullableTextModel, TextModel
+from .app.models import (
+    Article,
+    Blog,
+    Challenge,
+    ChallengeContent,
+    ChildArticle,
+    NullableTextModel,
+    TextModel,
+)
 from .utils import CreateTestModel
 
 
@@ -263,6 +271,52 @@ class TranslatedFieldTest(TestCase):
 
         with self.assertRaises(ValueError):
             blog.title_i18n
+
+
+class CustomFallbackLanguageTest(TestCase):
+    def test_instance_fallback(self):
+
+        instance = Challenge(default_language="nl", title="Hurray", i18n={"title_nl": "Hoera"})
+
+        with override("de"):
+            self.assertEqual(instance.title_i18n, "Hoera")
+        with override("en"):
+            self.assertEqual(instance.title_i18n, "Hurray")
+        with override("nl"):
+            self.assertEqual(instance.title_i18n, "Hoera")
+
+    def test_empty_original_field(self):
+        instance = Challenge(default_language="nl", title="", i18n={"title_nl": "Hoera"})
+
+        with override("de"):
+            self.assertEqual(instance.title_i18n, "Hoera")
+        with override("en"):
+            self.assertEqual(instance.title_i18n, "Hoera")
+
+    def test_instance_fallback_follow_relation(self):
+        challenge = Challenge.objects.create(default_language="nl", title="Hurray")
+        content = ChallengeContent(
+            challenge=challenge, content="Congratulations", i18n={"content_nl": "Gefeliciteerd"}
+        )
+
+        with override("de"):
+            self.assertEqual(content.content_i18n, "Gefeliciteerd")
+        with override("en"):
+            self.assertEqual(content.content_i18n, "Congratulations")
+        with override("nl"):
+            self.assertEqual(content.content_i18n, "Gefeliciteerd")
+
+    def test_instance_fallback_without_related_instance(self):
+        content = ChallengeContent(content="Congratulations", i18n={"content_nl": "Gefeliciteerd"})
+        self.assertEqual(content.content_nl, "Gefeliciteerd")
+        self.assertEqual(content.content_en, "Congratulations")
+
+        with override("de"):
+            self.assertEqual(content.content_i18n, "Congratulations")
+        with override("en"):
+            self.assertEqual(content.content_i18n, "Congratulations")
+        with override("nl"):
+            self.assertEqual(content.content_i18n, "Gefeliciteerd")
 
 
 class TranslatedFieldInheritanceTest(TestCase):

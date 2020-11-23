@@ -120,7 +120,7 @@ STATIC_URL = "/static/"
 if "test" in sys.argv:
     print("\n\033[33mWarning\033[00m: Running without migrations")
 
-    class DisableMigrations(object):
+    class DisableMigrations:
         def __contains__(self, item):
             return True
 

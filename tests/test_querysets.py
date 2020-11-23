@@ -10,7 +10,7 @@ from django.utils.translation import override
 from modeltrans.fields import TranslationField
 from modeltrans.translator import translate_model
 
-from .app.models import Attribute, Blog, BlogAttr, Category, Site
+from .app.models import Attribute, Blog, BlogAttr, Category, Challenge, ChallengeContent, Site
 from .utils import CreateTestModel, load_wiki
 
 
@@ -289,6 +289,47 @@ class FilterTest(TestCase):
 
         qs = Site.objects.filter(blog__title_i18n__contains="modeltrans")
         self.assertEqual({m.name for m in qs}, {"Modeltrans blog"})
+
+
+class CustomFallbackTest(TestCase):
+    def test_custom_fallback(self):
+        instance = Challenge.objects.create(
+            default_language="nl", title="Hurray", i18n={"title_nl": "Hoera"}
+        )
+
+        with override("de"):
+            self.assertCountEqual(Challenge.objects.filter(title_i18n="Hoera"), [instance])
+        with override("nl"):
+            self.assertCountEqual(Challenge.objects.filter(title_i18n="Hoera"), [instance])
+        with override("en"):
+            self.assertCountEqual(Challenge.objects.filter(title_i18n="Hoera"), [])
+
+    def test_custom_fallback_null(self):
+        instance = Challenge.objects.create(
+            default_language=None, title="Hurray", i18n={"title_nl": "Hoera"}
+        )
+        with override("de"):
+            self.assertCountEqual(Challenge.objects.filter(title_i18n="Hoera"), [])
+        with override("nl"):
+            self.assertCountEqual(Challenge.objects.filter(title_i18n="Hoera"), [instance])
+        with override("en"):
+            self.assertCountEqual(Challenge.objects.filter(title_i18n="Hoera"), [])
+
+    def test_custom_fallback_follow_relation(self):
+        challenge = Challenge.objects.create(default_language="nl", title="Hurray")
+        content = ChallengeContent.objects.create(
+            challenge=challenge, content="Congratulations", i18n={"content_nl": "Gefeliciteerd"}
+        )
+        with override("de"):
+            self.assertCountEqual(
+                ChallengeContent.objects.filter(content_i18n="Gefeliciteerd"), [content]
+            )
+        with override("nl"):
+            self.assertCountEqual(
+                ChallengeContent.objects.filter(content_i18n="Gefeliciteerd"), [content]
+            )
+        with override("en"):
+            self.assertCountEqual(ChallengeContent.objects.filter(content_i18n="Gefeliciteerd"), [])
 
 
 class FulltextSearch(TestCase):

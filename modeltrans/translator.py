@@ -5,6 +5,7 @@ from django.db.models import Manager
 from .conf import get_available_languages, get_default_language
 from .fields import TranslationField, translated_field_factory
 from .manager import MultilingualManager, transform_translatable_fields
+from .utils import get_model_field
 
 
 def get_i18n_field(Model):
@@ -89,6 +90,14 @@ def validate(Model):
             raise ImproperlyConfigured(
                 'Argument "fields" to TranslationField contains an item "{}", '
                 "which is not a field (missing a comma?).".format(field)
+            )
+
+    if i18n_field.fallback_language_field:
+        field = get_model_field(Model, i18n_field.fallback_language_field)
+        if field is None:
+            raise ImproperlyConfigured(
+                'Argument "fallback_language_field" to TranslationField is "{}", '
+                "which is not an existing field.".format(i18n_field.fallback_language_field)
             )
 
     if i18n_field.required_languages:

@@ -15,7 +15,7 @@ Using translated fields in ``QuerySet``/``Manager`` methods
 
 Fields supported
 ----------------
-Behavior is tested using ``CharField()`` en ``TextField()``, as these make most sense for translated values.
+Behaviour is tested using ``CharField()`` and ``TextField()``, as these make most sense for translated values.
 Additional fields could make sense, and will likely work, but need extra test coverage.
 
 
@@ -30,7 +30,7 @@ Context of 'current language'
 Lookups (`<field>_i18n`) are translated when the line they are defined on is executed::
 
     class Foo():
-        qs = Blog.objects.filter(title_i18n__contains='foo')
+        qs = Blog.objects.filter(title_i18n__contains="foo")
 
         def get_blogs(self):
             return self.qs
@@ -41,3 +41,26 @@ But instead, the language active while creating the class ``Foo`` will be used.
 
 For example the `queryset` argument to `ModelChoiceField()`.
 See `github issue #34 <https://github.com/zostera/django-modeltrans/issues/34>`_
+
+Using translated fields from a related model
+--------------------------------------------
+``modeltrans.manager.MultilingualManager`` is required to transform `<field>_i18n` to the correct
+lookup in the ``JSONField``.
+
+If you want to use translated fields when building the query from a related model, you need to add
+``objects = MultilingualManager()`` to the model you want to build the query from.
+
+For example, ``Category`` needs ``objects = MultilingualManager()`` in order to allow
+``Category.objects.filter(blog__title_i18n__icontains="django")``::
+
+    class Category(models.Model):
+        title = models.CharField(max_length=255)
+
+        objects = MultilingualManager()  # required to use translated fields of Blog.
+
+    class Blog(models.Model):
+        title = models.CharField(max_length=255)
+        body = models.TextField(null=True)
+        category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.CASCADE)
+
+        i18n = TranslationField(fields=("title", "body"))

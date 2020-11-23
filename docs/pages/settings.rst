@@ -19,6 +19,8 @@ A custom definition might be::
     MODELTRANS_AVAILABLE_LANGUAGES = ('de', 'fr')
 
 
+.. _settings_fallback:
+
 ``MODELTRANS_FALLBACK``
 -----------------------
 A dict of fallback chains as lists of languages. By default, it falls back to the language defined in django setting `LANGUAGE_CODE`.
@@ -35,6 +37,18 @@ If configured like this::
        'default': (LANGUAGE_CODE, ),
        'fy': ('nl', 'en')
     }
+
+Note that a custom fallback language can be configured on a model instance if the `i18n` field is configured like this::
+
+    class Model(models.Model):
+        title = models.CharField(max_length=100)
+        fallback_language = models.CharField(max_length=2)
+
+        i18n = TranslationField(fields=("title",), fallback_language_field="fallback_language")
+
+in which ``fallback_language_field`` refers to the model field that contains the language code.
+
+This topic is explained in :ref:`custom_fallback`.
 
 
 ``MODELTRANS_ADD_FIELD_HELP_TEXT``

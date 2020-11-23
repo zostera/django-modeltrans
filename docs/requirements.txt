@@ -2,7 +2,7 @@ Sphinx==1.6.5
 Django
 sphinx_rtd_theme
 recommonmark
-psycopg2
+psycopg2-binary==2.8.6
 
 sphinxcontrib-spelling
 pyenchant

@@ -77,9 +77,9 @@ WSGI_APPLICATION = "example.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "model-translation",
-        "USER": "postgres",
-        "PASSWORD": "test1234",
+        "NAME": "modeltrans",
+        "USER": "modeltrans",
+        "PASSWORD": "modeltrans",
         "HOST": "localhost",
         "PORT": 5432,
         "CONN_MAX_AGE": 600,
