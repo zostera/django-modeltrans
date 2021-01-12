@@ -3,12 +3,6 @@ from django.db.models import F, fields
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import gettext_lazy as _
 
-try:
-    from django.db.models import JSONField, KeyTextTransform  # django==3.1 moved json field
-except ImportError:
-    from django.contrib.postgres.fields import JSONField
-    from django.contrib.postgres.fields.jsonb import KeyTextTransform
-
 from .conf import get_default_language, get_fallback_chain, get_modeltrans_setting
 from .utils import (
     FallbackTransform,
@@ -16,6 +10,13 @@ from .utils import (
     get_instance_field_value,
     get_language,
 )
+
+try:
+    from django.db.models import JSONField, KeyTextTransform  # django==3.1 moved json field
+except ImportError:
+    from django.contrib.postgres.fields import JSONField
+    from django.contrib.postgres.fields.jsonb import KeyTextTransform
+
 
 SUPPORTED_FIELDS = (fields.CharField, fields.TextField)
 
