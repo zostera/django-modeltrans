@@ -1,6 +1,9 @@
 django-modeltrans change log
 ============================
 
+## 0.5.1 (2021-01-12)
+ - Adjust imports to remove deprecation warnings with django==3.1.* #65
+
 ## 0.5.0 (2020-11-23)
  - Add per-record fallback feature #63
 
