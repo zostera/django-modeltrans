@@ -12,7 +12,9 @@ from .utils import (
 )
 
 try:
-    from django.db.models import JSONField, KeyTextTransform  # django==3.1 moved json field
+    # django==3.1 moved JSONField into django.db.models
+    from django.db.models import JSONField
+    from django.db.models.fields.json import KeyTextTransform
 except ImportError:
     from django.contrib.postgres.fields import JSONField
     from django.contrib.postgres.fields.jsonb import KeyTextTransform
