@@ -10,7 +10,6 @@ except ImportError:
     from django.contrib.postgres.fields import JSONField
 
 
-
 class CategoryQueryset(models.QuerySet):
     """
     Custom manager to make sure pickling on-the-fly created classes
