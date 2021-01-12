@@ -1,6 +1,10 @@
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+try:
+    from django.db.models import JSONField  # django==3.1 moved json field
+except ImportError:
+    from django.contrib.postgres.fields import JSONField
 
 from modeltrans.fields import TranslationField
 from modeltrans.manager import MultilingualManager
