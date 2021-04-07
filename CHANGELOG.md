@@ -1,6 +1,9 @@
 django-modeltrans change log
 ============================
 
+## 0.6.0 (2021-04-07)
+ - Add support for Django==3.2
+
 ## 0.5.2 (and 0.5.1) (2021-01-12)
  - Adjust imports to remove deprecation warnings with django==3.1.* #65
 
