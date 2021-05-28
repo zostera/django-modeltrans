@@ -78,8 +78,8 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         "NAME": "modeltrans",
-        "USER": "daniel",
-        "PASSWORD": "Ploei888",
+        "USER": "modeltrans",
+        "PASSWORD": "modeltrans",
         "HOST": "localhost",
         "PORT": 5432,
         "CONN_MAX_AGE": 600,
