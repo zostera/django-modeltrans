@@ -3,9 +3,10 @@ from django.forms import ModelForm
 from django.test import TestCase
 from django.utils.translation import override
 
-from .app.models import Blog, Challenge
 from modeltrans.conf import get_default_language
 from modeltrans.forms import TranslationModelForm
+
+from .app.models import Blog, Challenge
 
 
 class ModelFormTest(TestCase):
@@ -46,7 +47,12 @@ class Form(TranslationModelForm):
 
     class Meta:
         model = Challenge
-        fields = ["title", "start_date", "default_language", "header"]  # adding start_date to test the ordering
+        fields = [
+            "title",
+            "start_date",
+            "default_language",
+            "header",
+        ]  # adding start_date to test the ordering
         required = {"title": True, "header": False}
 
 
@@ -68,7 +74,6 @@ class ExcludeForm(TranslationModelForm):
 
 
 class TranslationFormTestCase(TestCase):
-
     def test_included_languages_errors(self):
         """Test the error messages for incorrect included_languages options."""
 
@@ -81,13 +86,17 @@ class TranslationFormTestCase(TestCase):
         with self.assertRaisesMessage(ValueError, "included_languages: options should be strings"):
             Form(included_languages=[0, "fallback"])
 
-        with self.assertRaisesMessage(ValueError, "included_languages: option es_it is not permitted"):
+        with self.assertRaisesMessage(
+            ValueError, "included_languages: option es_it is not permitted"
+        ):
             Form(included_languages=["es_it", "fallback"])
 
         with self.assertRaisesMessage(ValueError, "included_languages: option e is not permitted"):
             Form(included_languages=["e", "fallback"])
 
-        with self.assertRaisesMessage(ValueError, "included_languages: xx is not an available language in the system"):
+        with self.assertRaisesMessage(
+            ValueError, "included_languages: xx is not an available language in the system"
+        ):
             Form(included_languages=["xx", "fallback"])
 
         class NoLanguageForm(TranslationModelForm):
@@ -98,7 +107,9 @@ class TranslationFormTestCase(TestCase):
                 fields = ["title", "header"]
                 included_languages = []
 
-        with self.assertRaisesMessage(ValueError, "included_languages: Error. No languages have been defined."):
+        with self.assertRaisesMessage(
+            ValueError, "included_languages: Error. No languages have been defined."
+        ):
             NoLanguageForm()
 
     def test_defaults(self):
@@ -141,7 +152,10 @@ class TranslationFormTestCase(TestCase):
         """Tests fields and their order defined with Meta 'fields' option."""
         form = Form()
         self.assertEqual(form.languages, ["en"])
-        self.assertEqual(list(form.fields.keys()), ["title", "start_date", "default_language", "header", "end_date"])
+        self.assertEqual(
+            list(form.fields.keys()),
+            ["title", "start_date", "default_language", "header", "end_date"],
+        )
 
     def test_fields_with_included_languages_kwarg_and_fields_option(self):
         """Test fields and their order defined with parameter override of in form with 'fields' option."""
@@ -149,34 +163,50 @@ class TranslationFormTestCase(TestCase):
         self.assertEqual(form.languages, ["fr", "en"])
         self.assertEqual(
             list(form.fields.keys()),
-            ["title_fr", "title", "start_date", "default_language", "header_fr", "header", "end_date"],
+            [
+                "title_fr",
+                "title",
+                "start_date",
+                "default_language",
+                "header_fr",
+                "header",
+                "end_date",
+            ],
         )
 
     def test_fields_defined_with_exclude_options(self):
         """Test fields and their order defined with Meta 'exclude' option."""
         form = ExcludeForm()
         self.assertEqual(form.languages, ["en", "de", "fr"])
-        self.assertEqual(list(form.fields.keys()), ["start_date", "title", "title_de", "title_fr", "end_date"])
+        self.assertEqual(
+            list(form.fields.keys()), ["start_date", "title", "title_de", "title_fr", "end_date"]
+        )
 
     def test_fields_with_included_languages_kwarg_with_exclude_option(self):
         """Test fields and their order with parameter override in form with 'exclude' option."""
         form = ExcludeForm(included_languages=["de", "fallback"], fallback_language="nl")
         self.assertEqual(form.languages, ["de", "nl"])
-        self.assertEqual(list(form.fields.keys()), ["start_date", "title_de", "title_nl", "end_date"])
+        self.assertEqual(
+            list(form.fields.keys()), ["start_date", "title_de", "title_nl", "end_date"]
+        )
 
     def test_fields_with_model_instance_fallback_with_exclude_options(self):
         """Test fields and their order with model instance fallback override in form with 'exclude' option."""
         challenge = Challenge.objects.create(default_language="nl")
         form = ExcludeForm(instance=challenge)
         self.assertEqual(form.languages, ["en", "de", "nl"])
-        self.assertEqual(list(form.fields.keys()), ["start_date", "title", "title_de", "title_nl", "end_date"])
+        self.assertEqual(
+            list(form.fields.keys()), ["start_date", "title", "title_de", "title_nl", "end_date"]
+        )
 
     def test_fields_with_fallback_language_kwarg_with_exclude_option(self):
         """Test fields and their order with parameter override of model instance fallback in form with 'exclude'."""
         challenge = Challenge(default_language="de")
         form = ExcludeForm(instance=challenge, fallback_language="nl")
         self.assertEqual(form.languages, ["en", "de", "nl"])
-        self.assertEqual(list(form.fields.keys()), ["start_date", "title", "title_de", "title_nl", "end_date"])
+        self.assertEqual(
+            list(form.fields.keys()), ["start_date", "title", "title_de", "title_nl", "end_date"]
+        )
 
     def test_setting_of_field_properties(self):
         """Test that fields are set with the correct properties."""
@@ -208,7 +238,11 @@ class TranslationFormTestCase(TestCase):
     def test_form_initial_values(self):
         challenge = Challenge(title="english", title_fr="espanol")
         challenge = Challenge.objects.create(title="english", title_fr="espanol")
-        initial_data = {"title": "not english", "title_fr": "not espenaol", "header_fr": "fr header"}
+        initial_data = {
+            "title": "not english",
+            "title_fr": "not espenaol",
+            "header_fr": "fr header",
+        }
 
         with self.subTest("Initial values from model instance"):
             form = Form(instance=challenge, included_languages=["fr", "fallback"])
@@ -229,12 +263,15 @@ class TranslationFormTestCase(TestCase):
             self.assertEqual(form["default_language"].initial, get_default_language())
 
         with self.subTest("Initial values from initial data model override"):
-            form = Form(initial=initial_data, instance=challenge, included_languages=["fr", "fallback"])
+            form = Form(
+                initial=initial_data, instance=challenge, included_languages=["fr", "fallback"]
+            )
 
             self.assertEqual(form["title"].initial, initial_data["title"])
             self.assertEqual(form["title_fr"].initial, initial_data["title_fr"])
             self.assertEqual(form["header"].initial, "")
             self.assertEqual(form["header_fr"].initial, initial_data["header_fr"])
             self.assertEqual(form["default_language"].initial, get_default_language())
+
 
 # TODO test form valid and save and instance creation and update.
