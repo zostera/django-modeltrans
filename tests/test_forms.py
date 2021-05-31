@@ -157,6 +157,15 @@ class TranslationFormTestCase(TestCase):
             ["title", "start_date", "default_language", "header", "end_date"],
         )
 
+    def test_fields_defined_with_fields_option_tuple(self):
+        """Test that form works correctly even if fields is defined in tuple format."""
+        class TupleForm(TranslationModelForm):
+            class Meta:
+                model = Challenge
+                fields = ("title", "header")
+        form = TupleForm()
+        self.assertEqual(list(form.fields.keys()), ["title", "header"])
+
     def test_fields_with_included_languages_kwarg_and_fields_option(self):
         """Test fields and their order defined with parameter override of in form with 'fields' option."""
         form = Form(included_languages=["fr", "fallback"])

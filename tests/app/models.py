@@ -177,9 +177,17 @@ class Challenge(models.Model):
     title = models.CharField(max_length=255)
     header = models.CharField(max_length=255)
 
-    default_language = models.CharField(max_length=2, null=True, blank=True, default=get_default_language())
+    default_language = models.CharField(
+        max_length=2, null=True, blank=True, default=get_default_language()
+    )
 
-    i18n = TranslationField(fields=("title", "header",), fallback_language_field="default_language")
+    i18n = TranslationField(
+        fields=(
+            "title",
+            "header",
+        ),
+        fallback_language_field="default_language",
+    )
 
     def __str__(self):
         return self.title_i18n
