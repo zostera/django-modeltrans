@@ -159,10 +159,12 @@ class TranslationFormTestCase(TestCase):
 
     def test_fields_defined_with_fields_option_tuple(self):
         """Test that form works correctly even if fields is defined in tuple format."""
+
         class TupleForm(TranslationModelForm):
             class Meta:
                 model = Challenge
                 fields = ("title", "header")
+
         form = TupleForm()
         self.assertEqual(list(form.fields.keys()), ["title", "header"])
 
@@ -193,10 +195,12 @@ class TranslationFormTestCase(TestCase):
 
     def test_fields_defined_with_exclude_option_tuple(self):
         """Test that form works correctly even if fields is defined in tuple format."""
+
         class TupleForm(TranslationModelForm):
             class Meta:
                 model = Challenge
                 exclude = ("default_language",)
+
         form = TupleForm()
         self.assertEqual(list(form.fields.keys()), ["title", "header"])
 
