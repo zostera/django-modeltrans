@@ -136,17 +136,17 @@ class TranslationFormTestCase(TestCase):
             form = Form(instance=challenge)
             self.assertEqual(form.fallback_language, "de")
 
-            # test that it override the Meta option
+            # test that the Meta option overrides the model instance
             form = ExcludeForm(instance=challenge)
-            self.assertEqual(form.fallback_language, "de")
+            self.assertEqual(form.fallback_language, "fr")
 
         with self.subTest("Test the fallback defined in form parameter"):
             form = Form(fallback_language="de")
             self.assertEqual(form.fallback_language, "de")
 
             # test that it overrides the Meta option
-            form = ExcludeForm(fallback_language="de")
-            self.assertEqual(form.fallback_language, "de")
+            form = ExcludeForm(fallback_language="nl")
+            self.assertEqual(form.fallback_language, "nl")
 
     def test_fields_defined_with_fields_option(self):
         """Tests fields and their order defined with Meta 'fields' option."""
@@ -212,9 +212,9 @@ class TranslationFormTestCase(TestCase):
         """Test fields and their order with model instance fallback override in form with 'exclude' option."""
         challenge = Challenge.objects.create(default_language="nl")
         form = ExcludeForm(instance=challenge)
-        self.assertEqual(form.languages, ["en", "de", "nl"])
+        self.assertEqual(form.languages, ["en", "de", "fr"])
         self.assertEqual(
-            list(form.fields.keys()), ["start_date", "title", "title_de", "title_nl", "end_date"]
+            list(form.fields.keys()), ["start_date", "title", "title_de", "title_fr", "end_date"]
         )
 
     def test_fields_with_fallback_language_kwarg_with_exclude_option(self):
@@ -226,6 +226,7 @@ class TranslationFormTestCase(TestCase):
             list(form.fields.keys()), ["start_date", "title", "title_de", "title_nl", "end_date"]
         )
 
+    # TODO: set customized field settings, i.e. overrule of standard settings based on model field
     def test_setting_of_field_properties(self):
         """Test that fields are set with the correct properties."""
         with self.subTest("Browser (fallback) language"):

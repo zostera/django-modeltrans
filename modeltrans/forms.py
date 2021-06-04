@@ -25,7 +25,7 @@ class TranslationModelFormOptions(forms.models.ModelFormOptions):
         super().__init__(options)
         self.included_languages = getattr(options, "included_languages", ["browser"])
         # TODO FUTURE self.fallback_readonly = getattr(options, "fallback_readonly", True)
-        self.fallback_language = getattr(options, "fallback_language", get_default_language())
+        self.fallback_language = getattr(options, "fallback_language", None)
 
 
 class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
@@ -87,18 +87,14 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
 
                         # add i18n field if an explicitly chosen field
                         if (
-                            opts.fields
-                            and original_field_name in base_fields
-                            and field_name not in base_fields
+                            opts.fields and original_field_name in base_fields and field_name not in base_fields
                         ):
                             base_fields.append(field_name)
                             opts_fields.append(field_name)
 
                         # remove field if an explicitly excluded field
                         if (
-                            opts.exclude
-                            and original_field_name in opts.exclude
-                            and field_name in base_fields
+                            opts.exclude and original_field_name in opts.exclude and field_name in base_fields
                         ):
                             base_fields.remove(field_name)
                             opts_exclude.append(field_name)
@@ -164,7 +160,7 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
             - "fr": a language code
         - Overlap is removed, e.g. ["browser", "fr", "fallback"], becomes ["fr"] if all are equal.
         - The list order determines the order of fields in the form.
-        - included languages can also be passed via form parameters to customize on the fly, useful for
+        - included languages can also be passed via form kwargs to customize on the fly, useful for
           generating translation forms for a specific language.
     - fallback_language: for adapting the fallback language specification on the fly and override the Meta option and/or
     model translation field custom fallback.
@@ -174,11 +170,11 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
 
     For the fallback language the following priority holds:
     1) fallback_language passed as form parameter: Form(fallback_language="fr")
-    2) a custom fallback of a model instance set via "fallback_language_field":
-        e.g. i18n = TranslationField(fields=("title", "header"), fallback_language_field="language_code")
-    3) the Meta option "fallback_language":
+    2) the Meta option "fallback_language":
         e.g. Meta:
                 fallback_language = "fr"
+    3) a custom fallback of a model instance set via "fallback_language_field":
+        e.g. i18n = TranslationField(fields=("title", "header"), fallback_language_field="language_code")
     4) The default language of the system. If not Meta option is given fallback reverts to get_default_language()
 
     Code example:
@@ -320,19 +316,23 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
         Get the fallback language.
 
         Priority is defined as:
-        1) argument override
-        2) model instance custom fallback
-        3) Meta option fallback, which has get_default_language as default
+        1) key word argument
+        2) form Meta option
+        3) model instance custom fallback
+        4) system default fallback
         """
         if fallback_language:
             return fallback_language
+
+        if self._meta.fallback_language:
+            return self._meta.fallback_language
 
         if self.model_i18n_field.fallback_language_field and self.instance.pk:
             return get_instance_field_value(
                 self.instance, self.model_i18n_field.fallback_language_field
             )
 
-        return self._meta.fallback_language  # the meta options defaults to the system default
+        return get_default_language()  # TODO: should be use get_fallback_chain? based on language?
 
     def get_languages(self):
         """Get the languages based on options included in include languages, in the order they are submitted."""

@@ -6,3 +6,9 @@ psycopg2-binary==2.8.6
 
 sphinxcontrib-spelling
 pyenchant
+
+flake8
+black
+isort
+docformatter==1.4
+autoflake==1.4
