@@ -229,9 +229,7 @@ class TranslationFormTestCase(TestCase):
     def test_setting_of_field_properties(self):
         """Test that fields are set with the correct properties."""
         with self.subTest("Browser (fallback) language"):
-            form = Form()
-
-            title_field = form.fields["title"]
+            title_field = Form().fields["title"]
             self.assertEqual(title_field.label, "Title (EN, default language)")
             self.assertEqual(title_field.required, True)
 
