@@ -86,20 +86,12 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
                         )
 
                         # add i18n field if an explicitly chosen field
-                        if (
-                            opts.fields
-                            and original_field_name in base_fields
-                            and field_name not in base_fields
-                        ):
+                        if opts.fields and original_field_name in base_fields and field_name not in base_fields:
                             base_fields.append(field_name)
                             opts_fields.append(field_name)
 
                         # remove field if an explicitly excluded field
-                        if (
-                            opts.exclude
-                            and original_field_name in opts.exclude
-                            and field_name in base_fields
-                        ):
+                        if opts.exclude and original_field_name in opts.exclude and field_name in base_fields:
                             base_fields.remove(field_name)
                             opts_exclude.append(field_name)
 
