@@ -84,12 +84,20 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
                         )
 
                         # add i18n field if an explicitly chosen field
-                        if opts.fields and original_field_name in base_fields and field_name not in base_fields:
+                        if (
+                            opts.fields
+                            and original_field_name in base_fields
+                            and field_name not in base_fields
+                        ):
                             base_fields.append(field_name)
                             opts_fields.append(field_name)
 
                         # remove field if an explicitly excluded field
-                        if opts.exclude and original_field_name in opts.exclude and field_name in base_fields:
+                        if (
+                            opts.exclude
+                            and original_field_name in opts.exclude
+                            and field_name in base_fields
+                        ):
                             base_fields.remove(field_name)
                             opts_exclude.append(field_name)
 
@@ -210,7 +218,9 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
 
         self.model_i18n_field = get_i18n_field(self._meta.model)
         self.included_languages = included_languages or self._meta.included_languages
-        self.form_i18n_fields = [field for field in self.model_i18n_field.fields if field in self.base_fields.keys()]
+        self.i18n_fields = [
+            field for field in self.model_i18n_field.fields if field in self.base_fields.keys()
+        ]
 
         # NOTE: because we update opts.fields and opts.exclude in META, field initial values are set in ModelForm
         super().__init__(*args, **kwargs)
@@ -228,7 +238,7 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
         """Return a dictionary mapping original field names to a list of included translation field names."""
 
         field_dict = {}
-        for original_field in self.form_i18n_fields:
+        for original_field in self.i18n_fields:
             # list is created in order of languages
             field_dict[original_field] = [
                 build_localized_fieldname(original_field, language, ignore_default=True)
@@ -240,18 +250,21 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
     def set_included_field_properties(self):
         """Apply settings of all original field to relevant translation fields."""
 
-        for original_field_name in self.form_i18n_fields:
+        for original_field_name in self.i18n_fields:
             # the order of languages and fields of that language should be the same
-            for language, field_name in zip(
-                self.languages, self.included_fields[original_field_name]
-            ):
-                original_field = self.base_fields[original_field_name]
-                translation = language != self.fallback_language
+            original_field = self.base_fields[original_field_name]
+            for field_name in self.included_fields[original_field_name]:
+                language = get_default_language()
+                if field_name != original_field_name:
+                    language = field_name.replace(f"{original_field_name}_", "")
+                is_translation = language != self.fallback_language
                 # TODO FUTURE idea to customize this text (in Meta), e.g. translation_label and fallback_label
-                label_text = _("translation language") if translation else _("default language")
+                label_text = _("translation language") if is_translation else _("default language")
                 label = f"{original_field.label} ({language.upper()}, {label_text})"
                 self.fields[field_name].label = label
-                self.fields[field_name].required = False if translation else original_field.required
+                self.fields[field_name].required = (
+                    False if is_translation else original_field.required
+                )
                 self.fields[field_name].widget = original_field.widget
 
     def order_translation_fields(self):
@@ -270,7 +283,7 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
         # in case of an explicit field order replace original field with set of included fields
         if field_order:
             new_field_order = list(field_order)
-            for original_field in self.form_i18n_fields:
+            for original_field in self.i18n_fields:
                 # TODO: what if it is not in the new_field_order?
                 if original_field in new_field_order:
                     index = new_field_order.index(original_field) + 1
@@ -288,7 +301,7 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
 
         # get all the form fields related to the form i18n fields
         translation_fields = []
-        for original_field_name in self.form_i18n_fields:
+        for original_field_name in self.i18n_fields:
             translation_fields += [field for field in self.fields if original_field_name in field]
 
         excluded_fields = [
@@ -332,12 +345,12 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
 
             for value in self.included_languages:
                 if not isinstance(value, str):
-                    raise ValueError("included_languages: options should be strings")
+                    raise ValueError("included_languages: values should be strings")
                 # TODO: need to consider what to do with en_GB style languages ...?
                 if len(value) > 2 and value not in INCLUDED_LANGUAGE_OPTIONS:
-                    raise ValueError(f"included_languages: option {value} is not permitted")
+                    raise ValueError(f"included_languages: value {value} is not permitted")
                 if len(value) < 2:
-                    raise ValueError(f"included_languages: option {value} is not permitted")
+                    raise ValueError(f"included_languages: value {value} is not permitted")
                 if len(value) == 2 and value not in get_available_languages():
                     raise ValueError(
                         f"included_languages: {value} is not an available language in the system"

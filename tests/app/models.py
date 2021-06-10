@@ -175,7 +175,7 @@ class Challenge(models.Model):
     """Model using a custom fallback language per instance/record."""
 
     title = models.CharField(max_length=255)
-    header = models.CharField(max_length=255)
+    header = models.CharField(max_length=255, null=True, blank=True)
 
     default_language = models.CharField(
         max_length=2, null=True, blank=True, default=get_default_language()

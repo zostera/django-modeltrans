@@ -78,15 +78,15 @@ class TranslationFormTestCase(TestCase):
         # ):
         #    Form(included_languages=["all", "fallback"])
 
-        with self.assertRaisesMessage(ValueError, "included_languages: options should be strings"):
+        with self.assertRaisesMessage(ValueError, "included_languages: values should be strings"):
             Form(included_languages=[0, "fallback"])
 
         with self.assertRaisesMessage(
-            ValueError, "included_languages: option es_it is not permitted"
+            ValueError, "included_languages: value es_it is not permitted"
         ):
             Form(included_languages=["es_it", "fallback"])
 
-        with self.assertRaisesMessage(ValueError, "included_languages: option e is not permitted"):
+        with self.assertRaisesMessage(ValueError, "included_languages: value e is not permitted"):
             Form(included_languages=["e", "fallback"])
 
         with self.assertRaisesMessage(
@@ -254,11 +254,10 @@ class TranslationFormTestCase(TestCase):
             self.assertEqual(title_fr_field.widget.__class__, forms.widgets.Textarea)
 
     def test_form_initial_values(self):
-        challenge = Challenge(title="english", title_fr="espanol")
-        challenge = Challenge.objects.create(title="english", title_fr="espanol")
+        challenge = Challenge.objects.create(title="english", title_fr="french")
         initial_data = {
             "title": "not english",
-            "title_fr": "not espenaol",
+            "title_fr": "not french",
             "header_fr": "fr header",
         }
 
@@ -287,9 +286,96 @@ class TranslationFormTestCase(TestCase):
 
             self.assertEqual(form["title"].initial, initial_data["title"])
             self.assertEqual(form["title_fr"].initial, initial_data["title_fr"])
-            self.assertEqual(form["header"].initial, "")
+            self.assertIsNone(form["header"].initial)
             self.assertEqual(form["header_fr"].initial, initial_data["header_fr"])
             self.assertEqual(form["default_language"].initial, get_default_language())
 
+    def test_form_valid_and_save(self):
 
-# TODO test form valid and save and instance creation and update.
+        with self.subTest("No translations and header not required."):
+            data = {"start_date": "2021-01-01", "end_date": "2021-02-02", "title": "A title"}
+            form = Form(data=data)
+            self.assertTrue(form.is_valid())
+            challenge = form.save()
+            self.assertEqual(challenge.title, data["title"])
+            self.assertIsNone(challenge.header)
+
+            data = {"start_date": "2021-01-01", "end_date": "2021-02-02", "title_fr": "Un title"}
+            form = ExcludeForm(data=data)
+            self.assertTrue(form.is_valid())
+            challenge = form.save()
+            self.assertEqual(challenge.title, "")
+            self.assertEqual(challenge.title_fr, data["title_fr"])
+            self.assertIsNone(challenge.header)
+
+        with self.subTest("Test that only fallback is required"):
+            data = {"start_date": "2021-01-01", "end_date": "2021-02-02"}
+
+            form = Form(data=data, included_languages=["de", "fr", "nl"], fallback_language="nl")
+            form.is_valid()
+            self.assertEqual(form.errors, {"title_nl": ["This field is required."]})
+
+            form = ExcludeForm(data=data, included_languages=["de", "en", "fallback"])
+            form.is_valid()
+            self.assertEqual(form.errors, {"title_fr": ["This field is required."]})
+
+        with self.subTest("Test that translations are stored correctly"):
+
+            data = {
+                "start_date": "2021-01-01",
+                "end_date": "2021-02-02",
+                "title_nl": "Een titel",
+                "title_de": "Ein titel",
+            }
+            form = Form(data=data, included_languages=["de", "fr", "nl"], fallback_language="nl")
+            self.assertTrue(form.is_valid())
+            challenge = form.save()
+            self.assertEqual(challenge.title_nl, data["title_nl"])
+            self.assertEqual(challenge.title_de, data["title_de"])
+            self.assertIsNone(challenge.title_fr)
+            self.assertEqual(challenge.title, "")
+            self.assertIsNone(challenge.header)
+
+            data = {
+                "start_date": "2021-01-01",
+                "end_date": "2021-02-02",
+                "title_nl": "Een titel",
+                "title_fr": "Un titel",
+            }
+            form = ExcludeForm(data=data, included_languages=["de", "nl", "fallback"])
+            self.assertTrue(form.is_valid())
+            challenge = form.save()
+            self.assertEqual(challenge.title_nl, data["title_nl"])
+            self.assertEqual(challenge.title_fr, data["title_fr"])
+            self.assertIsNone(challenge.title_de)
+            self.assertEqual(challenge.title, "")
+            self.assertIsNone(challenge.header)
+
+        with self.subTest("Update existing instance"):
+            challenge = Challenge.objects.create(
+                title="english", title_fr="french", default_language="fr"
+            )
+
+            data = {
+                "start_date": "2021-01-01",
+                "end_date": "2021-02-02",
+                "title_nl": "Een titel",
+                "title_de": "Ein titel",
+            }
+            form = Form(instance=challenge, data=data, included_languages=["nl", "de"])
+            self.assertTrue(form.is_valid())
+            form.save()
+            self.assertEqual(challenge.title_nl, data["title_nl"])
+            self.assertEqual(challenge.title_de, data["title_de"])
+
+            data = {
+                "start_date": "2021-01-01",
+                "end_date": "2021-02-02",
+                "title_nl": "Een andere titel",
+                "title_fr": "Un titel nouveau",
+            }
+            form = ExcludeForm(instance=challenge, data=data, included_languages=["nl", "fallback"])
+            self.assertTrue(form.is_valid())
+            form.save()
+            self.assertEqual(challenge.title_nl, data["title_nl"])
+            self.assertEqual(challenge.title_fr, data["title_fr"])
