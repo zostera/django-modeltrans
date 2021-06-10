@@ -47,12 +47,7 @@ class Form(TranslationModelForm):
 
     class Meta:
         model = Challenge
-        fields = [
-            "title",
-            "start_date",
-            "default_language",
-            "header",
-        ]  # adding start_date to test the ordering
+        fields = ["title", "start_date", "default_language", "header"]
         required = {"title": True, "header": False}
 
 

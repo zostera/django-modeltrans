@@ -21,11 +21,11 @@ You can define a TranslationModelForm as::
     class NewsRoomTranslationForm(TranslationModelForm):
 
         class Meta:
-            fields = (name, text)
+            fields = ("name", "text")
             included_languages = ["browser", "fr", "fallback"]
             fallback_language = "en"
 
-This will define a form with maximally three language entries per field, say 'nl', 'fr' and 'en', where 'nl' is the
+This will define a form with at most three inputs per field, say 'nl', 'fr' and 'en', where 'nl' is the
 active browser language, and 'en' the defined fallback language. The exclude Meta options can also be used to define
 fields are in the form, where the form field_order parameter can be used to define the field ordering.
 
@@ -38,7 +38,7 @@ Defines the languages included in the form.
         - "fallback": the fallback language either define in the form, the model instance, or in the system, in that order of priority
         - a language code: e.g. "fr", "it"
     - Ordering: the ordering defined in the declaration is preserved
-    - Overlap is removed, e.g. ["browser", "fr", "fallback"], becomes ["fr"] if all are equal.
+    - Overlap is removed, e.g. ["browser", "fr", "fallback"], becomes ["fr"] if browser language and fallback are also "fr".
 
 Included_languages can be defined in the form Meta options as in the example above,
 or as a form kwarg as in::
