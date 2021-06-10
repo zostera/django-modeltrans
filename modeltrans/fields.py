@@ -116,7 +116,7 @@ class TranslatedVirtualField:
         return default
 
     def __get__(self, instance, instance_type=None):
-        # This method is apparantly called with instance=None from django.
+        # This method is apparently called with instance=None from django.
         # django-hstor raises AttributeError here, but that doesn't solve our problem.
         if instance is None:
             return
