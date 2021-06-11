@@ -251,7 +251,6 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
         """Apply settings of all original field to relevant translation fields."""
 
         for original_field_name in self.i18n_fields:
-            # the order of languages and fields of that language should be the same
             original_field = self.base_fields[original_field_name]
             for field_name in self.included_fields[original_field_name]:
                 language = get_default_language()
