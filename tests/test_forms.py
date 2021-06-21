@@ -62,37 +62,28 @@ class ExcludeForm(TranslationModelForm):
     class Meta:
         model = Challenge
         exclude = ["header", "default_language"]
-        included_languages = ["browser", "de", "fallback"]
+        languages = ["browser", "de", "fallback"]
         fallback_language = "fr"
-        # TODO FUTURE: fallback_readonly = True
         widgets = {"title": forms.widgets.Textarea}
 
 
 class TranslationFormTestCase(TestCase):
-    def test_included_languages_errors(self):
-        """Test the error messages for incorrect included_languages options."""
+    def test_languages_errors(self):
+        """Test the error messages for incorrect languages options."""
 
-        # TODO FUTURE at later stage
-        # with self.assertRaisesMessage(
-        #    ValueError, "included languages: you cannot include other options when including 'all'"
-        # ):
-        #    Form(included_languages=["all", "fallback"])
+        with self.assertRaisesMessage(ValueError, "languages: values should be strings"):
+            Form(languages=[0, "fallback"])
 
-        with self.assertRaisesMessage(ValueError, "included_languages: values should be strings"):
-            Form(included_languages=[0, "fallback"])
+        with self.assertRaisesMessage(ValueError, "languages: value es_it is not permitted"):
+            Form(languages=["es_it", "fallback"])
 
-        with self.assertRaisesMessage(
-            ValueError, "included_languages: value es_it is not permitted"
-        ):
-            Form(included_languages=["es_it", "fallback"])
-
-        with self.assertRaisesMessage(ValueError, "included_languages: value e is not permitted"):
-            Form(included_languages=["e", "fallback"])
+        with self.assertRaisesMessage(ValueError, "languages: value e is not permitted"):
+            Form(languages=["e", "fallback"])
 
         with self.assertRaisesMessage(
-            ValueError, "included_languages: xx is not an available language in the system"
+            ValueError, "languages: xx is not an available language in the system"
         ):
-            Form(included_languages=["xx", "fallback"])
+            Form(languages=["xx", "fallback"])
 
         class NoLanguageForm(TranslationModelForm):
             """Challenge form where fallback can be edited."""
@@ -100,19 +91,18 @@ class TranslationFormTestCase(TestCase):
             class Meta:
                 model = Challenge
                 fields = ["title", "header"]
-                included_languages = []
+                languages = []
 
         with self.assertRaisesMessage(
-            ValueError, "included_languages: Error. No languages have been defined."
+            ValueError, "languages: Error. No languages have been defined."
         ):
             NoLanguageForm()
 
     def test_defaults(self):
         """Test the default form options."""
         form = Form()
-        self.assertEqual(form.included_languages, ["browser"])
+        self.assertEqual(form.languages, ["browser"])
         self.assertEqual(form.fallback_language, get_default_language())
-        # TODO FUTURE self.assertEqual(form.fallback_readonly, True)
 
     def test_get_fallback_language(self):
         """Test that the form fallback language is set correctly."""
@@ -146,7 +136,7 @@ class TranslationFormTestCase(TestCase):
     def test_fields_defined_with_fields_option(self):
         """Tests fields and their order defined with Meta 'fields' option."""
         form = Form()
-        self.assertEqual(form.languages, ["en"])
+        self.assertEqual(form.language_codes, ["en"])
         self.assertEqual(
             list(form.fields.keys()),
             ["title", "start_date", "default_language", "header", "end_date"],
@@ -163,10 +153,10 @@ class TranslationFormTestCase(TestCase):
         form = TupleForm()
         self.assertEqual(list(form.fields.keys()), ["title", "header"])
 
-    def test_fields_with_included_languages_kwarg_and_fields_option(self):
+    def test_fields_with_languages_kwarg_and_fields_option(self):
         """Test fields and their order defined with parameter override of in form with 'fields' option."""
-        form = Form(included_languages=["fr", "fallback"])
-        self.assertEqual(form.languages, ["fr", "en"])
+        form = Form(languages=["fr", "fallback"])
+        self.assertEqual(form.language_codes, ["fr", "en"])
         self.assertEqual(
             list(form.fields.keys()),
             [
@@ -183,7 +173,7 @@ class TranslationFormTestCase(TestCase):
     def test_fields_defined_with_exclude_options(self):
         """Test fields and their order defined with Meta 'exclude' option."""
         form = ExcludeForm()
-        self.assertEqual(form.languages, ["en", "de", "fr"])
+        self.assertEqual(form.language_codes, ["en", "de", "fr"])
         self.assertEqual(
             list(form.fields.keys()), ["start_date", "title", "title_de", "title_fr", "end_date"]
         )
@@ -199,10 +189,10 @@ class TranslationFormTestCase(TestCase):
         form = TupleForm()
         self.assertEqual(list(form.fields.keys()), ["title", "header"])
 
-    def test_fields_with_included_languages_kwarg_with_exclude_option(self):
+    def test_fields_with_languages_kwarg_with_exclude_option(self):
         """Test fields and their order with parameter override in form with 'exclude' option."""
-        form = ExcludeForm(included_languages=["de", "fallback"], fallback_language="nl")
-        self.assertEqual(form.languages, ["de", "nl"])
+        form = ExcludeForm(languages=["de", "fallback"], fallback_language="nl")
+        self.assertEqual(form.language_codes, ["de", "nl"])
         self.assertEqual(
             list(form.fields.keys()), ["start_date", "title_de", "title_nl", "end_date"]
         )
@@ -211,7 +201,7 @@ class TranslationFormTestCase(TestCase):
         """Test fields and their order with model instance fallback override in form with 'exclude' option."""
         challenge = Challenge.objects.create(default_language="nl")
         form = ExcludeForm(instance=challenge)
-        self.assertEqual(form.languages, ["en", "de", "fr"])
+        self.assertEqual(form.language_codes, ["en", "de", "fr"])
         self.assertEqual(
             list(form.fields.keys()), ["start_date", "title", "title_de", "title_fr", "end_date"]
         )
@@ -220,12 +210,11 @@ class TranslationFormTestCase(TestCase):
         """Test fields and their order with parameter override of model instance fallback in form with 'exclude'."""
         challenge = Challenge(default_language="de")
         form = ExcludeForm(instance=challenge, fallback_language="nl")
-        self.assertEqual(form.languages, ["en", "de", "nl"])
+        self.assertEqual(form.language_codes, ["en", "de", "nl"])
         self.assertEqual(
             list(form.fields.keys()), ["start_date", "title", "title_de", "title_nl", "end_date"]
         )
 
-    # TODO: set customized field settings, i.e. overrule of standard settings based on model field
     def test_setting_of_field_properties(self):
         """Test that fields are set with the correct properties."""
         with self.subTest("Browser (fallback) language"):
@@ -260,7 +249,7 @@ class TranslationFormTestCase(TestCase):
         }
 
         with self.subTest("Initial values from model instance"):
-            form = Form(instance=challenge, included_languages=["fr", "fallback"])
+            form = Form(instance=challenge, languages=["fr", "fallback"])
 
             self.assertEqual(form["title"].initial, challenge.title)
             self.assertEqual(form["title_fr"].initial, challenge.title_fr)
@@ -269,7 +258,7 @@ class TranslationFormTestCase(TestCase):
             self.assertEqual(form["default_language"].initial, challenge.default_language)
 
         with self.subTest("Initial values from initial data"):
-            form = Form(initial=initial_data, included_languages=["fr", "fallback"])
+            form = Form(initial=initial_data, languages=["fr", "fallback"])
 
             self.assertEqual(form["title"].initial, initial_data["title"])
             self.assertEqual(form["title_fr"].initial, initial_data["title_fr"])
@@ -278,9 +267,7 @@ class TranslationFormTestCase(TestCase):
             self.assertEqual(form["default_language"].initial, get_default_language())
 
         with self.subTest("Initial values from initial data model override"):
-            form = Form(
-                initial=initial_data, instance=challenge, included_languages=["fr", "fallback"]
-            )
+            form = Form(initial=initial_data, instance=challenge, languages=["fr", "fallback"])
 
             self.assertEqual(form["title"].initial, initial_data["title"])
             self.assertEqual(form["title_fr"].initial, initial_data["title_fr"])
@@ -309,11 +296,11 @@ class TranslationFormTestCase(TestCase):
         with self.subTest("Test that only fallback is required"):
             data = {"start_date": "2021-01-01", "end_date": "2021-02-02"}
 
-            form = Form(data=data, included_languages=["de", "fr", "nl"], fallback_language="nl")
+            form = Form(data=data, languages=["de", "fr", "nl"], fallback_language="nl")
             form.is_valid()
             self.assertEqual(form.errors, {"title_nl": ["This field is required."]})
 
-            form = ExcludeForm(data=data, included_languages=["de", "en", "fallback"])
+            form = ExcludeForm(data=data, languages=["de", "en", "fallback"])
             form.is_valid()
             self.assertEqual(form.errors, {"title_fr": ["This field is required."]})
 
@@ -325,7 +312,7 @@ class TranslationFormTestCase(TestCase):
                 "title_nl": "Een titel",
                 "title_de": "Ein titel",
             }
-            form = Form(data=data, included_languages=["de", "fr", "nl"], fallback_language="nl")
+            form = Form(data=data, languages=["de", "fr", "nl"], fallback_language="nl")
             self.assertTrue(form.is_valid())
             challenge = form.save()
             self.assertEqual(challenge.title_nl, data["title_nl"])
@@ -340,7 +327,7 @@ class TranslationFormTestCase(TestCase):
                 "title_nl": "Een titel",
                 "title_fr": "Un titel",
             }
-            form = ExcludeForm(data=data, included_languages=["de", "nl", "fallback"])
+            form = ExcludeForm(data=data, languages=["de", "nl", "fallback"])
             self.assertTrue(form.is_valid())
             challenge = form.save()
             self.assertEqual(challenge.title_nl, data["title_nl"])
@@ -360,7 +347,7 @@ class TranslationFormTestCase(TestCase):
                 "title_nl": "Een titel",
                 "title_de": "Ein titel",
             }
-            form = Form(instance=challenge, data=data, included_languages=["nl", "de"])
+            form = Form(instance=challenge, data=data, languages=["nl", "de"])
             self.assertTrue(form.is_valid())
             form.save()
             self.assertEqual(challenge.title_nl, data["title_nl"])
@@ -372,7 +359,7 @@ class TranslationFormTestCase(TestCase):
                 "title_nl": "Een andere titel",
                 "title_fr": "Un titel nouveau",
             }
-            form = ExcludeForm(instance=challenge, data=data, included_languages=["nl", "fallback"])
+            form = ExcludeForm(instance=challenge, data=data, languages=["nl", "fallback"])
             self.assertTrue(form.is_valid())
             form.save()
             self.assertEqual(challenge.title_nl, data["title_nl"])
