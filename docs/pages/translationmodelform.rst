@@ -30,9 +30,8 @@ where 'nl' is the active browser language, and 'en' the defined fallback languag
 The exclude Meta options can also be used to define fields are in the form,
 where the form field_order parameter can be used to define the field ordering.
 
-------------------
 `languages`
-------------------
+-------------------
 
 Defines the languages included in the form.
     - Options are:
