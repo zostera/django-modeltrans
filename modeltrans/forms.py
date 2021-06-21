@@ -141,7 +141,7 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
 
 class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaClass):
     """
-    ModelForm that adds fields for translations.
+    Model form that only adds translation fields for specified languages.
 
     Meta options and form parameters include:
     - languages: a list defining languages for which translation fields are added.
@@ -149,7 +149,6 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
             - "browser": current browser language
             - "fallback": the current fallback language, which is the system fallback,
                           or a customized fallback of the translation field.
-            # TODO FUTURE - "all": all system languages are included
             - "fr": a language code
         - Overlap is removed, e.g. ["browser", "fr", "fallback"], becomes ["fr"] if all are equal.
         - The list order determines the order of fields in the form.
@@ -209,7 +208,9 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
             field for field in self.model_i18n_field.fields if field in self.base_fields.keys()
         ]
 
-        # NOTE: because we update opts.fields and opts.exclude in META, field initial values are set in ModelForm
+        # Given that we set opt.fields and opts.exclude in Meta,
+        # the setting of initial values that occurs in ModelForm includes
+        # any additional translation fields that have been added in Meta.
         super().__init__(*args, **kwargs)
 
         # the following require the instance generated in the super call
@@ -218,22 +219,25 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
         self.included_fields = self.get_included_fields()
 
         self.remove_excess_fields()
-        self.set_included_field_properties()
+        self.set_translation_field_attributes()
         self.order_translation_fields()
 
     def get_included_fields(self):
-        """Return a dictionary mapping original field names to a list of included translation field names."""
+        """
+        Return a dictionary mapping original field names to a list of included field names,
+        which may or may not include the original field name.
+        """
 
-        field_dict = {}
+        fields = {}
         for original_field in self.i18n_fields:
-            field_dict[original_field] = [
+            fields[original_field] = [
                 build_localized_fieldname(original_field, language_code, ignore_default=True)
                 for language_code in self.language_codes
             ]
-        field_dict["__all__"] = list(itertools.chain.from_iterable(field_dict.values()))
-        return field_dict
+        fields["__all__"] = list(itertools.chain.from_iterable(fields.values()))
+        return fields
 
-    def set_included_field_properties(self):
+    def set_translation_field_attributes(self):
         """Apply settings of all original field to relevant translation fields."""
 
         for original_field_name in self.i18n_fields:
@@ -256,7 +260,7 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
         Set the order of the fields, ideally replacing the original field with the set of fields in included fields.
 
         For the Meta.excludes use a cruder ordering where translated fields types are grouped,
-        but the per type the languages are in order of: browser, other, fallback
+        but per type the languages are in order of: browser, other, fallback
         """
 
         # Form parameter field_order takes priority, otherwise adopt order of fields in Meta fields option, if available
@@ -281,18 +285,11 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
 
     def remove_excess_fields(self):
         """Remove translations fields that are not included in languages."""
-
-        # get all the form fields related to the form i18n fields
-        translation_fields = []
+        fields = self.fields.copy()
         for original_field_name in self.i18n_fields:
-            translation_fields += [field for field in self.fields if original_field_name in field]
-
-        excluded_fields = [
-            field for field in translation_fields if field not in self.included_fields["__all__"]
-        ]
-        for field_name in excluded_fields:
-            if field_name in self.fields:
-                self.fields.pop(field_name)
+            for field in fields:
+                if original_field_name in field and field not in self.included_fields["__all__"]:
+                    self.fields.pop(field)
 
     def get_fallback_language(self, fallback_language=None):
         """
@@ -341,9 +338,7 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
                 elif value == "fallback":
                     languages.append(self.fallback_language)
                 else:
-                    languages.append(
-                        value
-                    ) 
+                    languages.append(value)
 
         if not languages:
             raise ValueError("languages: Error. No languages have been defined.")
