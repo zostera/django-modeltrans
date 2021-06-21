@@ -182,7 +182,6 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
             class Meta:
                 fields = ["title", "description"] or exclude = ["language_code"]
                 languages = ["browser", "es", "fallback"]
-                # TODO FUTURE later fallback_readonly = False
 
 
         class ChallengeCreateUpdateView(GenericCreateUpdateView):
@@ -323,9 +322,6 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
 
         languages = []
         if self.languages:
-            # TODO FUTURE later stage
-            # if len(self.languages) > 1 and "all" in self.languages:
-            #    raise ValueError("included languages: you cannot include other options when including 'all'")
 
             for value in self.languages:
                 if not isinstance(value, str):
@@ -344,13 +340,10 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
                     languages.append(get_language())
                 elif value == "fallback":
                     languages.append(self.fallback_language)
-                # TODO FUTURE at later stage
-                # elif value == "all":
-                #    languages = get_available_languages()
                 else:
                     languages.append(
                         value
-                    )  # assuming above checks assure this is an existing language in the system
+                    ) 
 
         if not languages:
             raise ValueError("languages: Error. No languages have been defined.")
