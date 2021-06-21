@@ -3,7 +3,7 @@ TranslationModelForm
 
 TranslationModelForm is an adaptation of Django's ModelForm that allow easy management of translation fields.
 Assuming your Model has an i18n ModelTrans field,
-you can used TranslationModelForm to specify which translation fields to include and for which languages.
+you can use TranslationModelForm to specify which translation fields to include and for which languages.
 
 For example, given a NewsRoom model::
 
@@ -12,7 +12,7 @@ For example, given a NewsRoom model::
         text = models.CharField(max_length=255)
         default_language = models.CharField(max_length=2)
 
-        i18n = TranslationField(fields=("name",), fallback_language_field="default_language")
+        i18n = TranslationField(fields=("name", "text"), fallback_language_field="default_language")
 
 You can define a TranslationModelForm as::
 
@@ -25,40 +25,40 @@ You can define a TranslationModelForm as::
             included_languages = ["browser", "fr", "fallback"]
             fallback_language = "en"
 
-This will define a form with at most three inputs per field, say 'nl', 'fr' and 'en',
+This defines a form with at most three language inputs per field, say 'nl', 'fr' and 'en',
 where 'nl' is the active browser language, and 'en' the defined fallback language.
 The exclude Meta options can also be used to define fields are in the form,
 where the form field_order parameter can be used to define the field ordering.
 
-included_languages
-------------------
+`included_languages`
+--------------------
 
 Defines the languages included in the form.
     - Options are:
-        - "browser": the language that is active in the browser session
-        - "fallback": the fallback language either define in the form, the model instance, or in the system, in that order of priority
-        - a language code: e.g. "fr", "it"
+        - `"browser"`: the language that is active in the browser session
+        - `"fallback"`: the fallback language either defined in the form, the model instance, or in the system, in that order of priority
+        - a language code: e.g. `"fr"`, `"it"`
     - Ordering: the ordering defined in the declaration is preserved
-    - Overlap is removed, e.g. `["browser", "fr", "fallback"]`, becomes `["fr"]` if browser language and fallback are also "fr".
+    - Duplicate languages are removed, e.g. `["browser", "fr", "fallback"]`, becomes `["fr"]` if browser language and fallback are also `"fr"`.
 
 Included_languages can be defined in the form Meta options as in the example above, or as a form kwarg as in::
 
     form = NewsRoomTranslationForm(included_languages=["it", "fallback"])
 
 
-fallback_language
------------------
+`fallback_language`
+-------------------
 
 Defines the fallback_language in the form.
-Requires "fallback" to be included in included_languages.
-Can be defined via the form Meta options as in the example above, and also be passed as a Kwarg like included_languages.
+Requires `"fallback"` to be included in `included_languages`.
+Can be defined via the form `Meta` options as in the example above, and also be passed as a kwarg like `included_languages`.
 The following prioritization is followed:
 
     1) fallback_language passed as form parameter:
         `Form(fallback_language="fr")`
-    2) the Meta option "fallback_language":
-        e.g. Meta: fallback_language = "fr"
-    3) a custom fallback of a model instance set via "fallback_language_field":
+    2) the `Meta` option `"fallback_language"`:
+        e.g. `Meta`: `fallback_language = "fr"`
+    3) a custom fallback of a model instance set via `"fallback_language_field"`:
         e.g. `i18n = TranslationField(fields=("title", "header"), fallback_language_field="language_code")`
     4) The default language of the system: If no `Meta` option is given fallback reverts to `get_default_language()`
 

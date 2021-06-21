@@ -141,8 +141,7 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
             else:
                 base_fields = new_class.declared_fields
 
-            # override base_fields with properly determined set of all translation fields
-            # based on ModelForm
+            # Override base_fields with properly determined set of all translation fields based on ModelForm
             new_class.base_fields = base_fields
 
         return new_class
@@ -239,7 +238,6 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
 
         field_dict = {}
         for original_field in self.i18n_fields:
-            # list is created in order of languages
             field_dict[original_field] = [
                 build_localized_fieldname(original_field, language, ignore_default=True)
                 for language in self.languages
@@ -270,11 +268,11 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
         """
         Set the order of the fields, ideally replacing the original field with the set of fields in included fields.
 
-        For the Meta 'excludes' option we do a cruder ordering where translated fields types are grouped,
+        For the Meta.excludes use a cruder ordering where translated fields types are grouped,
         but the per type the languages are in order of: browser, other, fallback
         """
 
-        # form parameter field_order takes priority, otherwise adopt order of fields in meta fields option, if available
+        # Form parameter field_order takes priority, otherwise adopt order of fields in Meta fields option, if available
         field_order = self.field_order or None
         if not field_order and self._meta.fields and self._meta.fields != "all":
             field_order = self._meta.fields
@@ -331,7 +329,7 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
                 self.instance, self.model_i18n_field.fallback_language_field
             )
 
-        return get_default_language()  # TODO: should be use get_fallback_chain? based on language?
+        return get_default_language()
 
     def get_languages(self):
         """Get the languages based on options included in include languages, in the order they are submitted."""

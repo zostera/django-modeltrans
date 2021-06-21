@@ -65,7 +65,7 @@ class ExcludeForm(TranslationModelForm):
         included_languages = ["browser", "de", "fallback"]
         fallback_language = "fr"
         # TODO FUTURE: fallback_readonly = True
-        widgets = {"title": forms.widgets.Textarea}  # add widget to test field setting
+        widgets = {"title": forms.widgets.Textarea}
 
 
 class TranslationFormTestCase(TestCase):
