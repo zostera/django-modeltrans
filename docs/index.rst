@@ -25,6 +25,7 @@ Table of contents
 
     pages/getting-started
     pages/working-with-models
+    pages/translation-model-form
     pages/performance
     pages/inner-workings
     pages/known-issues
