@@ -72,7 +72,9 @@ class TranslationFormTestCase(TestCase):
         """Test the error messages for incorrect languages options."""
 
         for language in [0, "es_it", "e", "xx"]:
-            with self.assertRaisesMessage(ValueError, f"languages: {language} is not permitted"):
+            with self.assertRaisesMessage(
+                ValueError, f"languages: value {language} is not permitted"
+            ):
                 Form(languages=[language])
 
         class NoLanguageForm(TranslationModelForm):
@@ -83,9 +85,7 @@ class TranslationFormTestCase(TestCase):
                 fields = ["title", "header"]
                 languages = []
 
-        with self.assertRaisesMessage(
-            ValueError, "languages: Error. No languages have been defined."
-        ):
+        with self.assertRaisesMessage(ValueError, "languages: No languages have been defined."):
             NoLanguageForm()
 
     def test_defaults(self):

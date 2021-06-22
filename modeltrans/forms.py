@@ -326,7 +326,7 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
                 elif value == "fallback":
                     value = self.fallback_language
                 if value not in valid_languages:
-                     raise ValueError(f"languages: value {value} is not permitted")
+                    raise ValueError(f"languages: value {value} is not permitted")
                 languages.append(value)
 
         if not languages:
