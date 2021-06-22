@@ -317,21 +317,17 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
     def get_language_codes(self):
         """Get the languages based on options included in include languages, in the order they are submitted."""
 
+        valid_languages = get_available_languages()
         languages = []
         if self.languages:
-
             for value in self.languages:
-                if not isinstance(value, str):
-                    raise ValueError("languages: values should be strings")
-valid_languages = get_available_languages()
-for value in self.languages:
-    if value == "browser":
-       value = get_language()
-    elif value == "fallback":
-        value = self.fallback_language
-    if value not in valid_languages:
-        raise ValueError(f"languages: value {value} is not permitted")
-    languages.append(value)
+                if value == "browser":
+                    value = get_language()
+                elif value == "fallback":
+                    value = self.fallback_language
+                if value not in valid_languages:
+                     raise ValueError(f"languages: value {value} is not permitted")
+                languages.append(value)
 
         if not languages:
             raise ValueError("languages: No languages have been defined.")
