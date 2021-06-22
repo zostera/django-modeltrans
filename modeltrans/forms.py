@@ -323,22 +323,15 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
             for value in self.languages:
                 if not isinstance(value, str):
                     raise ValueError("languages: values should be strings")
-                # TODO: need to consider what to do with en_GB style languages ...?
-                if len(value) > 2 and value not in LANGUAGE_OPTIONS:
-                    raise ValueError(f"languages: value {value} is not permitted")
-                if len(value) < 2:
-                    raise ValueError(f"languages: value {value} is not permitted")
-                if len(value) == 2 and value not in get_available_languages():
-                    raise ValueError(
-                        f"languages: {value} is not an available language in the system"
-                    )
-
-                if value == "browser":
-                    languages.append(get_language())
-                elif value == "fallback":
-                    languages.append(self.fallback_language)
-                else:
-                    languages.append(value)
+valid_languages = get_available_languages()
+for value in self.languages:
+    if value == "browser":
+       value = get_language()
+    elif value == "fallback":
+        value = self.fallback_language
+    if value not in valid_languages:
+        raise ValueError(f"languages: value {value} is not permitted")
+    languages.append(value)
 
         if not languages:
             raise ValueError("languages: No languages have been defined.")

@@ -71,19 +71,9 @@ class TranslationFormTestCase(TestCase):
     def test_languages_errors(self):
         """Test the error messages for incorrect languages options."""
 
-        with self.assertRaisesMessage(ValueError, "languages: values should be strings"):
-            Form(languages=[0, "fallback"])
-
-        with self.assertRaisesMessage(ValueError, "languages: value es_it is not permitted"):
-            Form(languages=["es_it", "fallback"])
-
-        with self.assertRaisesMessage(ValueError, "languages: value e is not permitted"):
-            Form(languages=["e", "fallback"])
-
-        with self.assertRaisesMessage(
-            ValueError, "languages: xx is not an available language in the system"
-        ):
-            Form(languages=["xx", "fallback"])
+        for language in [0, "es_it", "e", "xx"]:
+            with self.assertRaisesMessage(ValueError, f"languages: {language} is not permitted"):
+                Form(languages=[language])
 
         class NoLanguageForm(TranslationModelForm):
             """Challenge form where fallback can be edited."""

@@ -1,9 +1,9 @@
 `TranslationModelForm`
 ======================
 
-`TranslationModelForm` is an adaptation of Django's `django.forms.ModelForm` that allow management of translation fields.
+`TranslationModelForm` is an adaptation of Django's `django.forms.ModelForm` that allows management of translation fields.
 Assuming your model is translated with modeltrans,
-you can use `TranslationModelForm` to specify which languages to includes form fields for.
+you can use `TranslationModelForm` to specify which languages to include form fields for.
 
 For example, given a `NewsRoom` model::
 
