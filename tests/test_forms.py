@@ -109,19 +109,18 @@ class TranslationFormTestCase(TestCase):
 
         with self.subTest("Test the default fallback_language"):
             form = Form()
-            self.assertEqual(form.fallback_language, get_default_language())
+            self.assertEqual(form.fallback_language, "en")
 
         with self.subTest("Test the fallback defined in Meta options"):
             form = ExcludeForm()
             self.assertEqual(form.fallback_language, "fr")
 
+        challenge = Challenge.objects.create(default_language="de")
         with self.subTest("Test the fallback defined in a model instance"):
-            challenge = Challenge.objects.create(default_language="de")
-
             form = Form(instance=challenge)
             self.assertEqual(form.fallback_language, "de")
 
-            # test that the Meta option overrides the model instance
+        with self.subTest("Verify the Meta option overrides the model instance"):
             form = ExcludeForm(instance=challenge)
             self.assertEqual(form.fallback_language, "fr")
 
@@ -220,7 +219,7 @@ class TranslationFormTestCase(TestCase):
         with self.subTest("Browser (fallback) language"):
             title_field = Form().fields["title"]
             self.assertEqual(title_field.label, "Title (EN, default language)")
-            self.assertEqual(title_field.required, True)
+            self.assertTrue(title_field.required)
 
         with self.subTest("Custom (fallback) language"):
             form = ExcludeForm()

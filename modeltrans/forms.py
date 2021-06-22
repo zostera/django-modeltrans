@@ -341,7 +341,7 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
                     languages.append(value)
 
         if not languages:
-            raise ValueError("languages: Error. No languages have been defined.")
+            raise ValueError("languages: No languages have been defined.")
 
         # remove duplicates while preserving the order
         no_repeats = set()
