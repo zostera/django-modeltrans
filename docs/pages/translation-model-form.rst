@@ -1,5 +1,5 @@
-`TranslationModelForm`
-======================
+Translations in forms
+=====================
 
 `TranslationModelForm` is an adaptation of Django's `django.forms.ModelForm` that allows management of translation fields.
 Assuming your model is translated with modeltrans,
@@ -30,10 +30,10 @@ where `"nl"` is the active browser language, and `"en"` the defined fallback lan
 `Meta.exclude` can also be used to define which fields are in the form,
 where the forms' `field_order` parameter can be used to define the field ordering.
 
-`languages`
------------
+Setting the form languages
+--------------------------
 
-Defines the languages included in the form.
+`languages` defines the languages included in the form.
     - Options are:
         - `"browser"`: the language that is active in the browser session
         - `"fallback"`: the fallback language either defined in the form, the model instance, or in the system, in that order of priority
@@ -46,10 +46,10 @@ Defines the languages included in the form.
     form = NewsRoomTranslationForm(languages=["it", "fallback"])
 
 
-`fallback_language`
--------------------
+Setting the fallback language
+-----------------------------
 
-Defines the fallback_language in the form.
+`fallback_language` defines the fallback language in the form.
 Requires `"fallback"` to be included in `languages`.
 Can be defined via the form `Meta` options as in the example above, and also be passed as a kwarg like `languages`.
 The following prioritization is followed:
@@ -62,8 +62,8 @@ The following prioritization is followed:
         e.g. `i18n = TranslationField(fields=("title", "header"), fallback_language_field="language_code")`
     4) The default language of the system: If no `Meta` option is given fallback reverts to `get_default_language()`
 
-Field properties
-----------------
+Handling of field properties
+----------------------------
 
 Properties of translation form fields are inherited from the form field that is generated for the original model field.
 The label of the field is adjusted to include the relevant language

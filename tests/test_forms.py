@@ -67,7 +67,7 @@ class ExcludeForm(TranslationModelForm):
         widgets = {"title": forms.widgets.Textarea}
 
 
-class TranslationFormTestCase(TestCase):
+class TranslationModelFormTestCase(TestCase):
     def test_languages_errors(self):
         """Test the error messages for incorrect languages options."""
 
@@ -130,6 +130,17 @@ class TranslationFormTestCase(TestCase):
             list(form.fields.keys()),
             ["title", "start_date", "default_language", "header", "end_date"],
         )
+
+    def test_fields_defined_with_fields_option_explicit_naming_of_default_field(self):
+        """Test that the default language fields is not repeated."""
+        
+        class BadForm(TranslationModelForm):
+            class Meta:
+                model = Challenge
+                fields = ("title", "title_en", "header")
+
+        form = BadForm()
+        self.assertEqual(list(form.fields.keys()), ["title", "header"])
 
     def test_fields_defined_with_fields_option_tuple(self):
         """Test that form works correctly even if fields is defined in tuple format."""

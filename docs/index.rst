@@ -24,8 +24,8 @@ Table of contents
     :caption: Documentation
 
     pages/getting-started
-    pages/working-with-models
     pages/translation-model-form
+    pages/working-with-models
     pages/performance
     pages/inner-workings
     pages/known-issues
