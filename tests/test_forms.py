@@ -133,7 +133,7 @@ class TranslationModelFormTestCase(TestCase):
 
     def test_fields_defined_with_fields_option_explicit_naming_of_default_field(self):
         """Test that the default language fields is not repeated."""
-        
+
         class BadForm(TranslationModelForm):
             class Meta:
                 model = Challenge
