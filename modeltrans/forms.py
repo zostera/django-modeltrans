@@ -16,7 +16,7 @@ class TranslationModelFormOptions(forms.models.ModelFormOptions):
 
     def __init__(self, options=None):
         super().__init__(options)
-        self.languages = getattr(options, "languages", ["browser"])
+        self.languages = getattr(options, "languages", ["browser", "fallback"])
         self.fallback_language = getattr(options, "fallback_language", None)
 
 
