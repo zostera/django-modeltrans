@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from modeltrans.conf import get_default_language
 from modeltrans.fields import TranslationField
 from modeltrans.manager import MultilingualManager
 
@@ -174,10 +175,13 @@ class Challenge(models.Model):
     """Model using a custom fallback language per instance/record."""
 
     title = models.CharField(max_length=255)
+    header = models.CharField(max_length=255, null=True, blank=True)
 
-    default_language = models.CharField(max_length=2, null=True, blank=True)
+    default_language = models.CharField(
+        max_length=2, null=True, blank=True, default=get_default_language()
+    )
 
-    i18n = TranslationField(fields=("title",), fallback_language_field="default_language")
+    i18n = TranslationField(fields=("title", "header"), fallback_language_field="default_language")
 
     def __str__(self):
         return self.title_i18n
