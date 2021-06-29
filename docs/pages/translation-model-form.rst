@@ -38,6 +38,7 @@ Setting the form languages
         - `"browser"`: the language that is active in the browser session
         - `"fallback"`: the fallback language either defined in the form, the model instance, or in the system, in that order of priority
         - a language code: e.g. `"fr"`, `"it"`
+    - Default: `["browser", "fallback"]`
     - Ordering: the ordering defined in the declaration is preserved
     - Duplicate languages are removed, e.g. `["browser", "fr", "fallback"]`, becomes `["fr"]` if browser language and fallback are also `"fr"`.
 

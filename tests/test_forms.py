@@ -91,7 +91,7 @@ class TranslationModelFormTestCase(TestCase):
     def test_defaults(self):
         """Test the default form options."""
         form = Form()
-        self.assertEqual(form.languages, ["browser"])
+        self.assertEqual(form.languages, ["browser", "fallback"])
         self.assertEqual(form.fallback_language, get_default_language())
 
     def test_get_fallback_language(self):
