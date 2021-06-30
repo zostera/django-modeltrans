@@ -1,7 +1,7 @@
 django-modeltrans change log
 ============================
 
-## 0.6.1 (2021-06-04)
+## 0.7.0 (2021-06-30)
  - Add `TranslationModelForm`
 
 ## 0.6.0 (2021-04-07)
