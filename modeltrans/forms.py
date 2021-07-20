@@ -18,6 +18,10 @@ class TranslationModelFormOptions(forms.models.ModelFormOptions):
         super().__init__(options)
         self.languages = getattr(options, "languages", ["browser", "fallback"])
         self.fallback_language = getattr(options, "fallback_language", None)
+        self.labels = {
+            "fallback": getattr(options, "fallback_label", _("fallback language")),
+            "translation": getattr(options, "translation_label", _("translation language")),
+        }
 
 
 class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
@@ -202,6 +206,7 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
 
         self.model_i18n_field = get_i18n_field(self._meta.model)
         self.languages = languages or self._meta.languages
+        self.labels = self._meta.labels
         self.i18n_fields = [
             field for field in self.model_i18n_field.fields if field in self.base_fields.keys()
         ]
@@ -245,7 +250,9 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
                 if field_name != original_field_name:
                     language = field_name.replace(f"{original_field_name}_", "")
                 is_translation = language != self.fallback_language
-                label_text = _("translation language") if is_translation else _("default language")
+                label_text = (
+                    self.labels["translation"] if is_translation else self.labels["fallback"]
+                )
                 label = f"{original_field.label} ({language.upper()}, {label_text})"
                 self.fields[field_name].label = label
                 self.fields[field_name].required = (

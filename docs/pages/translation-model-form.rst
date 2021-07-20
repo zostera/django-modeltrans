@@ -71,4 +71,9 @@ The label of the field is adjusted to include the relevant language
 and to designate the field as a translation or default fallback field, as follows:
 
   - translation fields: "field name (NL, translation language)"
-  - fallback field: "field name (EN, default language)"
+  - fallback field: "field name (EN, fallback language)"
+
+The labels "translation language" and "fallback language" are customizable using the `Meta` options:
+
+  - `fallback_label` (defaults to "fallback language")
+  - `translation_label` (defaults to "translation language")
