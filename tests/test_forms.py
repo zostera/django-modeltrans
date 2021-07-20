@@ -219,7 +219,7 @@ class TranslationModelFormTestCase(TestCase):
         """Test that fields are set with the correct properties."""
         with self.subTest("Browser (fallback) language"):
             title_field = Form().fields["title"]
-            self.assertEqual(title_field.label, "Title (EN, default language)")
+            self.assertEqual(title_field.label, "Title (EN, fallback language)")
             self.assertTrue(title_field.required)
 
         with self.subTest("Custom (fallback) language"):
@@ -236,9 +236,26 @@ class TranslationModelFormTestCase(TestCase):
             self.assertEqual(title_de_field.widget.__class__, forms.widgets.Textarea)
 
             title_fr_field = form.fields["title_fr"]
-            self.assertEqual(title_fr_field.label, "Title (FR, default language)")
+            self.assertEqual(title_fr_field.label, "Title (FR, fallback language)")
             self.assertEqual(title_fr_field.required, True)
             self.assertEqual(title_fr_field.widget.__class__, forms.widgets.Textarea)
+
+        with self.subTest("Custom labels"):
+
+            class CustomLabelForm(TranslationModelForm):
+                class Meta:
+                    model = Challenge
+                    fields = ["title"]
+                    languages = ["browser", "fallback"]
+                    fallback_language = "fr"
+                    fallback_label = "default language"
+                    translation_label = "new language"
+
+            form = CustomLabelForm()
+            title_field = form.fields["title"]
+            self.assertEqual(title_field.label, "Title (EN, new language)")
+            title_field = form.fields["title_fr"]
+            self.assertEqual(title_field.label, "Title (FR, default language)")
 
     def test_form_initial_values(self):
         challenge = Challenge.objects.create(title="english", title_fr="french")
