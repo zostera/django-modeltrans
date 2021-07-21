@@ -2,7 +2,6 @@ import json
 
 import django_tables2 as tables
 from django.shortcuts import redirect
-from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView
 from django.views.generic.edit import UpdateView
 from django_filters import FilterSet
@@ -17,7 +16,7 @@ class BlogTable(tables.Table):
         template_code="""<a href="{% url 'blog-edit' pk=record.pk %}" class="btn btn-sm btn-primary">edit</a>""",
         empty_values=(),
         orderable=False,
-        verbose_name=_("edit"),
+        verbose_name="edit",
     )
 
     class Meta:
