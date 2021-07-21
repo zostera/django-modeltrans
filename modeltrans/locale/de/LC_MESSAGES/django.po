@@ -18,10 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: example/app/templates/blog.html:6
-msgid "edit"
-msgstr "bearbeiten"
-
 #: modeltrans/fields.py:77
 msgid "current language: {}"
 msgstr "aktuelle Sprache: {}"
