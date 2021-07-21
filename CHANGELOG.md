@@ -1,6 +1,10 @@
 django-modeltrans change log
 ============================
 
+## 0.7.1 (2021-06-30)
+ - Add translations for NL, DE and FR
+ - Remove translation strings in example and tests
+
 ## 0.7.0 (2021-06-30)
  - Add `TranslationModelForm`
 
