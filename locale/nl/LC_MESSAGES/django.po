@@ -1,0 +1,71 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-07-21 12:35+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: example/app/templates/blog.html:6 example/app/views.py:20
+msgid "edit"
+msgstr "bewerk"
+
+#: example/example/settings.py:111 test_migrations/migrate_test/settings.py:104
+msgid "German"
+msgstr "Duits"
+
+#: example/example/settings.py:111 test_migrations/migrate_test/settings.py:104
+msgid "English"
+msgstr "Engels"
+
+#: example/example/settings.py:111 test_migrations/migrate_test/settings.py:104
+msgid "Dutch"
+msgstr "Nederlands"
+
+#: example/example/settings.py:111 test_migrations/migrate_test/settings.py:104
+msgid "French"
+msgstr "Frans"
+
+#: modeltrans/fields.py:77
+msgid "current language: {}"
+msgstr "huidige taal: {}"
+
+#: modeltrans/forms.py:248
+msgid "translation language"
+msgstr "vertalingstaal"
+
+#: modeltrans/forms.py:248
+msgid "default language"
+msgstr "standaardtaal"
+
+#: tests/app/models.py:86
+msgid "slug"
+msgstr "slug"
+
+#: tests/app/models.py:87 tests/app/models.py:98
+msgid "name"
+msgstr "naam"
+
+#: tests/app/models.py:97
+msgid "value"
+msgstr "waarde"
+
+#: tests/app/models.py:99
+msgid "description"
+msgstr "beschrijving"
+
+#: tests/app/models.py:100
+msgid "sort order"
+msgstr "sorteervolgorde"
