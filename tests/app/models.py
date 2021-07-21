@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 
 from modeltrans.conf import get_default_language
 from modeltrans.fields import TranslationField
@@ -83,8 +82,8 @@ class NullableTextModel(models.Model):
 
 # copy of attributes in ringbase
 class Attribute(models.Model):
-    slug = models.SlugField(verbose_name=_("slug"), unique=True)
-    name = models.CharField(_("name"), max_length=100, db_index=True)
+    slug = models.SlugField(verbose_name="slug", unique=True)
+    name = models.CharField("name", max_length=100, db_index=True)
 
     i18n = TranslationField(fields=("name",))
 
@@ -94,10 +93,10 @@ class Attribute(models.Model):
 
 class Choice(models.Model):
     attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
-    value = models.CharField(_("value"), max_length=100, blank=True, db_index=True)
-    name = models.CharField(_("name"), max_length=100, blank=True, db_index=True)
-    description = models.TextField(_("description"), blank=True)
-    sort_order = models.IntegerField(_("sort order"), default=0, db_index=True)
+    value = models.CharField("value", max_length=100, blank=True, db_index=True)
+    name = models.CharField("name", max_length=100, blank=True, db_index=True)
+    description = models.TextField("description", blank=True)
+    sort_order = models.IntegerField("sort order", default=0, db_index=True)
 
     i18n = TranslationField(fields=("name", "description"))
 
