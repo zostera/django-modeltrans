@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-21 12:35+0000\n"
+"POT-Creation-Date: 2021-07-21 13:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,25 +18,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: example/app/templates/blog.html:6 example/app/views.py:20
+#: example/app/templates/blog.html:6
 msgid "edit"
 msgstr "bearbeiten"
-
-#: example/example/settings.py:111 test_migrations/migrate_test/settings.py:104
-msgid "German"
-msgstr "Deutsch"
-
-#: example/example/settings.py:111 test_migrations/migrate_test/settings.py:104
-msgid "English"
-msgstr "Englisch"
-
-#: example/example/settings.py:111 test_migrations/migrate_test/settings.py:104
-msgid "Dutch"
-msgstr "Niederländisch"
-
-#: example/example/settings.py:111 test_migrations/migrate_test/settings.py:104
-msgid "French"
-msgstr "Französisch"
 
 #: modeltrans/fields.py:77
 msgid "current language: {}"
@@ -49,23 +33,3 @@ msgstr "Übersetzungssprache"
 #: modeltrans/forms.py:248
 msgid "default language"
 msgstr "Standardsprache"
-
-#: tests/app/models.py:86
-msgid "slug"
-msgstr ""
-
-#: tests/app/models.py:87 tests/app/models.py:98
-msgid "name"
-msgstr "Name"
-
-#: tests/app/models.py:97
-msgid "value"
-msgstr "Wert"
-
-#: tests/app/models.py:99
-msgid "description"
-msgstr "Beschreibung"
-
-#: tests/app/models.py:100
-msgid "sort order"
-msgstr "Anordnung"
