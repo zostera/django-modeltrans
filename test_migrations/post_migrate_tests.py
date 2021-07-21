@@ -1,6 +1,7 @@
 from django.db import connection
 from django.test import TestCase
 from django.utils.translation import override
+
 from migrate_test.app.models import Blog
 
 
