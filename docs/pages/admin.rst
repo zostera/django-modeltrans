@@ -7,7 +7,7 @@ By default, each field is displayed for each language configured for django-mode
 This might work for a couple of languages, but with 2 translated fields and 10 languages,
 it already is a bit unwieldy.
 
-A mixin is provided to show only the default language (`settings.LANGUAGE_CODE`) and
+The `ActiveLanguageMixin` is provided to show only the default language (`settings.LANGUAGE_CODE`) and
 the currently active language. Use like this::
 
     from django.contrib import admin
@@ -21,8 +21,8 @@ the currently active language. Use like this::
         pass
 
 
-This uses `modeltrans.forms.TranslationModelForm`, if you need more customization,
-it can be used directly::
+`ActiveLanguageMixin` uses `modeltrans.forms.TranslationModelForm`, if you need more customization,
+the latter can be used directly::
 
     from modeltrans.forms import TranslationModelForm
 
