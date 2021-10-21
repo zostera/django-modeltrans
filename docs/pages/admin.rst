@@ -1,13 +1,13 @@
 .. _admin:
 
-Admin support
-=============
+Admin
+=====
 
 By default, each field is displayed for each language configured for django-modeltrans.
 This might work for a couple of languages, but with 2 translated fields and 10 languages,
 it already is a bit unwieldy.
 
-A mixin is provided to show only the default language (settings.LANGUAGE_CODE) and
+A mixin is provided to show only the default language (`settings.LANGUAGE_CODE`) and
 the currently active language. Use like this::
 
     from django.contrib import admin
@@ -19,3 +19,17 @@ the currently active language. Use like this::
     @admin.register(Blog)
     class BlogAdmin(ActiveLanguageMixin, admin.ModelAdmin):
         pass
+
+
+This uses `modeltrans.forms.TranslationModelForm`, if you need more customization,
+it can be used directly::
+
+    from modeltrans.forms import TranslationModelForm
+
+    class BlogForm(TranslationModelForm):
+        pass
+
+
+    @admin.register(Blog)
+    class BlogAdmin(admin.ModelAdmin):
+        form_class = BlogForm
