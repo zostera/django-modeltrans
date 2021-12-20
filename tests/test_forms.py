@@ -1,5 +1,6 @@
 from django import forms
-from django.forms import ModelForm
+from django.forms import ModelForm, modelform_factory
+from django.forms.models import ALL_FIELDS
 from django.test import TestCase
 from django.utils.translation import override
 
@@ -72,9 +73,8 @@ class TranslationModelFormTestCase(TestCase):
         """Test the error messages for incorrect languages options."""
 
         for language in [0, "es_it", "e", "xx"]:
-            with self.assertRaisesMessage(
-                ValueError, f"languages: value {language} is not permitted"
-            ):
+            expected_message = f"languages: value {language} is not permitted"
+            with self.assertRaisesMessage(ValueError, expected_message):
                 Form(languages=[language])
 
         class NoLanguageForm(TranslationModelForm):
@@ -93,6 +93,17 @@ class TranslationModelFormTestCase(TestCase):
         form = Form()
         self.assertEqual(form.languages, ["browser", "fallback"])
         self.assertEqual(form.fallback_language, get_default_language())
+
+    def test_all_fields(self):
+        class Form(TranslationModelForm):
+            class Meta:
+                model = Challenge
+                fields = ALL_FIELDS
+
+        Form().as_p()
+
+        Form = modelform_factory(model=Challenge, form=TranslationModelForm, fields=ALL_FIELDS)
+        Form().as_p()
 
     def test_get_fallback_language(self):
         """Test that the form fallback language is set correctly."""

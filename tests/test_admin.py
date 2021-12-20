@@ -27,24 +27,34 @@ class AdminTest(TestCase):
         self.wikipedia = Category.objects.get(name="Wikipedia")
 
     def test_limited_admin(self):
-        urls = [
-            reverse("admin:app_category_changelist"),
-            reverse("admin:app_category_change", args=(self.wikipedia.pk,)),
-        ]
-        for url in urls:
+        url = reverse("admin:app_category_changelist")
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.wikipedia.name)
+
+        with override("nl"):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             self.assertContains(response, self.wikipedia.name)
 
-            with override("nl"):
-                response = self.client.get(url)
-                self.assertEqual(response.status_code, 200)
-                self.assertContains(response, self.wikipedia.name)
+        with override("de"):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, self.wikipedia.name)
 
-            with override("de"):
-                response = self.client.get(url)
-                self.assertEqual(response.status_code, 200)
-                self.assertContains(response, self.wikipedia.name)
+    def test_change_view(self):
+        url = reverse("admin:app_category_change", args=(self.wikipedia.pk,))
+
+        with override("nl"):
+            response = self.client.get(url)
+            self.assertNotContains(response, "name_de")
+            self.assertContains(response, "name_nl")
+
+        with override("de"):
+            response = self.client.get(url)
+            self.assertNotContains(response, "name_nl")
+            self.assertContains(response, "name_de")
 
     def test_non_translated_admin(self):
         url = reverse("admin:app_site_change", args=(self.site.pk,))

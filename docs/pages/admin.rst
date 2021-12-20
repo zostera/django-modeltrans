@@ -32,4 +32,4 @@ the latter can be used directly::
 
     @admin.register(Blog)
     class BlogAdmin(admin.ModelAdmin):
-        form_class = BlogForm
+        form = BlogForm
