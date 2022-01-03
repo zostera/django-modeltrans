@@ -1,7 +1,7 @@
 import itertools
 
 from django import forms
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext
 
 from .conf import get_available_languages, get_default_language
 from .fields import get_instance_field_value
@@ -245,7 +245,11 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
                 if field_name != original_field_name:
                     language = field_name.replace(f"{original_field_name}_", "")
                 is_translation = language != self.fallback_language
-                label_text = _("translation language") if is_translation else _("default language")
+                label_text = (
+                    gettext("translation language")
+                    if is_translation
+                    else gettext("default language")
+                )
                 label = f"{original_field.label} ({language.upper()}, {label_text})"
                 self.fields[field_name].label = label
                 self.fields[field_name].required = (

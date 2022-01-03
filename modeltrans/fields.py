@@ -1,7 +1,7 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import F, fields
 from django.db.models.functions import Cast, Coalesce
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext
 
 from .conf import get_default_language, get_fallback_chain, get_modeltrans_setting
 from .utils import (
@@ -74,7 +74,7 @@ class TranslatedVirtualField:
             return self._help_text
 
         if get_modeltrans_setting("MODELTRANS_ADD_FIELD_HELP_TEXT") and self.language is None:
-            return _("current language: {}").format(get_language())
+            return gettext("current language: {}").format(get_language())
 
     def contribute_to_class(self, cls, name):
         self.model = cls
@@ -84,7 +84,7 @@ class TranslatedVirtualField:
         self.column = None
 
         # Use a translated verbose name:
-        translated_field_name = _(self.original_field.verbose_name)
+        translated_field_name = gettext(self.original_field.verbose_name)
         if self.language is not None:
             translated_field_name += " ({})".format(self.language.upper())
         self.verbose_name = translated_field_name
