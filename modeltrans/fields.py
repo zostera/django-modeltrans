@@ -1,5 +1,6 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import F, fields
+from django.db.models.expressions import Case, When
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import gettext
 
@@ -22,10 +23,10 @@ except ImportError:
 
 SUPPORTED_FIELDS = (fields.CharField, fields.TextField)
 
-DEFAULT_LANGUAGE = get_default_language()
+GLOBAL_DEFAULT_LANGUAGE = get_default_language()
 
 
-def translated_field_factory(original_field, language=None, *args, **kwargs):
+def translated_field_factory(original_field, language=None, default_language_field=None, *args, **kwargs):
     if not isinstance(original_field, SUPPORTED_FIELDS):
         raise ImproperlyConfigured(
             "{} is not supported by django-modeltrans.".format(original_field.__class__.__name__)
@@ -36,7 +37,7 @@ def translated_field_factory(original_field, language=None, *args, **kwargs):
 
     Specific.__name__ = "Translated{}".format(original_field.__class__.__name__)
 
-    return Specific(original_field, language, *args, **kwargs)
+    return Specific(original_field, language, *args, default_language_field=default_language_field, **kwargs)
 
 
 class TranslatedVirtualField:
@@ -45,18 +46,21 @@ class TranslatedVirtualField:
 
     Arguments:
         original_field: The original field to be translated
-        language: The language to translate to, or `None` to track the current active Django language.
+        language: The language to translate to, or `None` to use the default language (see `default_language_field`)
+        default_language_field: Name of the field that contains the default language for this field, or `None` to track
+            the current active Django language
     """
 
     # Implementation inspired by HStoreVirtualMixin from:
     # https://github.com/djangonauts/django-hstore/blob/master/django_hstore/virtual.py
 
-    def __init__(self, original_field, language=None, *args, **kwargs):
+    def __init__(self, original_field, language=None, *args, default_language_field=None, **kwargs):
         # TODO: this feels like a big hack.
         self.__dict__.update(original_field.__dict__)
 
         self.original_field = original_field
         self.language = language
+        self.default_language_field = default_language_field
 
         self.blank = kwargs["blank"]
         self.null = kwargs["null"]
@@ -128,7 +132,8 @@ class TranslatedVirtualField:
 
         language = self.get_language()
         original_value = getattr(instance, self.original_name)
-        if language == DEFAULT_LANGUAGE and original_value:
+        default_language = self.get_default_language(instance)
+        if language == default_language and original_value:
             return original_value
 
         # Make sure we test for containment in a dict, not in None
@@ -144,7 +149,7 @@ class TranslatedVirtualField:
         # This is the _i18n version of the field, and the current language is not available,
         # so we walk the fallback chain:
         for fallback_language in (language,) + self.get_instance_fallback_chain(instance, language):
-            if fallback_language == DEFAULT_LANGUAGE:
+            if fallback_language == default_language:
                 if original_value:
                     return original_value
                 else:
@@ -163,7 +168,8 @@ class TranslatedVirtualField:
 
         language = self.get_language()
 
-        if language == DEFAULT_LANGUAGE:
+        default_language = self.get_default_language(instance)
+        if language == default_language:
             setattr(instance, self.original_name, value)
         else:
             field_name = build_localized_fieldname(self.original_name, language)
@@ -211,7 +217,7 @@ class TranslatedVirtualField:
         return Field()
 
     def _localized_lookup(self, language, bare_lookup):
-        if language == DEFAULT_LANGUAGE:
+        if not self.default_language_field and language == GLOBAL_DEFAULT_LANGUAGE:
             return bare_lookup.replace(self.name, self.original_name)
 
         # When accessing a table directly, the i18_lookup will be just "i18n", while following relations
@@ -223,6 +229,15 @@ class TranslatedVirtualField:
             # abuse build_localized_fieldname without language to get "<field>_"
             field_prefix = build_localized_fieldname(self.original_name, "")
             return FallbackTransform(field_prefix, language, i18n_lookup)
+        elif self.default_language_field:
+            default_value_field = bare_lookup.replace(self.name, self.original_name)
+            return Case(
+                When(**{self.default_language_field: language}, then=default_value_field),
+                default=KeyTextTransform(
+                    build_localized_fieldname(self.original_name, language), i18n_lookup
+                ),
+                output_field=self.output_field(),
+            )
         else:
             return KeyTextTransform(
                 build_localized_fieldname(self.original_name, language), i18n_lookup
@@ -233,7 +248,7 @@ class TranslatedVirtualField:
         Compose an expression to get the value for this virtual field in a query.
         """
         language = self.get_language()
-        if language == DEFAULT_LANGUAGE:
+        if not self.default_language_field and language == GLOBAL_DEFAULT_LANGUAGE:
             return F(self._localized_lookup(language, bare_lookup))
 
         if not fallback:
@@ -254,7 +269,21 @@ class TranslatedVirtualField:
         # and now, add the list of fallback languages to the lookup list
         for fallback_language in fallback_chain:
             lookups.append(self._localized_lookup(fallback_language, bare_lookup))
+
+        if self.default_language_field:
+            # Add the original field as a fallback (might not be in the fallback chain)
+            # TBD: This may be a good idea anyway even if self.default_language_field is None. After all, __get__()
+            # falls back to the original field if all else fails, so it may be surprising that `instance.field_i18n`
+            # falls back to the original field but `Model.objects.values_list('field_i18n')` does not. Changing this
+            # might break existing applications though.
+            lookups.append(bare_lookup.replace(self.name, self.original_name))
+
         return Coalesce(*lookups, output_field=self.output_field())
+
+    def get_default_language(self, instance):
+        if not self.default_language_field:
+            return GLOBAL_DEFAULT_LANGUAGE
+        return get_instance_field_value(instance, self.default_language_field)
 
 
 class TranslationField(JSONField):
@@ -263,6 +292,10 @@ class TranslationField(JSONField):
 
     Arguments:
         fields (iterable): List of model field names to make translatable.
+        default_language_field (field name):
+            Field of the model containing the language stored in the original
+            model fields; use Django main language by default. May contain `__`
+            as a field name separator to follow foreign keys.
         required_languages (iterable or dict): List of languages required for the model.
             If a dict is supplied, the keys must be translated field names with the value
             containing a list of required languages for that specific field.
@@ -282,6 +315,7 @@ class TranslationField(JSONField):
     def __init__(
         self,
         fields=None,
+        default_language_field=None,
         required_languages=None,
         virtual_fields=True,
         fallback_language_field=None,
@@ -289,6 +323,7 @@ class TranslationField(JSONField):
         **kwargs,
     ):
         self.fields = fields or ()
+        self.default_language_field = default_language_field
         self.required_languages = required_languages or ()
         self.virtual_fields = virtual_fields
         self.fallback_language_field = fallback_language_field

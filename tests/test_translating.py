@@ -44,6 +44,8 @@ class Translating_utils(TestCase):
             app_models.Choice,
             app_models.Challenge,
             app_models.ChallengeContent,
+            app_models.Organization,
+            app_models.Department,
         }
         self.assertEqual(set(get_translated_models("app")), expected)
 

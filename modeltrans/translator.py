@@ -61,9 +61,10 @@ def translate_model(Model):
     validate(Model)
 
     add_manager(Model)
+    default_language_field = get_i18n_field_param(Model, i18n_field, "default_language_field")
     fields_to_translate = get_i18n_field_param(Model, i18n_field, "fields")
     required_languages = get_i18n_field_param(Model, i18n_field, "required_languages")
-    add_virtual_fields(Model, fields_to_translate, required_languages)
+    add_virtual_fields(Model, default_language_field, fields_to_translate, required_languages)
     patch_constructor(Model)
 
     translate_meta_ordering(Model)
@@ -136,7 +137,7 @@ def raise_if_field_exists(Model, field_name):
     )
 
 
-def add_virtual_fields(Model, fields, required_languages):
+def add_virtual_fields(Model, default_language_field, fields, required_languages):
     """
     Adds newly created translation fields to the given translation options.
     """
@@ -154,34 +155,42 @@ def add_virtual_fields(Model, fields, required_languages):
         # first, add a `<original_field_name>_i18n` virtual field to get the currently
         # active translation for a field
         field = translated_field_factory(
-            original_field=original_field, blank=True, null=True, editable=False  # disable in admin
+            original_field=original_field, blank=True, null=True, editable=False,  # disable in admin
+            default_language_field=default_language_field,
         )
 
         raise_if_field_exists(Model, field.get_field_name())
         field.contribute_to_class(Model, field.get_field_name())
 
-        # add a virtual field pointing to the original field with name
-        # <original_field_name>_<LANGUAGE_CODE>
-        field = translated_field_factory(
-            original_field=original_field,
-            language=get_default_language(),
-            blank=True,
-            null=True,
-            editable=False,
-        )
-        raise_if_field_exists(Model, field.get_field_name())
-        field.contribute_to_class(Model, field.get_field_name())
+        if default_language_field:
+            # create field for global default language later on
+            add_field_for_global_default_language = True
+        else:
+            # create field for global default language now with different arguments than fields for other languages
+            add_field_for_global_default_language = False
+            # add a virtual field pointing to the original field with name
+            # <original_field_name>_<LANGUAGE_CODE>
+            field = translated_field_factory(
+                original_field=original_field,
+                language=get_default_language(),
+                blank=True,
+                null=True,
+                editable=False,
+            )
+            raise_if_field_exists(Model, field.get_field_name())
+            field.contribute_to_class(Model, field.get_field_name())
 
         # now, for each language, add a virtual field to get the tranlation for
         # that specific langauge
         # <original_field_name>_<language>
-        for language in get_available_languages(include_default=False):
+        for language in get_available_languages(include_default=add_field_for_global_default_language):
             blank_allowed = language not in field_required_languages
             field = translated_field_factory(
                 original_field=original_field,
                 language=language,
                 blank=blank_allowed,
                 null=blank_allowed,
+                default_language_field=default_language_field,
             )
             raise_if_field_exists(Model, field.get_field_name())
             field.contribute_to_class(Model, field.get_field_name())

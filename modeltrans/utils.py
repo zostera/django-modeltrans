@@ -32,12 +32,14 @@ def split_translated_fieldname(field_name):
     return (field_name[0:_pos], field_name[_pos + 1 :])
 
 
-def build_localized_fieldname(field_name, lang, ignore_default=False):
+def build_localized_fieldname(field_name, lang, ignore_default=False, default_language=None):
+    if default_language is None:
+        default_language = get_default_language()
     if lang == "id":
         # The 2-letter Indonesian language code is problematic with the
         # current naming scheme as Django foreign keys also add "id" suffix.
         lang = "ind"
-    if ignore_default and lang == get_default_language():
+    if ignore_default and lang == default_language:
         return field_name
     return "{}_{}".format(field_name, lang.replace("-", "_"))
 

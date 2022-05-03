@@ -12,7 +12,9 @@ from .app.models import (
     Challenge,
     ChallengeContent,
     ChildArticle,
+    Department,
     NullableTextModel,
+    Organization,
     TextModel,
 )
 from .utils import CreateTestModel
@@ -42,6 +44,54 @@ class TranslatedFieldTest(TestCase):
         # other translations are still there.
         self.assertEqual(m.title_nl, "Valk")
         self.assertEqual(m.title_de, "Falk")
+
+    @override_settings(
+        MODELTRANS_AVAILABLE_LANGUAGES=("de", "en", "nl", "fr"),
+        MODELTRANS_FALLBACK={"default": ("nl",)},
+    )
+    def test_get_has_no_translation_fallback_to_local_default_language(self):
+        org = Organization(language="de", name="das foo", i18n={"name_en": "bar"})
+        # en is activated and name_en is present
+        self.assertEqual(org.name_i18n, "bar")
+        with override("fr"):
+            # fr is activated but name_fr is not present and neither is name_nl (from the fallback chain)
+            self.assertEqual(org.name_i18n, "das foo")
+
+    @override_settings(
+        MODELTRANS_AVAILABLE_LANGUAGES=("de", "en", "nl", "fr"),
+        MODELTRANS_FALLBACK={"default": ("nl",)},
+    )
+    def test_get_has_no_translation_fallback_to_fallback_chain_despite_local_default_language(self):
+        org = Organization(language="de", name="das foo", i18n={"name_en": "bar", "name_nl": "foo"})
+        # en is activated and name_en is present
+        self.assertEqual(org.name_i18n, "bar")
+        with override("fr"):
+            # fr is activated and name_fr is not present, but name_nl is (from the fallback chain)
+            self.assertEqual(org.name_i18n, "foo")
+
+    @override_settings(
+        MODELTRANS_AVAILABLE_LANGUAGES=("en", "de", "nl"),
+        MODELTRANS_FALLBACK={"default": ("en",)},
+    )
+    def test_default_language_field_with_fallback_language_field(self):
+        class Model(models.Model):
+            title = models.CharField(max_length=10)
+            language = models.CharField(max_length=2)
+            i18n = TranslationField(
+                fields=["title"],
+                default_language_field="language",
+                fallback_language_field="language",
+            )
+
+            class Meta:
+                app_label = "test"
+
+        with CreateTestModel(Model, translate=True):
+            m = Model(language="nl", title="foo", title_en="bar")
+
+        with override("de"):
+            # Fall back to language in `fallback_language_field` and not to languages in fallback chain
+            self.assertEqual(m.title_i18n, "foo")
 
     def test_get_non_translatable_field(self):
         m = Blog(title="Falcon")
@@ -120,12 +170,21 @@ class TranslatedFieldTest(TestCase):
         with override("fr"):
             self.assertEqual(m.description_i18n, DESCRIPTION)
 
-    def test_creating_using_virtual_default_language_field(self):
+    def test_creating_using_virtual_global_default_language_field(self):
         m = Blog.objects.create(title_en="Falcon")
 
         self.assertEqual(m.title, "Falcon")
 
-    def test_creationg_prevents_double_definition(self):
+    def test_creating_using_virtual_local_default_language_field(self):
+        org = Organization.objects.create(language="de", name_de="foo")
+        self.assertEqual(org.name, "foo")
+
+    def test_creating_using_virtual_local_default_language_field_on_related_model(self):
+        org = Organization.objects.create(language="de", name_de="foo")
+        dept = Department.objects.create(organization=org, name_de="bar")
+        self.assertEqual(dept.name, "bar")
+
+    def test_creating_prevents_double_definition(self):
         expected_message = (
             'Attempted override of "title" with "title_en". Only ' "one of the two is allowed."
         )
