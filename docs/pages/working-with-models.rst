@@ -99,6 +99,11 @@ achieve this, you have two options:
   one for all models. If you don't set `MODELTRANS_FALLBACK["default"]`, `(LANGUAGE_CODE,)` will be used, which means
   that the global default language will have precedence over the per-record default language.
 
+**Caveat:** Changing the default language for instances cannot be easily done at the moment. When you change the default
+language, you must manually move the original field values to the JSON field and the other way around. Be aware that
+changing the default language of an instance may affect instances from other models as well if their
+`default_language_field` refers to the changed instance via foreign keys (using the `__` syntax).
+
 
 Inheritance of models with translated fields.
 ---------------------------------------------
