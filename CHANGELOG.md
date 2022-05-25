@@ -1,6 +1,9 @@
 django-modeltrans change log
 ============================
 
+## 0.7.3 (2022-05-25)
+- Revert: Use `TranslationModelForm` to implement `ActiveLanguageMixin` (#86)
+
 ## 0.7.2 (2021-10-21)
 - Use `TranslationModelForm` to implement `ActiveLanguageMixin` (#80)
 - Add support for django 4.0 (#78)
