@@ -24,14 +24,14 @@ Table of contents
     :caption: Documentation
 
     pages/getting-started
-    pages/forms
-    pages/admin
+    pages/translation-model-form
     pages/working-with-models
     pages/performance
     pages/inner-workings
     pages/known-issues
     pages/related-packages
     pages/management
+    pages/admin
 
 .. toctree::
     :maxdepth: 1
