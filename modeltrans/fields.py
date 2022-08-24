@@ -270,13 +270,8 @@ class TranslatedVirtualField:
         for fallback_language in fallback_chain:
             lookups.append(self._localized_lookup(fallback_language, bare_lookup))
 
-        if self.default_language_field:
-            # Add the original field as a fallback (might not be in the fallback chain)
-            # TBD: This may be a good idea anyway even if self.default_language_field is None. After all, __get__()
-            # falls back to the original field if all else fails, so it may be surprising that `instance.field_i18n`
-            # falls back to the original field but `Model.objects.values_list('field_i18n')` does not. Changing this
-            # might break existing applications though.
-            lookups.append(bare_lookup.replace(self.name, self.original_name))
+        # Add the original field as a fallback (might not be in the fallback chain)
+        lookups.append(bare_lookup.replace(self.name, self.original_name))
 
         return Coalesce(*lookups, output_field=self.output_field())
 
