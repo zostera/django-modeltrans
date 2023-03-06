@@ -137,18 +137,18 @@ class TranslatedFieldTest(TestCase):
         Blogs have titles, not names, so trying to add something with a name
         should raise an eror.
         """
-        if DJANGO_VERSION < (2, 2):
-            expected_message = "'name' is an invalid keyword argument for this function"
-        else:
+        if DJANGO_VERSION < (4, 1):
             expected_message = "Blog() got an unexpected keyword argument 'name'"
+        else:
+            expected_message = "Blog() got unexpected keyword arguments: 'name'"
 
         with self.assertRaisesMessage(TypeError, expected_message):
             Blog.objects.create(name="Falcon")
 
-        if DJANGO_VERSION < (2, 2):
-            expected_message = "'name_nl' is an invalid keyword argument for this function"
-        else:
+        if DJANGO_VERSION < (4, 1):
             expected_message = "Blog() got an unexpected keyword argument 'name_nl'"
+        else:
+            expected_message = "Blog() got unexpected keyword arguments: 'name_nl'"
         with self.assertRaisesMessage(TypeError, expected_message):
             Blog.objects.create(title="Falcon", name_nl="Valk")
 
