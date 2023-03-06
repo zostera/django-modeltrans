@@ -3,7 +3,7 @@ from .translator import get_i18n_field
 from .utils import get_language
 
 
-class ActiveLanguageMixin(object):
+class ActiveLanguageMixin:
     """
     Add this mixin to your admin class to exclude all virtual fields, except:
 

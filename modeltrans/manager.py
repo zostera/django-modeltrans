@@ -1,3 +1,4 @@
+from django import VERSION as DJANGO_VERSION
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models import Count, Func, Manager, Q, QuerySet
 from django.db.models.constants import LOOKUP_SEP
@@ -6,7 +7,6 @@ from django.db.models.functions import Cast
 
 from .conf import get_default_language
 from .fields import TranslatedVirtualField
-from .utils import DJANGO_VERSION
 
 
 def transform_translatable_fields(model, fields):
@@ -193,7 +193,11 @@ class MultilingualQuerySet(QuerySet):
 
     def _rewrite_Q(self, q):
         if isinstance(q, Q):
-            return Q._new_instance(
+            if DJANGO_VERSION < (4, 2):
+                factory = Q._new_instance
+            else:
+                factory = Q.create
+            return factory(
                 list(self._rewrite_Q(child) for child in q.children),
                 connector=q.connector,
                 negated=q.negated,
@@ -274,29 +278,8 @@ class MultilingualQuerySet(QuerySet):
 
         return super().order_by(*new_field_names)
 
-    # Django 3.2 removed argument unpacking for _filter_or_exclude
-    # https://github.com/django/django/pull/13251
-    # Shim can be removed if support for django 3.1 is dropped
-    if DJANGO_VERSION < "3.2":
-
-        def _filter_or_exclude(self, negate, *args, **kwargs):
-            new_args = [Q(self._rewrite_Q(arg)) for arg in args]
-            new_kwargs = dict(
-                self._rewrite_filter_clause(field, value) for field, value in kwargs.items()
-            )
-
-            return super()._filter_or_exclude(negate, *new_args, **new_kwargs)
-
-    else:
-
-        def _filter_or_exclude(self, negate, args, kwargs):
-            new_args = [Q(self._rewrite_Q(arg)) for arg in args if arg]
-            new_kwargs = dict(
-                self._rewrite_filter_clause(field, value) for field, value in kwargs.items()
-            )
-            return super()._filter_or_exclude(negate, new_args, new_kwargs)
-
-    _filter_or_exclude.__doc__ = """
+    def _filter_or_exclude(self, negate, args, kwargs):
+        """
         Annotate lookups for `filter()` and `exclude()`.
 
         Examples:
@@ -309,6 +292,11 @@ class MultilingualQuerySet(QuerySet):
         In all cases, the field part of the field lookup will be changed to use
         the annotated verion.
         """
+        new_args = [Q(self._rewrite_Q(arg)) for arg in args if arg]
+        new_kwargs = dict(
+            self._rewrite_filter_clause(field, value) for field, value in kwargs.items()
+        )
+        return super()._filter_or_exclude(negate, new_args, new_kwargs)
 
     def _values(self, *fields, **expressions):
         """

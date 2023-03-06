@@ -120,7 +120,7 @@ def get_next_migration_filename(app_name, connection=None, migration_type="data"
     Return name (including the absolute path) of the next migration to insert for this app
     """
     latest_migration_name = get_latest_migration(app_name)
-    next_migration_name = "{0:04d}_i18n_{1}_migration.py".format(
+    next_migration_name = "{:04d}_i18n_{}_migration.py".format(
         int(latest_migration_name[0:4]) + 1, migration_type
     )
     app_base_path = os.path.dirname(apps.get_app_config(app_name).module.__file__)
@@ -128,7 +128,7 @@ def get_next_migration_filename(app_name, connection=None, migration_type="data"
     return os.path.join(app_base_path, "migrations", next_migration_name)
 
 
-class I18nMigration(object):
+class I18nMigration:
     helper_functions = ()
     template = """
 # -*- coding: utf-8 -*-
