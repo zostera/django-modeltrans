@@ -70,7 +70,6 @@ class BlogUpdateView(UpdateView):
 
 
 def fixtures(request):
-
     Blog.objects.all().delete()
     Category.objects.all().delete()
 

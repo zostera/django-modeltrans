@@ -275,7 +275,6 @@ class TranslatedFieldTest(TestCase):
 
 class CustomFallbackLanguageTest(TestCase):
     def test_instance_fallback(self):
-
         instance = Challenge(default_language="nl", title="Hurray", i18n={"title_nl": "Hoera"})
 
         with override("de"):
