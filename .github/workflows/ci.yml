@@ -4,24 +4,24 @@ jobs:
   black:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-python@v2
-      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4.5.0
+      - uses: actions/checkout@v3
       - run: python -m pip install --upgrade black
       - run: black --check .
 
   flake8:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-python@v2
-      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4.5.0
+      - uses: actions/checkout@v3
       - run: python -m pip install flake8
       - run: flake8
 
   isort:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-python@v2
-      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4.5.0
+      - uses: actions/checkout@v3
       - run: python -m pip install psycopg2-binary isort==5.6.4
       - run: isort --diff --check .
 
@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:10.8
+        image: postgres:12.8
         env:
           POSTGRES_USER: modeltrans
           POSTGRES_PASSWORD: modeltrans
@@ -39,31 +39,31 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, "3.10"]
-        django-version: [2.2, 3.1, 3.2, 4.0a1]
+        python-version: [3.7, 3.8, 3.9, "3.10", 3.11]
+        django-version: [3.2, 4.0, 4.1]
         exclude:
-            - python-version: 3.6
-              django-version: 4.0a1
             - python-version: 3.7
-              django-version: 4.0a1
-            - python-version: 3.8
-              django-version: 2.2
-            - python-version: 3.9
-              django-version: 2.2
+              django-version: 4.0
+            - python-version: 3.7
+              django-version: 4.1
+            - python-version: 3.7
+              django-version: 4.2b1
             - python-version: "3.10"
-              django-version: 2.2
+              django-version: 3.2
+            - python-version: 3.11
+              django-version: 3.2
 
     steps:
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4.5.0
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: python -m pip install Django==${{ matrix.django-version }}
         if: matrix.django-version != 'master'
       - run: python -m pip install https://github.com/django/django/archive/master.tar.gz
         if: matrix.django-version == 'master'
       - run: |
           python -m pip install coverage
-          python -m pip install psycopg2-binary==2.8.6
+          python -m pip install psycopg2-binary==2.9.5
       - run: coverage run --source=modeltrans manage.py test

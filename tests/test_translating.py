@@ -225,10 +225,10 @@ class TranslateModelTest(TestCase):
         self.assertFalse(hasattr(m, "title_i18n"))
         self.assertFalse(hasattr(m, "title_en"))
 
-        if DJANGO_VERSION < (2, 2):
-            expected_message = "'title_nl' is an invalid keyword argument for this function"
-        else:
+        if DJANGO_VERSION < (4, 1):
             expected_message = "TestModel4() got an unexpected keyword argument 'title_nl'"
+        else:
+            expected_message = "TestModel4() got unexpected keyword arguments: 'title_nl'"
 
         with self.assertRaisesMessage(TypeError, expected_message):
             TestModel4(title="bar", title_nl="foo")

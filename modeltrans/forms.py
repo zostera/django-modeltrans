@@ -64,9 +64,7 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
         if model_class:
             i18n_field = get_i18n_field(model_class)
             if i18n_field:
-
                 for original_field_name in i18n_field.fields:  # for all translated fields
-
                     # for all possible system languages
                     for language in languages:
                         field_name = build_localized_fieldname(
