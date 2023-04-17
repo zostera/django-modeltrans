@@ -11,7 +11,7 @@ django-modeltrans - Translate model fields using a `JSONField`
 About the app:
 
 - `Available on pypi <https://pypi.python.org/pypi/django-modeltrans>`_
-- Tested using `Travis CI <https://travis-ci.org/zostera/django-modeltrans>`_
+- Tested using `GitHub actions <https://github.com/zostera/django-modeltrans/actions>`_
 - `Documentation on readthedocs.org <https://django-modeltrans.readthedocs.io/en/latest/>`_
 - `Bug tracker <http://github.com/zostera/django-modeltrans/issues>`_
 
