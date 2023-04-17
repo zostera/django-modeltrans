@@ -1,6 +1,6 @@
 # django-modeltrans
 
-[![Travis CI](https://travis-ci.org/zostera/django-modeltrans.svg?branch=master)](https://travis-ci.org/zostera/django-modeltrans)
+[![CI](https://github.com/zostera/django-modeltrans/actions/workflows/ci.yml/badge.svg)](https://github.com/zostera/django-modeltrans/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/django-modeltrans/badge/?version=latest)](http://django-modeltrans.readthedocs.io/en/latest/?badge=latest)
 [![Any color you like](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
@@ -8,9 +8,8 @@ Translates Django model fields in a `JSONField` using a registration approach.
 
 # Features/requirements
 
-- Uses one PostgreSQL `jsonb`-field per model.
-  (`django.contrib.postgres.JSONField` for Django<3.1, `django.db.models.JSONField` for Django>=3.1)
-- Django 2.2, 3.0, 3.1, 3.2, 4.0 (with their supported python versions)
+- Uses one PostgreSQL `jsonb`-field per model (via `django.db.models.JSONField`)
+- Django 3.2, 4.0, 4.1, 4.2 (with their supported python versions)
 - PostgreSQL >= 9.5 and Psycopg2 >= 2.5.4.
 - [Available on pypi](https://pypi.python.org/pypi/django-modeltrans)
 - [Documentation](http://django-modeltrans.readthedocs.io/en/latest/)
