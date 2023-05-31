@@ -1,12 +1,12 @@
 from django import forms
-from django.forms import ModelForm
+from django.forms import ModelForm, modelform_factory
 from django.test import TestCase
 from django.utils.translation import override
 
 from modeltrans.conf import get_default_language
 from modeltrans.forms import TranslationModelForm
 
-from .app.models import Blog, Challenge
+from .app.models import Blog, Challenge, Comment, Post
 
 
 class ModelFormTest(TestCase):
@@ -362,3 +362,13 @@ class TranslationModelFormTestCase(TestCase):
             form.save()
             self.assertEqual(challenge.title_nl, data["title_nl"])
             self.assertEqual(challenge.title_fr, data["title_fr"])
+
+    def test_limit_choices_to(self):
+        published_post = Post.objects.create(title="foo", is_published=True)
+        unpublished_post = Post.objects.create(title="bar", is_published=False)
+        form_class = modelform_factory(Comment, fields="__all__")
+        form = form_class()
+        queryset = form.fields["post"].queryset
+        self.assertEqual(queryset.count(), 1)
+        self.assertIn(published_post, queryset)
+        self.assertNotIn(unpublished_post, queryset)

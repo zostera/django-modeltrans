@@ -290,7 +290,7 @@ class MultilingualQuerySet(QuerySet):
             - `Q(title_nl__contains="foo") will add an annotation for `title_nl`
 
         In all cases, the field part of the field lookup will be changed to use
-        the annotated verion.
+        the annotated version.
         """
         new_args = [Q(self._rewrite_Q(arg)) for arg in args if arg]
         new_kwargs = dict(
