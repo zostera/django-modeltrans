@@ -204,6 +204,7 @@ class MultilingualQuerySet(QuerySet):
             )
         if isinstance(q, (list, tuple)):
             return self._rewrite_filter_clause(*q)
+        return q
 
     def _rewrite_ordering(self, field_names):
         new_field_names = []
