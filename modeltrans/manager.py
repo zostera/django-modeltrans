@@ -7,6 +7,7 @@ from django.db.models.functions import Cast
 
 from .conf import get_default_language
 from .fields import TranslatedVirtualField
+from .utils import get_instance_field_value
 
 
 def transform_translatable_fields(model, fields):
@@ -39,7 +40,16 @@ def transform_translatable_fields(model, fields):
 
         if isinstance(field, TranslatedVirtualField):
             has_translated_fields = True
-            if field.get_language() == get_default_language():
+            if field.default_language_field:
+                first_part, *path = field.default_language_field.split(LOOKUP_SEP, maxsplit=1)
+                if path:
+                    assert len(path) == 1
+                    default_language = get_instance_field_value(fields[first_part], path[0])
+                else:
+                    default_language = fields[first_part]
+            else:
+                default_language = get_default_language()
+            if field.get_language() == default_language:
                 if field.original_name in fields:
                     raise ValueError(
                         'Attempted override of "{}" with "{}". '
@@ -317,7 +327,7 @@ class MultilingualQuerySet(QuerySet):
 
             fallback = field.language is None
 
-            if field.get_language() == get_default_language():
+            if not field.default_language_field and field.get_language() == get_default_language():
                 original_field = field_name.replace(field.name, field.original_field.name)
                 self.query.add_annotation(Cast(original_field, field.output_field()), field_name)
             else:

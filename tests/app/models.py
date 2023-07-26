@@ -195,3 +195,27 @@ class ChallengeContent(models.Model):
 
     def __str__(self):
         return self.content_i18n
+
+
+class Organization(models.Model):
+    """Model using a custom default language per instance/record."""
+
+    name = models.CharField(max_length=255)
+    language = models.CharField(max_length=2, null=True, blank=True, default=get_default_language())
+
+    i18n = TranslationField(fields=("name",), default_language_field="language")
+
+    def __str__(self):
+        return self.name_i18n
+
+
+class Department(models.Model):
+    """Model using a custom default language on a related record."""
+
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+
+    i18n = TranslationField(fields=("name",), default_language_field="organization__language")
+
+    def __str__(self):
+        return self.name_i18n

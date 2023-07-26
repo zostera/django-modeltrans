@@ -64,11 +64,15 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
         if model_class:
             i18n_field = get_i18n_field(model_class)
             if i18n_field:
+                has_default_language_field = bool(i18n_field.default_language_field)
+
                 for original_field_name in i18n_field.fields:  # for all translated fields
                     # for all possible system languages
                     for language in languages:
+                        # Ignore the default language suffix (and use the original field) only if the field has no
+                        # specified default_language_field because, if it does, we don't know the default language
                         field_name = build_localized_fieldname(
-                            original_field_name, language, ignore_default=True
+                            original_field_name, language, ignore_default=not has_default_language_field
                         )
 
                         # add i18n field if an explicitly chosen field
@@ -225,9 +229,12 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
         """
 
         fields = {}
+        has_default_language_field = bool(self.model_i18n_field.default_language_field)
         for original_field in self.i18n_fields:
+            # Ignore the default language suffix (and use the original field) only if the field has no
+            # specified default_language_field because, if it does, we don't know the default language
             fields[original_field] = [
-                build_localized_fieldname(original_field, language_code, ignore_default=True)
+                build_localized_fieldname(original_field, language_code, ignore_default=not has_default_language_field)
                 for language_code in self.language_codes
             ]
         fields["__all__"] = list(itertools.chain.from_iterable(fields.values()))
