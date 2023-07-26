@@ -1,4 +1,3 @@
-import django
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.lookups import Transform
@@ -10,9 +9,6 @@ try:
     from django.db.models.fields.json import KeyTransform
 except ImportError:
     from django.contrib.postgres.fields.jsonb import KeyTransform
-
-
-DJANGO_VERSION = django.get_version()
 
 
 def get_language():
@@ -113,4 +109,4 @@ class FallbackTransform(Transform):
         rhs_sql, rhs_params = compiler.compile(rhs)
         params.extend(rhs_params)
 
-        return "(%s ->> (%%s || %s ))" % (lhs, rhs_sql), (params)
+        return ("({} ->> (%s || {} ))".format(lhs, rhs_sql), params)

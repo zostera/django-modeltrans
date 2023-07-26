@@ -230,7 +230,7 @@ def add_manager(model):
                 def deconstruct(self):
                     return (
                         False,  # as_manager
-                        "%s.%s" % (self._old_module, self._old_class),  # manager_class
+                        "{}.{}".format(self._old_module, self._old_class),  # manager_class
                         None,  # qs_class
                         self._constructor_args[0],  # args
                         self._constructor_args[1],  # kwargs

@@ -1,7 +1,7 @@
 Django==3.2.*
 psycopg2-binary
 pytz==2021.1
-wheel==0.34.2
+wheel==0.38.1
 django-tables2==2.4.0
 sqlparse==0.4.2
 django-bootstrap3==15.0.0

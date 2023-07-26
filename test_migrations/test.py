@@ -72,7 +72,7 @@ def main():
 
 
 def replace_in_file(file, search, dest=""):
-    with open(file, "r") as f:
+    with open(file) as f:
         contents = f.read()
 
     with open(file, "w") as f:

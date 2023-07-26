@@ -67,7 +67,6 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
                 has_default_language_field = bool(i18n_field.default_language_field)
 
                 for original_field_name in i18n_field.fields:  # for all translated fields
-
                     # for all possible system languages
                     for language in languages:
                         # Ignore the default language suffix (and use the original field) only if the field has no

@@ -13,15 +13,15 @@ class PostMigrateTest(TestCase):
 
     def test_model_fields(self):
         falcon = Blog.objects.get(title="Falcon")
-        self.assertEquals(falcon.i18n["title_nl"], "Valk")
-        self.assertEquals(falcon.i18n["title_de"], "Falk")
+        self.assertEqual(falcon.i18n["title_nl"], "Valk")
+        self.assertEqual(falcon.i18n["title_de"], "Falk")
         self.assertIn("body_nl", falcon.i18n)
 
         with override("nl"):
-            self.assertEquals(falcon.title_i18n, "Valk")
+            self.assertEqual(falcon.title_i18n, "Valk")
 
         with override("de"):
-            self.assertEquals(falcon.title_i18n, "Falk")
+            self.assertEqual(falcon.title_i18n, "Falk")
 
     def test_indexes_in_place(self):
         """

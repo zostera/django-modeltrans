@@ -19,17 +19,3 @@ the currently active language. Use like this::
     @admin.register(Blog)
     class BlogAdmin(ActiveLanguageMixin, admin.ModelAdmin):
         pass
-
-
-`ActiveLanguageMixin` uses `modeltrans.forms.TranslationModelForm`, if you need more customization,
-the latter can be used directly::
-
-    from modeltrans.forms import TranslationModelForm
-
-    class BlogForm(TranslationModelForm):
-        pass
-
-
-    @admin.register(Blog)
-    class BlogAdmin(admin.ModelAdmin):
-        form_class = BlogForm

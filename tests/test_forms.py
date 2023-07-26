@@ -276,7 +276,6 @@ class TranslationModelFormTestCase(TestCase):
             self.assertEqual(form["default_language"].initial, get_default_language())
 
     def test_form_valid_and_save(self):
-
         with self.subTest("No translations and header not required."):
             data = {"start_date": "2021-01-01", "end_date": "2021-02-02", "title": "A title"}
             form = Form(data=data)
@@ -305,7 +304,6 @@ class TranslationModelFormTestCase(TestCase):
             self.assertEqual(form.errors, {"title_fr": ["This field is required."]})
 
         with self.subTest("Test that translations are stored correctly"):
-
             data = {
                 "start_date": "2021-01-01",
                 "end_date": "2021-02-02",

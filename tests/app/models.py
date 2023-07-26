@@ -18,7 +18,6 @@ class CategoryQueryset(models.QuerySet):
 
 
 class Category(models.Model):
-
     name = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
 
@@ -136,7 +135,6 @@ class BlogAttr(createBaseAttr(Blog)):
 
 
 class ArticleQueryset(models.QuerySet):
-
     pass
 
 
@@ -157,7 +155,6 @@ class AbstractArticle(models.Model):
 
 
 class Article(AbstractArticle):
-
     pass
 
 

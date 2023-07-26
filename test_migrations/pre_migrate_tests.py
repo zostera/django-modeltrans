@@ -11,7 +11,7 @@ class PreMigrateTest(TestCase):
         self.assertIn("modeltranslation", settings.INSTALLED_APPS)
 
     def test_model_fields(self):
-        self.assertEquals(
+        self.assertEqual(
             {field.name for field in Blog._meta.get_fields()},
             {
                 "id",
@@ -33,7 +33,7 @@ class PreMigrateTest(TestCase):
         def get_titles():
             return {m.title for m in Blog.objects.all()}
 
-        self.assertEquals(get_titles(), {"Falcon", "Dolphin", "Vulture"})
+        self.assertEqual(get_titles(), {"Falcon", "Dolphin", "Vulture"})
 
         with override("de"):
-            self.assertEquals(get_titles(), {"Falk", "Delfin", ""})
+            self.assertEqual(get_titles(), {"Falk", "Delfin", ""})
