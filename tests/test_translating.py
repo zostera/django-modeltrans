@@ -44,6 +44,8 @@ class Translating_utils(TestCase):
             app_models.Choice,
             app_models.Challenge,
             app_models.ChallengeContent,
+            app_models.Post,
+            app_models.Comment,
         }
         self.assertEqual(set(get_translated_models("app")), expected)
 
@@ -283,3 +285,17 @@ class TranslateModelTest(TestCase):
         sql = str(OrderByPkModel.objects.all().query)
 
         self.assertIn('ORDER BY "django-modeltrans_tests_orderbypkmodel"."id" DESC', sql)
+
+    def test_limit_choices_to(self):
+        published_post = app_models.Post.objects.create(title="foo", is_published=True)
+        unpublished_post = app_models.Post.objects.create(title="bar", is_published=False)
+
+        comment = app_models.Comment.objects.create(post=published_post, text="foo")
+        self.assertIsNotNone(comment.pk)
+
+        with self.assertRaisesMessage(
+            ValidationError,
+            f"post instance with id {unpublished_post.pk} does not exist",
+        ):
+            comment.post = unpublished_post
+            comment.full_clean()
