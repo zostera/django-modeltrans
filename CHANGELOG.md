@@ -1,6 +1,9 @@
 django-modeltrans change log
 ============================
 
+## 0.7.5 (2023-08-03)
+- Fix crash with `limit_choices_to` (#100) fixes: #94
+
 ## 0.7.4 (2023-04-03)
 - Add support for Django 4.2
 
