@@ -1,14 +1,10 @@
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models.constants import LOOKUP_SEP
+from django.db.models.fields.json import KeyTransform
 from django.db.models.lookups import Transform
 from django.utils.translation import get_language as _get_language
 
 from .conf import get_available_languages, get_default_language
-
-try:
-    from django.db.models.fields.json import KeyTransform
-except ImportError:
-    from django.contrib.postgres.fields.jsonb import KeyTransform
 
 
 def get_language():

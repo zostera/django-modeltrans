@@ -1,5 +1,6 @@
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models import F, fields
+from django.db.models import F, JSONField, fields
+from django.db.models.fields.json import KeyTextTransform
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import gettext
 
@@ -10,15 +11,6 @@ from .utils import (
     get_instance_field_value,
     get_language,
 )
-
-try:
-    # django==3.1 moved JSONField into django.db.models
-    from django.db.models import JSONField
-    from django.db.models.fields.json import KeyTextTransform
-except ImportError:
-    from django.contrib.postgres.fields import JSONField
-    from django.contrib.postgres.fields.jsonb import KeyTextTransform
-
 
 SUPPORTED_FIELDS = (fields.CharField, fields.TextField)
 
