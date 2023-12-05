@@ -36,6 +36,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.doctest",
+    "sphinxcontrib.jquery",
     "sphinxcontrib.spelling",
 ]
 
