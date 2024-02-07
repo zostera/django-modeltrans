@@ -2,6 +2,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields.json import KeyTransform
 from django.db.models.lookups import Transform
+from django.utils.functional import keep_lazy_text
 from django.utils.translation import get_language as _get_language
 
 from .conf import get_available_languages, get_default_language
@@ -22,6 +23,11 @@ def get_language():
 def split_translated_fieldname(field_name):
     _pos = field_name.rfind("_")
     return (field_name[0:_pos], field_name[_pos + 1 :])
+
+
+@keep_lazy_text
+def get_translated_field_label(original_label, lang):
+    return original_label + " ({})".format(lang.upper())
 
 
 def build_localized_fieldname(field_name, lang, ignore_default=False):
