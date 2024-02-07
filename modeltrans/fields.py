@@ -10,6 +10,7 @@ from .utils import (
     build_localized_fieldname,
     get_instance_field_value,
     get_language,
+    get_translated_field_label,
 )
 
 SUPPORTED_FIELDS = (fields.CharField, fields.TextField)
@@ -76,9 +77,9 @@ class TranslatedVirtualField:
         self.column = None
 
         # Use a translated verbose name:
-        translated_field_name = gettext(self.original_field.verbose_name)
+        translated_field_name = self.original_field.verbose_name
         if self.language is not None:
-            translated_field_name += " ({})".format(self.language.upper())
+            translated_field_name = get_translated_field_label(translated_field_name, self.language)
         self.verbose_name = translated_field_name
 
         setattr(cls, name, self)
