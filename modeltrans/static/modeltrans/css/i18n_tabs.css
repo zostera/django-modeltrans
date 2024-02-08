@@ -1,0 +1,40 @@
+.i18n-tabs {}
+
+.i18n-tab-buttons {
+    display: flex;
+    justify-content: start;
+    gap: 10px;
+    border-bottom: 1px solid var(--border-color, #ccc);
+}
+
+.i18n-button {
+    font: inherit;
+    padding: 5px 10px;
+    border: 1px solid var(--border-color, #ccc);
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+    color: var(--body-quiet-color);
+    background: transparent;
+    text-transform: uppercase;
+}
+
+.i18n-button:hover {
+    color: var(--admin-interface-generic-link-hover-color);
+}
+
+.i18n-button.errors {
+    color: var(--error-fg, var(--admin-interface-error-text-color));
+    border-color: var(--error-fg, var(--admin-interface-error-text-color));
+}
+
+.i18n-button.active {
+    margin-bottom: -1px;
+    padding-bottom: 6px;
+    color: var(--admin-interface-save-button-text-color, var(--button-fg));
+    background: var(--admin-interface-save-button-background-color, var(--button-bg));
+}
+
+.i18n-tab {
+    padding-top: 1em;
+}
