@@ -11,12 +11,13 @@ def get_modeltrans_setting(key):
             settings, "MODELTRANS_FALLBACK", {"default": (get_default_language(),)}
         ),
         "MODELTRANS_ADD_FIELD_HELP_TEXT": getattr(settings, "MODELTRANS_ADD_FIELD_HELP_TEXT", True),
+        "MODELTRANS_DEFAULT_LANGUAGE": get_default_language(),
     }
     return modeltrans_settings.get(key)
 
 
 def get_default_language():
-    return settings.LANGUAGE_CODE
+    return getattr(settings, "MODELTRANS_DEFAULT_LANGUAGE", getattr(settings, "LANGUAGE_CODE"))
 
 
 def get_available_languages_setting():
