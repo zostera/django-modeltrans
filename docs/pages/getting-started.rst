@@ -16,7 +16,7 @@ Getting started
 
     class Blog(models.Model):
         title = models.CharField(max_length=255)
-        body = models.TextField(null=True)
+        body = models.TextField(blank=True)
 
         i18n = TranslationField(fields=("title", "body"))
 

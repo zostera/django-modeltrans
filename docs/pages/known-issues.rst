@@ -60,7 +60,7 @@ For example, ``Category`` needs ``objects = MultilingualManager()`` in order to 
 
     class Blog(models.Model):
         title = models.CharField(max_length=255)
-        body = models.TextField(null=True)
+        body = models.TextField(blank=True)
         category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.CASCADE)
 
         i18n = TranslationField(fields=("title", "body"))
