@@ -40,7 +40,7 @@ class Site(models.Model):
 
 class Blog(models.Model):
     title = models.CharField(max_length=255)
-    body = models.TextField(null=True)
+    body = models.TextField(blank=True)
 
     category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.CASCADE)
     site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.CASCADE)
@@ -171,7 +171,7 @@ class Challenge(models.Model):
     """Model using a custom fallback language per instance/record."""
 
     title = models.CharField(max_length=255)
-    header = models.CharField(max_length=255, null=True, blank=True)
+    header = models.CharField(max_length=255, blank=True)
 
     default_language = models.CharField(
         max_length=2, null=True, blank=True, default=get_default_language()
