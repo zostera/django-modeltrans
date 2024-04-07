@@ -240,6 +240,26 @@ class TranslationModelFormTestCase(TestCase):
             self.assertEqual(title_fr_field.required, True)
             self.assertEqual(title_fr_field.widget.__class__, forms.widgets.Textarea)
 
+    def test_translated_field_labels(self):
+        """Test that a field's verbose_name is translated to the currently active language."""
+        form_cls = modelform_factory(Post, fields="__all__")
+        form = form_cls()
+        self.assertEqual(form.fields["title"].label, "Title of the post")
+        self.assertEqual(form.fields["title_de"].label, "Title of the post (DE)")
+        self.assertEqual(form.fields["title_fr"].label, "Title of the post (FR)")
+
+        with override("de"):
+            form = form_cls()
+            self.assertEqual(form.fields["title"].label, "Titel des Beitrags")
+            self.assertEqual(form.fields["title_de"].label, "Titel des Beitrags (DE)")
+            self.assertEqual(form.fields["title_fr"].label, "Titel des Beitrags (FR)")
+
+        with override("fr"):
+            form = form_cls()
+            self.assertEqual(form.fields["title"].label, "Titre de l'article")
+            self.assertEqual(form.fields["title_de"].label, "Titre de l'article (DE)")
+            self.assertEqual(form.fields["title_fr"].label, "Titre de l'article (FR)")
+
     def test_form_initial_values(self):
         challenge = Challenge.objects.create(title="english", title_fr="french")
         initial_data = {
