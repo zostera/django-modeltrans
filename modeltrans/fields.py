@@ -13,7 +13,7 @@ from .utils import (
     get_translated_field_label,
 )
 
-SUPPORTED_FIELDS = (fields.CharField, fields.TextField, JSONField)
+SUPPORTED_FIELDS = (fields.CharField, fields.TextField, JSONField, fields.files.FileField)
 
 DEFAULT_LANGUAGE = get_default_language()
 
