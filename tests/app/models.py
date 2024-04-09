@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext_lazy
 
 from modeltrans.conf import get_default_language
 from modeltrans.fields import TranslationField
@@ -198,7 +199,10 @@ class ChallengeContent(models.Model):
 
 
 class Post(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(
+        verbose_name=gettext_lazy("title of the post"),
+        max_length=255,
+    )
     is_published = models.BooleanField(default=False)
 
     i18n = TranslationField(fields=("title",))
