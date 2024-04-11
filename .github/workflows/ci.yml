@@ -52,6 +52,11 @@ jobs:
             - python-version: 3.9
               django-version: 5.0
 
+            # master
+            - python-version: 3.8
+              django-version: master
+            - python-version: 3.9
+              django-version: master
 
     steps:
       - name: Set up Python ${{ matrix.python-version }}
