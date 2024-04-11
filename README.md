@@ -10,7 +10,7 @@ Translates Django model fields in a `JSONField` using a registration approach.
 
 - Uses one PostgreSQL `jsonb`-field per model (via `django.db.models.JSONField`)
 - Django 4.2, 5.0 (with their supported python versions)
-- PostgreSQL >= 13 and Psycopg2 >= 2.5.4.
+- PostgreSQL >= 13 and the appropriate `psycopg` version for your Django version
 - [Available on pypi](https://pypi.python.org/pypi/django-modeltrans)
 - [Documentation](http://django-modeltrans.readthedocs.io/en/latest/)
 
