@@ -27,7 +27,7 @@ This is how to migrate from django-modeltranslation (version 0.12.1) to
 
     class Blog(models.Model):
         title = models.CharField(max_length=255)
-        body = models.TextField(null=True)
+        body = models.TextField(blank=True)
 
         # add this field, containing the TranslationOptions attributes as arguments:
         i18n = TranslationField(fields=('title', 'body'), virtual_fields=False)
