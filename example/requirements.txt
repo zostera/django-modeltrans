@@ -1,5 +1,5 @@
-Django==3.2.*
-psycopg2-binary
+Django==5.0.*
+psycopg
 pytz==2021.1
 wheel==0.38.1
 django-tables2==2.4.0

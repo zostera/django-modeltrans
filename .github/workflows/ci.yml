@@ -22,14 +22,22 @@ jobs:
     steps:
       - uses: actions/setup-python@v5.1.0
       - uses: actions/checkout@v4
-      - run: python -m pip install psycopg2-binary isort==5.6.4
+      - run: python -m pip install psycopg isort==5.13.2
       - run: isort --diff --check .
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5.1.0
+      - uses: actions/checkout@v4
+      - run: python -m pip install -r docs/requirements.txt
+      - run: cd docs/ && make html && make spelling
 
   tests:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:12.8
+        image: postgres:13.13
         env:
           POSTGRES_USER: modeltrans
           POSTGRES_PASSWORD: modeltrans
@@ -40,20 +48,8 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8, 3.9, "3.10", 3.11, 3.12]
-        django-version: [3.2, 4.1, 4.2, 5.0]
+        django-version: [4.2, 5.0, master]
         exclude:
-            # Django 3.2
-            - python-version: "3.10"
-              django-version: 3.2
-            - python-version: 3.11
-              django-version: 3.2
-            - python-version: 3.12
-              django-version: 3.2
-
-            # Django 4.1
-            - python-version: 3.12
-              django-version: 4.1
-
             # Django 4.2
             - python-version: 3.12
               django-version: 4.2
@@ -64,6 +60,11 @@ jobs:
             - python-version: 3.9
               django-version: 5.0
 
+            # master
+            - python-version: 3.8
+              django-version: master
+            - python-version: 3.9
+              django-version: master
 
     steps:
       - name: Set up Python ${{ matrix.python-version }}
@@ -77,5 +78,5 @@ jobs:
         if: matrix.django-version == 'master'
       - run: |
           python -m pip install coverage
-          python -m pip install psycopg2-binary==2.9.5
+          python -m pip install psycopg==3.1.8
       - run: coverage run --source=modeltrans manage.py test
