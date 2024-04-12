@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v5.1.0
       - uses: actions/checkout@v4
-      - run: python -m pip install psycopg isort==5.6.4
+      - run: python -m pip install psycopg isort==5.13.2
       - run: isort --diff --check .
 
   tests:
