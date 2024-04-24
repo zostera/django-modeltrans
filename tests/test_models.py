@@ -1,4 +1,3 @@
-
 from django.core.exceptions import ValidationError
 from django.db import DataError, models, transaction
 from django.test import TestCase, override_settings
