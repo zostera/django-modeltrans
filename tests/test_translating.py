@@ -1,4 +1,3 @@
-from django import VERSION as DJANGO_VERSION
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.test import TestCase
@@ -227,11 +226,7 @@ class TranslateModelTest(TestCase):
         self.assertFalse(hasattr(m, "title_i18n"))
         self.assertFalse(hasattr(m, "title_en"))
 
-        if DJANGO_VERSION < (4, 1):
-            expected_message = "TestModel4() got an unexpected keyword argument 'title_nl'"
-        else:
-            expected_message = "TestModel4() got unexpected keyword arguments: 'title_nl'"
-
+        expected_message = "TestModel4() got unexpected keyword arguments: 'title_nl'"
         with self.assertRaisesMessage(TypeError, expected_message):
             TestModel4(title="bar", title_nl="foo")
 

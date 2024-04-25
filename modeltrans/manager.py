@@ -1,4 +1,3 @@
-from django import VERSION as DJANGO_VERSION
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models import Count, Func, Manager, Q, QuerySet
 from django.db.models.constants import LOOKUP_SEP
@@ -193,10 +192,7 @@ class MultilingualQuerySet(QuerySet):
 
     def _rewrite_Q(self, q):
         if isinstance(q, Q):
-            if DJANGO_VERSION < (4, 2):
-                factory = Q._new_instance
-            else:
-                factory = Q.create
+            factory = Q.create
             return factory(
                 list(self._rewrite_Q(child) for child in q.children),
                 connector=q.connector,
