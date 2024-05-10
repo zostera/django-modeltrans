@@ -12,6 +12,7 @@ from .app.models import (
     ChallengeContent,
     ChildArticle,
     NullableTextModel,
+    TaggedBlog,
     TextModel,
 )
 from .utils import CreateTestModel
@@ -118,6 +119,23 @@ class TranslatedFieldTest(TestCase):
         m = NullableTextModel.objects.create(description=DESCRIPTION, description_fr="")
         with override("fr"):
             self.assertEqual(m.description_i18n, DESCRIPTION)
+
+    def test_fallback_getting_JSONField(self):
+        m = TaggedBlog.objects.create(title="Falcon", tags=["bird", "raptor"])
+        with override("de"):
+            # tags_de is not set, return fallback
+            self.assertEqual(m.tags_i18n, ["bird", "raptor"])
+
+        m = TaggedBlog.objects.create(title="Falcon", tags_fr=[])
+        with override("fr"):
+            # tags_fr is set, return the empty list
+            self.assertEqual(m.tags_i18n, [])
+
+        m = TaggedBlog.objects.create(title="Falcon", tags_fr=None)
+        with override("fr"):
+            # tags_fr is set to None, return field default (which is
+            # an empty list)
+            self.assertEqual(m.tags_i18n, [])
 
     def test_creating_using_virtual_default_language_field(self):
         m = Blog.objects.create(title_en="Falcon")

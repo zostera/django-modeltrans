@@ -34,6 +34,7 @@ class Translating_utils(TestCase):
         expected = {
             app_models.Article,
             app_models.Blog,
+            app_models.TaggedBlog,
             app_models.ChildArticle,
             app_models.Category,
             app_models.Person,
