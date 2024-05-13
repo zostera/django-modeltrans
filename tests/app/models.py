@@ -234,3 +234,18 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text
+
+
+class Attachment(models.Model):
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        limit_choices_to={"is_published": True},
+        related_name="attachments",
+    )
+    file = models.FileField()
+
+    i18n = TranslationField(fields=("file",))
+
+    def __str__(self):
+        return self.file.name

@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.db import DataError, models, transaction
 from django.test import TestCase, override_settings
 from django.utils.translation import override
@@ -7,11 +8,13 @@ from modeltrans.fields import TranslationField
 
 from .app.models import (
     Article,
+    Attachment,
     Blog,
     Challenge,
     ChallengeContent,
     ChildArticle,
     NullableTextModel,
+    Post,
     TaggedBlog,
     TextModel,
 )
@@ -136,6 +139,36 @@ class TranslatedFieldTest(TestCase):
             # tags_fr is set to None, return field default (which is
             # an empty list)
             self.assertEqual(m.tags_i18n, [])
+
+    def test_fallback_getting_FileField(self):
+        post = Post.objects.create(title="Test Post", is_published=True)
+        sample_file = ContentFile("sample content", name="sample-en.txt")
+        attachment = Attachment.objects.create(post=post, file=sample_file)
+        default_file_name = attachment.file.name
+        assert default_file_name
+
+        with override("fr"):
+            self.assertIsInstance(attachment.file_i18n, models.fields.files.FieldFile)
+            self.assertEqual(attachment.file_i18n.name, default_file_name)
+
+    def test_set_FileField(self):
+        post = Post.objects.create(title="Test Post", is_published=True)
+
+        en_content = "sample content"
+        fr_content = "exemple de contenu"
+        sample_file_en = ContentFile(en_content, name="sample-en.txt")
+        sample_file_fr = ContentFile(fr_content, name="sample-fr.txt")
+
+        attachment = Attachment.objects.create(
+            post=post, file=sample_file_en, file_fr=sample_file_fr
+        )
+
+        saved_fr_content = attachment.file_fr.read().decode("utf-8")
+        self.assertEqual(saved_fr_content, fr_content)
+        self.assertIsInstance(attachment.file_fr, models.fields.files.FieldFile)
+
+        with override("fr"):
+            self.assertEqual(attachment.file_i18n, attachment.file_fr)
 
     def test_creating_using_virtual_default_language_field(self):
         m = Blog.objects.create(title_en="Falcon")
