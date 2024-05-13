@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
+from django.core.files.storage.memory import InMemoryFileNode
 from django.db import DataError, models, transaction
 from django.test import TestCase, override_settings
 from django.utils.translation import override
@@ -144,12 +145,10 @@ class TranslatedFieldTest(TestCase):
         post = Post.objects.create(title="Test Post", is_published=True)
         sample_file = ContentFile("sample content", name="sample-en.txt")
         attachment = Attachment.objects.create(post=post, file=sample_file)
-        default_file_name = attachment.file.name
-        assert default_file_name
 
         with override("fr"):
             self.assertIsInstance(attachment.file_i18n, models.fields.files.FieldFile)
-            self.assertEqual(attachment.file_i18n.name, default_file_name)
+            self.assertIsInstance(attachment.file_i18n.file, InMemoryFileNode)
 
     def test_set_FileField(self):
         post = Post.objects.create(title="Test Post", is_published=True)
@@ -162,13 +161,57 @@ class TranslatedFieldTest(TestCase):
         attachment = Attachment.objects.create(
             post=post, file=sample_file_en, file_fr=sample_file_fr
         )
+        self.assertIsInstance(attachment.file_fr, models.fields.files.FieldFile)
+
+        self.assertIsInstance(attachment.file.file, InMemoryFileNode)
+        self.assertIsInstance(attachment.file_fr.file, InMemoryFileNode)
 
         saved_fr_content = attachment.file_fr.read().decode("utf-8")
         self.assertEqual(saved_fr_content, fr_content)
-        self.assertIsInstance(attachment.file_fr, models.fields.files.FieldFile)
 
         with override("fr"):
             self.assertEqual(attachment.file_i18n, attachment.file_fr)
+
+    def test_FileField_getter(self):
+        post = Post.objects.create(title="Test Post", is_published=True)
+
+        fr_content = "exemple de contenu 2"
+        sample_file_fr = ContentFile(fr_content, name="sample-fr-2.txt")
+
+        attachment = Attachment(post=post, file_fr=sample_file_fr)
+        # prior to invoking save, the file_fr should be an instance of FieldFile
+        self.assertIsInstance(attachment.file_fr, models.fields.files.FieldFile)
+        # but the file object should be an instance of ContentFile
+        self.assertIsInstance(attachment.file_fr.file, ContentFile)
+        attachment.save()
+
+        # After saving, the file object should be the default storage class
+        self.assertIsInstance(attachment.file_fr.file, InMemoryFileNode)
+
+        # Retreiving the instance from the database, file and file_fr
+        # should return the same kind of interface (a FieldFile instance)
+        attachment = Attachment.objects.get(pk=attachment.pk)
+        self.assertIsInstance(attachment.file, models.fields.files.FieldFile)
+        self.assertIsInstance(attachment.file_fr, models.fields.files.FieldFile)
+
+        # Test that we can overwrite those with new content
+        new_content = "new content"
+        new_fr_content = "new French content"
+        attachment.file = ContentFile(new_content, name="content-new.txt")
+        attachment.file_fr = ContentFile(new_fr_content, name="content-new-fr.txt")
+        self.assertIsInstance(attachment.file, models.fields.files.FieldFile)
+        self.assertIsInstance(attachment.file_fr, models.fields.files.FieldFile)
+
+        attachment.save()
+
+        self.assertIsInstance(attachment.file_fr, models.fields.files.FieldFile)
+        self.assertIsInstance(attachment.file, models.fields.files.FieldFile)
+
+        with attachment.file.open() as f:
+            self.assertEqual(f.read().decode("utf-8"), new_content)
+
+        with attachment.file_fr.open() as f:
+            self.assertEqual(f.read().decode("utf-8"), new_fr_content)
 
     def test_creating_using_virtual_default_language_field(self):
         m = Blog.objects.create(title_en="Falcon")

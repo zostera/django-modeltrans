@@ -112,8 +112,9 @@ class TranslatedVirtualField:
         value = instance.i18n.get(field_name)
 
         if isinstance(self.original_field, fields.files.FileField):
-            # TODO: Review this versus `descriptor_class`; need to write some additional tests to verify
-            return self.attr_class(instance, self, value)
+            descriptor = self.descriptor_class(self)
+            descriptor.__set__(instance, value)
+            return descriptor.__get__(instance)
 
         return value
 
