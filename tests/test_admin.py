@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils.translation import override
 
-from .app.models import Category, Site
+from .app.models import Category, Post, Site
 from .utils import load_wiki
 
 User = get_user_model()
@@ -66,3 +66,15 @@ class AdminTest(TestCase):
 
             response = self.client.get(url("frog"))
             self.assertContains(response, "Frog")
+
+    def test_tabbed_admin(self):
+        post = Post.objects.create(
+            title="History of the Universe",
+            title_nl="Geschiedenis van het heelal",
+        )
+        url = reverse("admin:app_post_change", args=(post.pk,))
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "History of the Universe")
+        self.assertContains(response, "Geschiedenis van het heelal")

@@ -1,8 +1,8 @@
 from django.contrib import admin
 
-from modeltrans.admin import ActiveLanguageMixin
+from modeltrans.admin import ActiveLanguageMixin, TabbedLanguageMixin
 
-from .models import Blog, Category, Site
+from .models import Blog, Category, Post, Site
 
 
 @admin.register(Blog)
@@ -18,4 +18,9 @@ class CategoryAdmin(ActiveLanguageMixin, admin.ModelAdmin):
 
 @admin.register(Site)
 class SiteAdmin(ActiveLanguageMixin, admin.ModelAdmin):
+    pass
+
+
+@admin.register(Post)
+class PostAdmin(TabbedLanguageMixin, admin.ModelAdmin):
     pass
