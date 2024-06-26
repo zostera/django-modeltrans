@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db.utils import ProgrammingError
+from django.db.utils import OperationalError, ProgrammingError
 
 
 def disable_admin_login():
@@ -21,7 +21,7 @@ def disable_admin_login():
                 is_staff=True,
             ),
         )
-    except ProgrammingError:
+    except (ProgrammingError, OperationalError):
         # auth_user doesn't exist, this allows the migrations to run properly.
         user = None
 
