@@ -7,7 +7,7 @@ Custom fallback language
 ------------------------
 
 By default, fallback is centrally configured with :ref:`settings_fallback`.
-That might not be sufficient, for example if part of the content is created for a single language which is not ``LANGUAGE_CODE``.
+That might not be sufficient, for example if part of the content is created for a single language which is not ``MODELTRANS_DEFAULT_LANGUAGE``.
 
 In that case, it can be configured per-record using the ``fallback_language_field`` argument to ``TranslationField``::
 
@@ -27,7 +27,7 @@ You can traverse foreign key relations too::
 
 Note that
  - if in this example no `newsroom` is set yet, the centrally configured fallback is used.
- - the original field _always_ contains the language as configured by ``LANGUAGE_CODE``.
+ - the original field _always_ contains the language as configured by ``MODELTRANS_DEFAULT_LANGUAGE``.
 
 With the models above::
 
