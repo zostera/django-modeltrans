@@ -52,6 +52,16 @@ class Blog(models.Model):
         return self.title
 
 
+class TaggedBlog(models.Model):
+    title = models.CharField(max_length=255)
+    tags = JSONField(null=True, blank=True, default=list)
+
+    i18n = TranslationField(fields=("title", "tags"))
+
+    def __str__(self):
+        return self.title
+
+
 class Person(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
