@@ -4,14 +4,25 @@ Settings Reference
 django-modeltrans allows some configuration to define its behavior.
 By default, it tries to use sensible defaults derived from the default django settings.
 
+
+``MODELTRANS_DEFAULT_LANGUAGE``
+----------------------------------
+A string representing the default language.  By default, the default language is set to
+django's `LANGUAGE_CODE setting <https://docs.djangoproject.com/en/stable/ref/settings/#language-code>`_.
+
+Customize this setting to change the default language used by django-modeltrans without impacting
+Django's translation / locale middlewares.
+
+See `#116 <https://github.com/zostera/django-modeltrans/issues/116>`_ for additional context.
+
+
 ``MODELTRANS_AVAILABLE_LANGUAGES``
 ----------------------------------
 A list of language codes to allow model fields to be translated in. By default,
 the language codes extracted from django's `LANGUAGES setting <https://docs.djangoproject.com/en/stable/ref/settings/#languages>`_.
 
 Note that
- - the default language, defined in django's `LANGUAGE_CODE setting <https://docs.djangoproject.com/en/stable/ref/settings/#language-code>`_,
-   should not be added to this list (will be ignored).
+ - the default language, defined in `MODELTRANS_DEFAULT_LANGUAGE` should not be added to this list (will be ignored).
  - order is not important
 
 A custom definition might be::
@@ -23,7 +34,7 @@ A custom definition might be::
 
 ``MODELTRANS_FALLBACK``
 -----------------------
-A dict of fallback chains as lists of languages. By default, it falls back to the language defined in django setting `LANGUAGE_CODE`.
+A dict of fallback chains as lists of languages. By default, it falls back to the language defined in `MODELTRANS_DEFAULT_LANGUAGE`.
 
 For example, django-modeltrans will fall back to:
  - english when the active language is 'nl'
@@ -31,10 +42,10 @@ For example, django-modeltrans will fall back to:
 
 If configured like this::
 
-    LANGUAGE_CODE = 'en'
+    MODELTRANS_DEFAULT_LANGUAGE = 'en'
     MODELTRANS_AVAILABLE_LANGUAGES = ('nl', 'fy')
     MODELTRANS_FALLBACK = {
-       'default': (LANGUAGE_CODE, ),
+       'default': (MODELTRANS_DEFAULT_LANGUAGE, ),
        'fy': ('nl', 'en')
     }
 
