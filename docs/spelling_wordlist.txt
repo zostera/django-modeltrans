@@ -12,6 +12,7 @@ ForeignKey
 fy
 german
 mixin
+middlewares
 modeltrans
 modeltranslation
 nl

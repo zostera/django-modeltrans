@@ -22,8 +22,7 @@ A list of language codes to allow model fields to be translated in. By default,
 the language codes extracted from django's `LANGUAGES setting <https://docs.djangoproject.com/en/stable/ref/settings/#languages>`_.
 
 Note that
- - the default language, defined in `MODELTRANS_DEFAULT_LANGUAGE`,
-   should not be added to this list (will be ignored).
+ - the default language, defined in `MODELTRANS_DEFAULT_LANGUAGE` should not be added to this list (will be ignored).
  - order is not important
 
 A custom definition might be::
