@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from modeltrans.admin import ActiveLanguageMixin
+from modeltrans.admin import ActiveLanguageMixin, TabbedLanguageMixin
 
 from .models import Blog, Category
 from .utils import disable_admin_login
@@ -9,7 +9,7 @@ admin.site.has_permission = disable_admin_login()
 
 
 @admin.register(Blog)
-class BlogAdmin(ActiveLanguageMixin, admin.ModelAdmin):
+class BlogAdmin(TabbedLanguageMixin, admin.ModelAdmin):
     list_display = ("title_i18n", "category")
     search_fields = ("title_i18n", "category__name_i18n")
 
