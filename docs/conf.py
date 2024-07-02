@@ -67,5 +67,7 @@ spelling_word_list_filename = "spelling_wordlist.txt"
 # Boolean controlling whether suggestions for misspelled words are printed.
 # Defaults to False.
 spelling_show_suggestions = True
+
+spelling_filters = ["enchant.tokenize.MentionFilter"]
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 html_static_path = ["_static"]
