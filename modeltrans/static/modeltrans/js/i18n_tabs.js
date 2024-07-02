@@ -160,7 +160,6 @@
         // Enable the currently active language
         if (fieldLanguage === currentLanguage) {
           tabButton.classList.add('active');
-          //tab.classList.add('active');
         } else {
           tab.classList.add('hidden');
         }
