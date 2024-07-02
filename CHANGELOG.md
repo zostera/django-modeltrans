@@ -1,6 +1,16 @@
 django-modeltrans change log
 ============================
 
+## 0.8.0 (2024-07-02)
+- Add `JSONField` support (#119) refs: #118 by @jacobwegner
+- Add `MODELTRANS_DEFAULT_LANGUAGE` setting (#117) by @jacobwegner
+- Fix OperationalError under Django 5+ (#121) by @julianwachholz
+- Test using postgres 14 for django master (#122)
+- Drop Django 3.2 and 4.1 from the build matrix, add support for Django 5.0 and Django master, python 3.12 (#112, #105)
+- Fix blank fields trying to insert NULL (#110) by @julianwachholz
+- Fix translated form labels using current language (#108) by @julianwachholz
+- Update Django versions and CI link in README and documentation, remove import shims (#95) by @browniebroke
+
 ## 0.7.5 (2023-08-03)
 - Fix crash with `limit_choices_to` (#100) fixes: #94
 
