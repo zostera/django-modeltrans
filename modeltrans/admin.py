@@ -37,10 +37,7 @@ class ActiveLanguageMixin:
 
 
 class TabbedLanguageMixin:
-    """
-    Mixin for your ModelAdmin to show a tabbed interface for i18n fields.
-
-    """
+    """ModelAdmin mixin to giving access to all languages for each i18n field using tabs."""
 
     class Media:
         css = {

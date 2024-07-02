@@ -3,7 +3,7 @@
 .i18n-tab-buttons {
     display: flex;
     justify-content: start;
-    gap: 10px;
+    gap: 5px;
     border-bottom: 1px solid var(--border-color, #ccc);
 }
 
