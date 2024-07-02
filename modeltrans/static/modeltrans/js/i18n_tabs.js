@@ -2,7 +2,6 @@
   const currentLanguage = document.documentElement.lang;
 
   const addEventListeners = ({ defaultField, fields }) => {
-    console.info(`Setting up event listeners on fields`, fields);
     const parent = fields[0].closest('.i18n-tabs');
 
     fields.forEach(field => {
@@ -11,7 +10,6 @@
       if (field.dataset.i18nDefault) {
         // Synchronize value with the default field
         field.addEventListener('input', () => {
-          console.log(`Synchronizing value of ${field.name} with default field`);
           defaultField.value = field.value;
         });
       }
@@ -52,8 +50,6 @@
       const formsetsContainer = field.closest('[data-inline-formset]');
       if (formsetsContainer && !formsetsContainer.dataset.formsetListener) {
         formsetsContainer.addEventListener('formset:added', (event) => {
-          console.log(`new formset added for group ${groupName}`);
-
           const formsetContainer = event.target;
           const formsetIndex = event.target.id.match(/\d+/)[0];
 
