@@ -290,7 +290,6 @@ class TranslateModelTest(TestCase):
         comment = app_models.Comment.objects.create(post=published_post, text="foo")
         self.assertIsNotNone(comment.pk)
 
-        print(django.get_version())
         if django.get_version().startswith("5.2"):
             expected = f"post instance with id {unpublished_post.pk} is not a valid choice."
         else:
