@@ -1,3 +1,4 @@
+import django
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.test import TestCase
@@ -289,9 +290,12 @@ class TranslateModelTest(TestCase):
         comment = app_models.Comment.objects.create(post=published_post, text="foo")
         self.assertIsNotNone(comment.pk)
 
-        with self.assertRaisesMessage(
-            ValidationError,
-            f"post instance with id {unpublished_post.pk} does not exist",
-        ):
+        print(django.get_version())
+        if django.get_version().startswith("5.2"):
+            expected = f"post instance with id {unpublished_post.pk} is not a valid choice."
+        else:
+            expected = f"post instance with id {unpublished_post.pk} does not exist"
+
+        with self.assertRaisesMessage(ValidationError, expected):
             comment.post = unpublished_post
             comment.full_clean()
