@@ -4,6 +4,7 @@ from unittest import skipIf
 import django
 from django.db import models
 from django.db.models import F, Q
+from django.db.models.functions import Collate
 from django.test import TestCase, override_settings
 from django.utils.translation import override
 
@@ -489,9 +490,9 @@ class OrderByTest(TestCase):
 
         filtered = Blog.objects.filter(category=c)
 
-        # order by title should result in aA because it is case sensitive.
-        qs = filtered.order_by("title", "title_nl")
-        self.assertEqual(key(qs, "title"), "a A")
+        # order by title should result in Aa because it is case sensitive.
+        qs = filtered.order_by(Collate("title", "C"), Collate("title_nl", "C"))
+        self.assertEqual(key(qs, "title"), "A a")
 
         # order by Lower('title') should result in Aa because lower('A') == lower('A')
         # so the title_nl field should determine the sorting
