@@ -44,38 +44,34 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.8, 3.9, "3.10", 3.11, 3.12]
-        django-version: [4.2, 5.0, 5.1b1, master]
+        python-version: [3.9, "3.10", 3.11, 3.12, 3.13]
+        django-version: [4.2, 5.1, 5.2, "main"]
         postgres-version: ["postgres:13.13", "postgres:14"]
         exclude:
             # Django 4.2
-            - python-version: 3.12
-              django-version: 4.2
             - django-version: 4.2
               postgres-version: postgres:13.13
 
-            # Django 5.0
-            - python-version: 3.8
-              django-version: 5.0
+            # Django 5.1
             - python-version: 3.9
-              django-version: 5.0
-            - django-version: 5.0
-              postgres-version: postgres:13.13
-
-            # Django 5.1b1
-            - python-version: 3.8
-              django-version: 5.1b1
-            - python-version: 3.9
-              django-version: 5.1b1
+              django-version: 5.1
             - django-version: 5.1
               postgres-version: postgres:13.13
 
-            # master
-            - python-version: 3.8
-              django-version: master
+            # Django 5.2
             - python-version: 3.9
-              django-version: master
-            - django-version: master
+              django-version: 5.2
+            - django-version: 5.2
+              postgres-version: postgres:13.13
+
+            # Django main (6.0)
+            - python-version: 3.9
+              django-version: main
+            - python-version: "3.10"
+              django-version: main
+            - python-version: 3.11
+              django-version: main
+            - django-version: main
               postgres-version: postgres:13.13
     services:
       postgres:
@@ -93,10 +89,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: actions/checkout@v4
       - run: python -m pip install Django==${{ matrix.django-version }}
-        if: matrix.django-version != 'master'
-      - run: python -m pip install https://github.com/django/django/archive/master.tar.gz
-        if: matrix.django-version == 'master'
+        if: matrix.django-version != 'main'
+      - run: python -m pip install https://github.com/django/django/archive/main.tar.gz
+        if: matrix.django-version == 'main'
       - run: |
           python -m pip install coverage
-          python -m pip install psycopg==3.1.8
+          python -m pip install psycopg==3.1.12
       - run: coverage run --source=modeltrans manage.py test

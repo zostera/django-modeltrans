@@ -42,7 +42,7 @@ class TranslatedVirtualField:
     """
 
     # Implementation inspired by HStoreVirtualMixin from:
-    # https://github.com/djangonauts/django-hstore/blob/master/django_hstore/virtual.py
+    # https://github.com/djangonauts/django-hstore/blob/main/django_hstore/virtual.py
 
     def __init__(self, original_field, language=None, *args, **kwargs):
         # TODO: this feels like a big hack.

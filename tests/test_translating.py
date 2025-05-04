@@ -71,7 +71,8 @@ class TranslateModelTest(TestCase):
             body = models.CharField(max_length=100)
 
             i18n = TranslationField(
-                fields=("title", "body"), required_languages={"body": ["nl"], "title": ["fr", "nl"]}
+                fields=("title", "body"),
+                required_languages={"body": ["nl"], "title": ["fr", "nl"]},
             )
 
             class Meta:
@@ -85,7 +86,8 @@ class TranslateModelTest(TestCase):
             body = models.CharField(max_length=100)
 
             i18n = TranslationField(
-                fields=("title", "body"), required_languages={"body": ["nl"], "title": "es"}
+                fields=("title", "body"),
+                required_languages={"body": ["nl"], "title": "es"},
             )
 
             class Meta:
@@ -290,7 +292,8 @@ class TranslateModelTest(TestCase):
         comment = app_models.Comment.objects.create(post=published_post, text="foo")
         self.assertIsNotNone(comment.pk)
 
-        if django.get_version().startswith("5.2"):
+        # Remove if we no longer support Django 4.2, Django 5.1
+        if django.get_version() >= "5.2":
             expected = f"post instance with id {unpublished_post.pk} is not a valid choice."
         else:
             expected = f"post instance with id {unpublished_post.pk} does not exist"
