@@ -85,10 +85,7 @@ class TranslateModelTest(TestCase):
             title = models.CharField(max_length=100)
             body = models.CharField(max_length=100)
 
-            i18n = TranslationField(
-                fields=("title", "body"),
-                required_languages={"body": ["nl"], "title": "es"},
-            )
+            i18n = TranslationField(fields=("title", "body"), required_languages={"body": ["nl"], "title": "es"})
 
             class Meta:
                 app_label = "django-modeltrans_tests"
