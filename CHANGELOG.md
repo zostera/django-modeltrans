@@ -1,6 +1,9 @@
 django-modeltrans change log
 ============================
 
+## In development
+- Support Python 3.9, 3.10, 3.11, 3.12, 3.13 and Django 4.2, 5.1, 5.2 and main (#129).
+
 ## 0.8.0 (2024-07-02)
 - Add `JSONField` support (#119) refs: #118 by @jacobwegner
 - Add `MODELTRANS_DEFAULT_LANGUAGE` setting (#117) by @jacobwegner
