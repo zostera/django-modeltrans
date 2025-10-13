@@ -3,14 +3,15 @@ django-modeltrans change log
 
 ## In development
 - Support Python 3.9, 3.10, 3.11, 3.12, 3.13 and Django 4.2, 5.1, 5.2 and main (#129).
+- Support Django 6.0 and PostgreSQL 14, 15, 16, 17, 18 (#132)
 
 ## 0.8.0 (2024-07-02)
 - Add `JSONField` support (#119) refs: #118 by @jacobwegner
 - Add `MODELTRANS_DEFAULT_LANGUAGE` setting (#117) by @jacobwegner
-- Fix OperationalError under Django 5+ (#121) by @julianwachholz
+- Fix `OperationalError` under Django 5+ (#121) by @julianwachholz
 - Test using PostgreSQL 14 for django master (#122)
 - Drop Django 3.2 and 4.1 from the build matrix, add support for Django 5.0 and Django master, python 3.12 (#112, #105)
-- Fix blank fields trying to insert NULL (#110) by @julianwachholz
+- Fix blank fields trying to insert `NULL` (#110) by @julianwachholz
 - Fix translated form labels using current language (#108) by @julianwachholz
 - Update Django versions and CI link in README and documentation, remove import shims (#95) by @browniebroke
 
