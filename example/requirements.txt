@@ -1,4 +1,4 @@
-Django==5.0.*
+Django==5.2.*
 psycopg
 pytz==2021.1
 wheel==0.38.1

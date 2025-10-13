@@ -103,10 +103,10 @@ class FallbackTransform(Transform):
 
     def as_postgresql(self, compiler, connection):
         lhs, params, key_transforms = self.preprocess_lhs(compiler, connection)
-        params.extend([self.field_prefix])
+        params = tuple(params) + (self.field_prefix,)
 
         rhs = self.language_expression.resolve_expression(compiler.query)
         rhs_sql, rhs_params = compiler.compile(rhs)
-        params.extend(rhs_params)
+        params = params + tuple(rhs_params)
 
         return ("({} ->> (%s || {} ))".format(lhs, rhs_sql), params)
