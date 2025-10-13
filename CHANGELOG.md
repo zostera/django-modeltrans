@@ -3,7 +3,7 @@ django-modeltrans change log
 
 ## In development
 - Support Python 3.9, 3.10, 3.11, 3.12, 3.13 and Django 4.2, 5.1, 5.2 and main (#129).
-- Support Django 6.0 and PostgreSQL 14, 15, 16, 17, 18 (#132)
+- Support Django 6.0 and PostgreSQL 14, 15, 16, 17, 18, drop Python 3.9 support (#132)
 
 ## 0.8.0 (2024-07-02)
 - Add `JSONField` support (#119) refs: #118 by @jacobwegner
