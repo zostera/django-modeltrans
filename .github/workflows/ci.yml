@@ -45,7 +45,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10", 3.11, 3.12, 3.13]
-        django-version: [4.2, 5.1, 5.2, 6.0a1, "main"]
+        django-version: [4.2, 5.1, 5.2, 6.0, "main"]
         postgres-version: ["postgres:14", "postgres:15", "postgres:16", "postgres:17", "postgres:18"]
         exclude:
             # Django 4.2
@@ -53,9 +53,9 @@ jobs:
               django-version: 4.2
 
             # Django 6.0
-            - django-version: 6.0a1
+            - django-version: 6.0
               python-version: "3.10"
-            - django-version: 6.0a1
+            - django-version: 6.0
               python-version: 3.11
 
             # Django main
