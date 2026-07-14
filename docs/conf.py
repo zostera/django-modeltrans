@@ -4,8 +4,6 @@ import sys
 
 import sphinx_rtd_theme
 
-from recommonmark.parser import CommonMarkParser
-
 os.environ["DJANGO_SETTINGS_MODULE"] = "tests.app.settings"
 
 # import project
@@ -20,7 +18,6 @@ version = release.rpartition(".")[0]
 default_role = "py:obj"
 
 # allow markdown to be able to include the CHANGELOG.md
-source_parsers = {".md": CommonMarkParser}
 source_suffix = [".rst", ".md"]
 
 # symlink CHANGELOG.md from repo root to the pages dir.
@@ -38,6 +35,7 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinxcontrib.jquery",
     "sphinxcontrib.spelling",
+    "myst_parser",
 ]
 
 intersphinx_mapping = {
