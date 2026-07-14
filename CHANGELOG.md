@@ -2,6 +2,8 @@ django-modeltrans change log
 ============================
 
 ## In development
+- Drop Django 5.1 support
+- Support python 3.14
 
 
 ## 0.9.0 (2025-10-13)
