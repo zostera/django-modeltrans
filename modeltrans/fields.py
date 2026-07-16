@@ -13,7 +13,7 @@ from .utils import (
     get_translated_field_label,
 )
 
-SUPPORTED_FIELDS = (fields.CharField, fields.TextField, JSONField)
+SUPPORTED_FIELDS = (fields.CharField, fields.TextField, JSONField, fields.files.FileField)
 
 DEFAULT_LANGUAGE = get_default_language()
 
@@ -108,6 +108,16 @@ class TranslatedVirtualField:
 
         return default
 
+    def get_localized_value(self, instance, field_name):
+        value = instance.i18n.get(field_name)
+
+        if isinstance(self.original_field, fields.files.FileField):
+            descriptor = self.descriptor_class(self)
+            descriptor.__set__(instance, value)
+            return descriptor.__get__(instance)
+
+        return value
+
     def __get__(self, instance, instance_type=None):
         # This method is apparently called with instance=None from django.
         # django-hstor raises AttributeError here, but that doesn't solve our problem.
@@ -132,7 +142,7 @@ class TranslatedVirtualField:
 
         # Just return the value if this is an explicit field (<name>_<lang>)
         if self.language is not None:
-            return instance.i18n.get(field_name)
+            return self.get_localized_value(instance, field_name)
 
         # This is the _i18n version of the field, and the current language is not available,
         # so we walk the fallback chain:
@@ -145,7 +155,7 @@ class TranslatedVirtualField:
 
             field_name = build_localized_fieldname(self.original_name, fallback_language)
             if field_name in instance.i18n and instance.i18n[field_name]:
-                return instance.i18n.get(field_name)
+                return self.get_localized_value(instance, field_name)
 
         # finally, return the original field if all else fails.
         return getattr(instance, self.original_name)
@@ -307,8 +317,43 @@ class TranslationField(JSONField):
             if isinstance(field, TranslatedVirtualField):
                 yield field
 
+    def get_file_fields(self):
+        """Return a generator for all translated FileFields."""
+        for field in self.get_translated_fields():
+            if isinstance(field.original_field, fields.files.FileField):
+                yield field
+
     def contribute_to_class(self, cls, name):
         if name != "i18n":
             raise ImproperlyConfigured('{} must have name "i18n"'.format(self.__class__.__name__))
 
         super().contribute_to_class(cls, name)
+
+    def pre_save(self, model_instance, add):
+        """Ensure that translated field values are serializable before save"""
+        data = super().pre_save(model_instance, add)
+
+        if data is None:
+            return data
+
+        for field in self.get_file_fields():
+            localized_file_attname = field.attname
+            if localized_file_attname in data:
+                current_value = data[localized_file_attname]
+
+                # wrap the value in the descriptor class, which will set
+                # the value within the model instance, _NOT_ the i18n key
+                descriptor = field.descriptor_class(field)
+                descriptor.__set__(model_instance, current_value)
+
+                # retrieve the descriptor value, which will check to see if the
+                # file reference has been committed
+                file = descriptor.__get__(model_instance)
+                if file and not file._committed:
+                    # Commit the file to storage prior to saving the model
+                    file.save(file.name, file.file, save=False)
+
+                # finally, mimic how `get_prep_value` works
+                # for "concrete" FileField instances
+                data[localized_file_attname] = str(file)
+        return data
