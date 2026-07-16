@@ -34,13 +34,12 @@ setup(
     url="https://github.com/zostera/django-modeltrans/",
     packages=find_packages(exclude=["tests.*", "tests", "example.*", "example"]),
     include_package_data=True,  # declarations in MANIFEST.in
-    install_requires=["Django>=4.2"],
+    install_requires=["Django>=5.2"],
     classifiers=[
         "Environment :: Web Environment",
         "Framework :: Django",
-        "Framework :: Django :: 4.2",
-        "Framework :: Django :: 5.1",
         "Framework :: Django :: 5.2",
+        "Framework :: Django :: 6.0",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
@@ -51,6 +50,7 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Software Development :: Libraries",
     ],

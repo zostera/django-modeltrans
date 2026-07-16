@@ -1,4 +1,3 @@
-import django
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.test import TestCase
@@ -291,11 +290,7 @@ class TranslateModelTest(TestCase):
         comment = app_models.Comment.objects.create(post=published_post, text="foo")
         self.assertIsNotNone(comment.pk)
 
-        # Remove if we no longer support Django 4.2, Django 5.1
-        if django.get_version() >= "5.2":
-            expected = f"post instance with id {unpublished_post.pk} is not a valid choice."
-        else:
-            expected = f"post instance with id {unpublished_post.pk} does not exist"
+        expected = f"post instance with id {unpublished_post.pk} is not a valid choice."
 
         with self.assertRaisesMessage(ValidationError, expected):
             comment.post = unpublished_post
