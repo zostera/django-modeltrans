@@ -10,7 +10,17 @@ from django.utils.translation import override
 from modeltrans.fields import TranslationField
 from modeltrans.translator import translate_model
 
-from .app.models import Attribute, Blog, BlogAttr, Category, Challenge, ChallengeContent, Site
+from .app.models import (
+    Attribute,
+    Blog,
+    BlogAttr,
+    Category,
+    Challenge,
+    ChallengeContent,
+    Department,
+    Organization,
+    Site,
+)
 from .utils import CreateTestModel, load_wiki
 
 
@@ -167,6 +177,26 @@ class FilterTest(TestCase):
             # should not fallback
             qs = Blog.objects.filter(title_nl="Cod")
             self.assertEqual({m.title for m in qs}, set())
+
+    def test_filter_i18n_with_default_language_field(self):
+        org = Organization.objects.create(name="Org", language="de")
+        Department.objects.create(name="Dept", organization=org)
+
+        with override("de"):
+            # should use German field
+            qs = Department.objects.filter(name_i18n="Dept")
+            self.assertEqual({m.name for m in qs}, {"Dept"})
+            qs = Department.objects.filter(name_de="Dept")
+            self.assertEqual({m.name for m in qs}, {"Dept"})
+
+        with override("nl"):
+            # should fallback to German
+            qs = Department.objects.filter(name_i18n="Dept")
+            self.assertEqual({m.name for m in qs}, {"Dept"})
+
+            # should not fallback
+            qs = Department.objects.filter(name_nl="Dept")
+            self.assertEqual({m.name for m in qs}, set())
 
     def test_filter_by_default_language(self):
         qs = Blog.objects.filter(title_en__contains="al")

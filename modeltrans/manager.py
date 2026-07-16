@@ -6,6 +6,32 @@ from django.db.models.functions import Cast
 
 from .conf import get_default_language
 from .fields import TranslatedVirtualField
+from .utils import get_instance_field_value
+
+
+def _resolve_fk_object(model, field_name, fields):
+    """
+    Resolve a ForeignKey related object from kwargs that use attname.
+
+    When model instances are constructed from serialized data, ForeignKey
+    fields may be passed using their column name (attname, e.g.,
+    'category_id') rather than the field name ('category'). This helper
+    looks up the related object so that default_language_field traversal
+    can work.
+    """
+    try:
+        fk_field = model._meta.get_field(field_name)
+    except FieldDoesNotExist:
+        return None
+    if not fk_field.remote_field:
+        return None
+    fk_id = fields.get(fk_field.attname)
+    if fk_id is None:
+        return None
+    try:
+        return fk_field.remote_field.model._default_manager.get(pk=fk_id)
+    except fk_field.remote_field.model.DoesNotExist:
+        return None
 
 
 def transform_translatable_fields(model, fields):
@@ -38,12 +64,34 @@ def transform_translatable_fields(model, fields):
 
         if isinstance(field, TranslatedVirtualField):
             has_translated_fields = True
-            if field.get_language() == get_default_language():
-                if field.original_name in fields:
-                    raise ValueError(
-                        'Attempted override of "{}" with "{}". '
-                        "Only one of the two is allowed.".format(field.original_name, field_name)
-                    )
+            if field.default_language_field:
+                first_part, *path = field.default_language_field.split(LOOKUP_SEP, maxsplit=1)
+                if first_part in fields:
+                    related_obj = fields[first_part]
+                else:
+                    # When constructing from serialized data, ForeignKey fields may
+                    # be passed as attname (e.g., category_id) instead of field name
+                    # (e.g., category). Resolve the related object from the FK id.
+                    related_obj = _resolve_fk_object(model, first_part, fields)
+                if path:
+                    assert len(path) == 1
+                    default_language = get_instance_field_value(related_obj, path[0])
+                else:
+                    default_language = related_obj
+            else:
+                default_language = get_default_language()
+            if field.get_language() == default_language:
+                if field.original_name in ret:
+                    existing = ret[field.original_name]
+                    if existing != value and (existing or value):
+                        raise ValueError(
+                            'Attempted override of "{}" with "{}". '
+                            "Only one of the two is allowed.".format(field.original_name, field_name)
+                        )
+                    # Both the original field and a translated virtual field for the
+                    # default language are present with compatible values (e.g., from
+                    # deserialized data). The original field value takes precedence.
+                    continue
                 ret[field.original_name] = value
             else:
                 ret["i18n"][field.name] = value
@@ -314,7 +362,7 @@ class MultilingualQuerySet(QuerySet):
 
             fallback = field.language is None
 
-            if field.get_language() == get_default_language():
+            if not field.default_language_field and field.get_language() == get_default_language():
                 original_field = field_name.replace(field.name, field.original_field.name)
                 self.query.add_annotation(Cast(original_field, field.output_field()), field_name)
             else:

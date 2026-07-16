@@ -10,7 +10,7 @@ from modeltrans.utils import (
     split_translated_fieldname,
 )
 
-from .app.models import Blog, Category
+from .app.models import Blog, Category, Department, Organization
 
 
 class UtilsTest(TestCase):
@@ -46,6 +46,52 @@ class UtilsTest(TestCase):
                 Blog, {"title": "bar", "title_de": "das foo", "i18n": {"title_nl": "foo"}}
             ),
             {"i18n": {"title_nl": "foo", "title_de": "das foo"}, "title": "bar"},
+        )
+
+    def test_transform_translatable_fields_with_default_language_field(self):
+        self.assertEqual(
+            transform_translatable_fields(
+                Organization,
+                {"language": "de", "name": "das foo", "name_nl": "foo", "i18n": {"name_en": "bar"}},
+            ),
+            {"language": "de", "name": "das foo", "i18n": {"name_nl": "foo", "name_en": "bar"}},
+        )
+
+    def test_transform_translatable_fields_with_default_language_field_explicit(
+        self,
+    ):
+        self.assertEqual(
+            transform_translatable_fields(
+                Organization,
+                {
+                    "language": "de",
+                    "name_de": "das foo",
+                    "i18n": {},
+                },
+            ),
+            {"language": "de", "name": "das foo", "i18n": {}},
+        )
+
+    def test_transform_translatable_fields_with_default_language_field_raises_if_override(self):
+        with self.assertRaises(ValueError):
+            transform_translatable_fields(
+                Organization,
+                {"language": "de", "name": "das foo", "name_de": "die foo"},
+            )
+
+    def test_transform_translatable_fields_with_default_language_field_in_related_model(self):
+        org = Organization(language="de")
+        self.assertEqual(
+            transform_translatable_fields(
+                Department,
+                {
+                    "organization": org,
+                    "name": "das foo",
+                    "name_en": "bar",
+                    "i18n": {"name_nl": "foo"},
+                },
+            ),
+            {"organization": org, "name": "das foo", "i18n": {"name_en": "bar", "name_nl": "foo"}},
         )
 
     def test_build_localized_fieldname(self):
