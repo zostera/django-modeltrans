@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-import os
 import re
+import shlex
+import subprocess
 import sys
 
 from setuptools import find_packages, setup
@@ -9,16 +10,33 @@ from setuptools import find_packages, setup
 with open("modeltrans/__init__.py", "rb") as f:
     VERSION = str(re.search('__version__ = "(.+?)"', f.read().decode("utf-8")).group(1))
 
+
+def run(command):
+    """Run command, aborting the release if it fails."""
+    subprocess.check_call(shlex.split(command))
+
+
+def run_python(command):
+    """Run command with the current interpreter, aborting the release if it fails."""
+    run("{} {}".format(shlex.quote(sys.executable), command))
+
+
 if sys.argv[-1] == "publish":
-    os.system("python setup.py sdist bdist_wheel --universal")
-    os.system("twine upload dist/django-modeltrans-{}.tar.gz".format(VERSION))
+    run_python("-m pip install --upgrade build twine")
+    run_python("-m build")
+    run_python(
+        "-m twine upload"
+        " dist/django_modeltrans-{version}.tar.gz"
+        " dist/django_modeltrans-{version}-py3-none-any.whl".format(version=VERSION)
+    )
     message = "\nreleased [{version}](https://pypi.python.org/pypi/django-modeltrans/{version})"
     print(message.format(version=VERSION))
     sys.exit()
 
 if sys.argv[-1] == "tag":
-    os.system("git tag -a v{} -m 'tagging v{}'".format(VERSION, VERSION))
-    os.system("git push --tags && git push origin master")
+    run("git tag -a v{version} -m 'tagging v{version}'".format(version=VERSION))
+    run("git push --tags")
+    run("git push origin master")
     sys.exit()
 
 

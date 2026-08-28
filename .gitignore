@@ -12,6 +12,7 @@ reports
 
 .coverage
 __pycache__
+build/
 dist/
 
 .idea
