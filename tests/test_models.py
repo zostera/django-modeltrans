@@ -11,10 +11,14 @@ from .app.models import (
     Challenge,
     ChallengeContent,
     ChildArticle,
+    Department,
     NullableTextModel,
+    Organization,
     TaggedBlog,
     TextModel,
 )
+from modeltrans.manager import transform_translatable_fields
+
 from .utils import CreateTestModel
 
 
@@ -42,6 +46,54 @@ class TranslatedFieldTest(TestCase):
         # other translations are still there.
         self.assertEqual(m.title_nl, "Valk")
         self.assertEqual(m.title_de, "Falk")
+
+    @override_settings(
+        MODELTRANS_AVAILABLE_LANGUAGES=("de", "en", "nl", "fr"),
+        MODELTRANS_FALLBACK={"default": ("nl",)},
+    )
+    def test_get_has_no_translation_fallback_to_local_default_language(self):
+        org = Organization(language="de", name="das foo", i18n={"name_en": "bar"})
+        # en is activated and name_en is present
+        self.assertEqual(org.name_i18n, "bar")
+        with override("fr"):
+            # fr is activated but name_fr is not present and neither is name_nl (from the fallback chain)
+            self.assertEqual(org.name_i18n, "das foo")
+
+    @override_settings(
+        MODELTRANS_AVAILABLE_LANGUAGES=("de", "en", "nl", "fr"),
+        MODELTRANS_FALLBACK={"default": ("nl",)},
+    )
+    def test_get_has_no_translation_fallback_to_fallback_chain_despite_local_default_language(self):
+        org = Organization(language="de", name="das foo", i18n={"name_en": "bar", "name_nl": "foo"})
+        # en is activated and name_en is present
+        self.assertEqual(org.name_i18n, "bar")
+        with override("fr"):
+            # fr is activated and name_fr is not present, but name_nl is (from the fallback chain)
+            self.assertEqual(org.name_i18n, "foo")
+
+    @override_settings(
+        MODELTRANS_AVAILABLE_LANGUAGES=("en", "de", "nl"),
+        MODELTRANS_FALLBACK={"default": ("en",)},
+    )
+    def test_default_language_field_with_fallback_language_field(self):
+        class Model(models.Model):
+            title = models.CharField(max_length=10)
+            language = models.CharField(max_length=2)
+            i18n = TranslationField(
+                fields=["title"],
+                default_language_field="language",
+                fallback_language_field="language",
+            )
+
+            class Meta:
+                app_label = "test"
+
+        with CreateTestModel(Model, translate=True):
+            m = Model(language="nl", title="foo", title_en="bar")
+
+        with override("de"):
+            # Fall back to language in `fallback_language_field` and not to languages in fallback chain
+            self.assertEqual(m.title_i18n, "foo")
 
     def test_get_non_translatable_field(self):
         m = Blog(title="Falcon")
@@ -142,7 +194,16 @@ class TranslatedFieldTest(TestCase):
 
         self.assertEqual(m.title, "Falcon")
 
-    def test_creationg_prevents_double_definition(self):
+    def test_creating_using_virtual_local_default_language_field(self):
+        org = Organization.objects.create(language="de", name_de="foo")
+        self.assertEqual(org.name, "foo")
+
+    def test_creating_using_virtual_local_default_language_field_on_related_model(self):
+        org = Organization.objects.create(language="de", name_de="foo")
+        dept = Department.objects.create(organization=org, name_de="bar")
+        self.assertEqual(dept.name, "bar")
+
+    def test_creating_prevents_double_definition(self):
         expected_message = (
             'Attempted override of "title" with "title_en". Only ' "one of the two is allowed."
         )
@@ -410,3 +471,111 @@ class CreatingInstancesTest(TestCase):
 
         a.refresh_from_db()
         self.assertEqual(a.title_de, defaults["title_de"])
+
+
+class ForeignKeyAttnameResolutionTest(TestCase):
+    """
+    Test that transform_translatable_fields resolves FK objects when kwargs
+    use attname (e.g., organization_id) instead of field name (organization).
+
+    This happens when models are constructed from serialized or deserialized
+    data where ForeignKey fields are stored by column name rather than field
+    name.
+    """
+
+    def test_fk_attname_resolves_default_language(self):
+        """Department with organization_id should resolve Organization to get its language."""
+        org = Organization.objects.create(language="de", name="Das Org")
+        dept = Department(organization_id=org.pk, name_de="Abteilung")
+        self.assertEqual(dept.name, "Abteilung")
+
+    def test_fk_field_name_still_works(self):
+        """Department with organization=obj should still work as before."""
+        org = Organization.objects.create(language="de", name="Das Org")
+        dept = Department(organization=org, name_de="Abteilung")
+        self.assertEqual(dept.name, "Abteilung")
+
+    def test_fk_attname_non_default_language_stored_in_i18n(self):
+        """Non-default language values should be stored in i18n even with FK attname."""
+        org = Organization.objects.create(language="de", name="Das Org")
+        result = transform_translatable_fields(
+            Department, {"organization_id": org.pk, "name": "German Name", "name_nl": "Dutch Name"}
+        )
+        self.assertEqual(result["name"], "German Name")
+        self.assertEqual(result["i18n"]["name_nl"], "Dutch Name")
+
+    def test_fk_attname_with_missing_fk_falls_back(self):
+        """When FK id points to a nonexistent object, default_language is None."""
+        result = transform_translatable_fields(
+            Department, {"organization_id": 999999, "name": "Fallback"}
+        )
+        # The original field is passed through; virtual fields for None language are
+        # stored in i18n since they don't match the (None) default language.
+        self.assertEqual(result["name"], "Fallback")
+
+
+class DuplicateOriginalAndVirtualFieldTest(TestCase):
+    """
+    Test behavior when both the original field and a translated virtual field
+    for the default language are present in kwargs.
+
+    This happens when constructing model instances from deserialized data that
+    includes both the DB column value and the virtual field values.
+    """
+
+    def test_same_values_tolerated(self):
+        """Identical original and virtual field values should not raise."""
+        result = transform_translatable_fields(
+            Blog, {"title": "Falcon", "title_en": "Falcon"}
+        )
+        self.assertEqual(result["title"], "Falcon")
+
+    def test_both_falsy_tolerated(self):
+        """Empty string + None are both falsy and should be tolerated."""
+        result = transform_translatable_fields(
+            Blog, {"title": "", "title_en": None}
+        )
+        self.assertEqual(result["title"], "")
+
+    def test_both_none_tolerated(self):
+        """Both None should be tolerated."""
+        result = transform_translatable_fields(
+            Blog, {"title": None, "title_en": None}
+        )
+        self.assertIsNone(result["title"])
+
+    def test_different_values_raises(self):
+        """Different original and virtual field values should still raise ValueError."""
+        with self.assertRaisesMessage(
+            ValueError,
+            'Attempted override of "title" with "title_en". Only one of the two is allowed.',
+        ):
+            transform_translatable_fields(
+                Blog, {"title": "Falcon", "title_en": "Hawk"}
+            )
+
+    def test_original_value_takes_precedence(self):
+        """When values are compatible, the original field value is kept."""
+        result = transform_translatable_fields(
+            Blog, {"title": "Falcon", "title_en": "Falcon", "title_nl": "Valk"}
+        )
+        self.assertEqual(result["title"], "Falcon")
+        self.assertEqual(result["i18n"]["title_nl"], "Valk")
+
+    def test_with_local_default_language_field(self):
+        """Duplicate tolerance works with per-instance default_language_field."""
+        org = Organization.objects.create(language="de", name="Das Org")
+        result = transform_translatable_fields(
+            Department,
+            {"organization_id": org.pk, "name": "Abteilung", "name_de": "Abteilung"},
+        )
+        self.assertEqual(result["name"], "Abteilung")
+
+    def test_with_local_default_language_field_different_raises(self):
+        """Different values with per-instance default_language_field should raise."""
+        org = Organization.objects.create(language="de", name="Das Org")
+        with self.assertRaises(ValueError):
+            transform_translatable_fields(
+                Department,
+                {"organization_id": org.pk, "name": "Abteilung", "name_de": "Büro"},
+            )
