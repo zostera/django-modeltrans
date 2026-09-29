@@ -771,3 +771,35 @@ class ValuesTest(TestCase):
     def test_values_spanning_relation(self):
         qs = Blog.objects.all().order_by("title_nl").values_list("title_nl", "category__name_nl")
         self.assertEqual(list(qs), [(None, None), ("Kikker", "Amfibiën"), ("Valk", "Vogels")])
+
+
+class FallbackEmptyStringTest(TestCase):
+    """
+    An empty translation in `i18n` must be skipped while building the fallback
+    expression, just like `TranslatedVirtualField.__get__()` skips it.
+    """
+
+    def setUp(self):
+        Blog.objects.bulk_create(
+            [Blog(title="Falcon", title_nl=""), Blog(title="Frog", title_nl="Kikker")]
+        )
+
+    def test_values_i18n(self):
+        with override("nl"):
+            self.assertEqual(
+                set(Blog.objects.values_list("title_i18n", flat=True)), {"Falcon", "Kikker"}
+            )
+
+    def test_filter_i18n(self):
+        with override("nl"):
+            self.assertEqual(
+                {m.title for m in Blog.objects.filter(title_i18n="Falcon")}, {"Falcon"}
+            )
+
+    def test_values_i18n_custom_fallback(self):
+        Challenge.objects.create(default_language="nl", title="Hurray", i18n={"title_nl": ""})
+
+        with override("de"):
+            self.assertEqual(
+                set(Challenge.objects.values_list("title_i18n", flat=True)), {"Hurray"}
+            )
