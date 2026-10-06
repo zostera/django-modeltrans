@@ -290,6 +290,66 @@ class FilterTest(TestCase):
         self.assertEqual({m.name for m in qs}, {"Modeltrans blog"})
 
 
+class RelatedLookupAnnotationTest(TestCase):
+    """
+    Lookups for the same translated field through different relations each need their
+    own annotation, or the annotation added last is used for all of them.
+
+    https://github.com/zostera/django-modeltrans/issues/37
+    """
+
+    def test_lookup_on_own_and_related_field(self):
+        birds = Category.objects.create(name="Birds", title="Birds", title_nl="Vogels")
+        Blog.objects.create(title="Falcon", title_nl="Valk", category=birds)
+        Blog.objects.create(title="Duck", title_nl="Eend", category=birds)
+
+        with override("nl"):
+            qs = Blog.objects.filter(Q(title_i18n="Valk") | Q(category__title_i18n="Vissen"))
+            sql = str(qs.query)
+
+            self.assertEqual(sql.count("_annotation"), 2)
+            # the lookup on `Blog.title_i18n` must not be resolved against `app_category`
+            self.assertIn('COALESCE(("app_blog"."i18n"', sql)
+            self.assertEqual(sql.count("JOIN"), 1)
+
+            self.assertEqual({b.title for b in qs}, {"Falcon"})
+
+    def test_lookup_through_nested_relations(self):
+        class NestedCategory(models.Model):
+            name = models.CharField(max_length=100)
+            # db_constraint=False keeps the temporary table droppable inside the test
+            # transaction, the lookups under test do not depend on it.
+            parent = models.ForeignKey(
+                "self", null=True, on_delete=models.CASCADE, db_constraint=False
+            )
+
+            i18n = TranslationField(fields=("name",))
+
+            class Meta:
+                app_label = "tests"
+
+        translate_model(NestedCategory)
+
+        with CreateTestModel(NestedCategory):
+            birds = NestedCategory.objects.create(name="Birds", name_nl="Vogels")
+            falcons = NestedCategory.objects.create(name="Falcons", name_nl="Valken", parent=birds)
+            NestedCategory.objects.create(name="Ducks", name_nl="Eenden", parent=falcons)
+
+            with override("nl"):
+                qs = NestedCategory.objects.filter(
+                    Q(parent__name_i18n="Vogels") | Q(parent__parent__name_i18n="Vogels")
+                )
+                sql = str(qs.query)
+
+                self.assertEqual(sql.count("_annotation"), 2)
+                # one join per relation in the lookups, and both of them are used
+                self.assertEqual(sql.count("JOIN"), 2)
+                self.assertIn('COALESCE(("T2"."i18n"', sql)
+                self.assertIn('COALESCE(("T3"."i18n"', sql)
+
+                self.assertEqual({c.name for c in qs}, {"Falcons", "Ducks"})
+
+
 class CustomFallbackTest(TestCase):
     def test_custom_fallback(self):
         instance = Challenge.objects.create(
