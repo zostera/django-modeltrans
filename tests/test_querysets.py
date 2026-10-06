@@ -633,6 +633,47 @@ class FallbackOrderByTest(TestCase):
                 )
 
 
+class FallbackToOriginalFieldTest(TestCase):
+    """
+    The original field is the last resort of the fallback chain, also when the
+    fallback chain does not mention the default language.
+    """
+
+    @override_settings(MODELTRANS_FALLBACK={"default": ("de",)})
+    def test_default_language_not_in_fallback_chain(self):
+        blog = Blog.objects.create(title="Falcon")
+
+        with override("de"):
+            self.assertEqual(blog.title_i18n, "Falcon")
+            self.assertEqual(
+                list(Blog.objects.filter(pk=blog.pk).values_list("title_i18n", flat=True)),
+                ["Falcon"],
+            )
+            self.assertCountEqual(Blog.objects.filter(title_i18n="Falcon"), [blog])
+
+    @override_settings(MODELTRANS_FALLBACK={"default": ()})
+    def test_empty_fallback_chain(self):
+        blog = Blog.objects.create(title="Falcon")
+
+        with override("de"):
+            self.assertEqual(blog.title_i18n, "Falcon")
+            self.assertEqual(
+                list(Blog.objects.filter(pk=blog.pk).values_list("title_i18n", flat=True)),
+                ["Falcon"],
+            )
+
+    @override_settings(MODELTRANS_FALLBACK={"default": ("de",)})
+    def test_translation_still_wins(self):
+        blog = Blog.objects.create(title="Falcon", title_de="Falk")
+
+        with override("de"):
+            self.assertEqual(blog.title_i18n, "Falk")
+            self.assertEqual(
+                list(Blog.objects.filter(pk=blog.pk).values_list("title_i18n", flat=True)),
+                ["Falk"],
+            )
+
+
 class FilteredOrderByTest(TestCase):
     def test_filtered_order_by(self):
         Blog.objects.bulk_create(
