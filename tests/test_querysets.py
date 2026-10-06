@@ -2,6 +2,7 @@ import pickle
 from unittest import skipIf
 
 import django
+from django.core.exceptions import FieldError
 from django.db import models
 from django.db.models import F, Q
 from django.test import TestCase, override_settings
@@ -289,6 +290,32 @@ class FilterTest(TestCase):
 
         qs = Site.objects.filter(blog__title_i18n__contains="modeltrans")
         self.assertEqual({m.name for m in qs}, {"Modeltrans blog"})
+
+    def test_filter_spanning_relation_without_multilingual_manager(self):
+        """
+        Without a `MultilingualManager`, the lookup is not rewritten, so the query can
+        never be compiled. The error must say which model needs the manager.
+        """
+        expected_message = (
+            "Cannot use the translated field 'app.Blog.title_i18n' in a query on app.BlogAttr. "
+            "Add `objects = MultilingualManager()` to app.BlogAttr to use translated fields "
+            "in its queries."
+        )
+        with self.assertRaisesMessage(FieldError, expected_message):
+            str(BlogAttr.objects.filter(object__title_i18n="Vreemd").query)
+
+    def test_lookup_not_rewritten_with_multilingual_manager(self):
+        """
+        The arguments to `distinct()` are not rewritten, so the error must not blame a
+        missing `MultilingualManager` on a model which has one.
+        """
+        expected_message = (
+            "Cannot use the translated field 'app.Blog.title_i18n' in a query on app.Blog. "
+            "Not every part of a query is rewritten to a lookup on the `i18n` field, the "
+            "arguments to `distinct()` and filtered aggregates are not."
+        )
+        with self.assertRaisesMessage(FieldError, expected_message):
+            str(Blog.objects.order_by("title_i18n").distinct("title_i18n").query)
 
 
 class CustomFallbackTest(TestCase):

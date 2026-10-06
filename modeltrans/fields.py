@@ -1,5 +1,6 @@
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import FieldError, ImproperlyConfigured
 from django.db.models import F, JSONField, fields
+from django.db.models.expressions import Col
 from django.db.models.fields.json import KeyTextTransform
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import gettext
@@ -30,6 +31,41 @@ def translated_field_factory(original_field, language=None, *args, **kwargs):
     Specific.__name__ = "Translated{}".format(original_field.__class__.__name__)
 
     return Specific(original_field, language, *args, **kwargs)
+
+
+class TranslatedVirtualFieldCol(Col):
+    """
+    Column for a `TranslatedVirtualField`, which only exists to raise a descriptive error.
+
+    A virtual field has no column in the database, so it can only end up in a query if
+    `MultilingualQuerySet` did not rewrite the lookup into an expression on the `i18n` field,
+    either because the model the query is built from has no `MultilingualManager`, or because
+    the field is used in a part of the query which is not rewritten.
+    """
+
+    def as_sql(self, compiler, connection):
+        # imported here because `modeltrans.manager` imports this module.
+        from .manager import MultilingualManager
+
+        model = compiler.query.model
+        if isinstance(model._default_manager, MultilingualManager):
+            hint = (
+                "Not every part of a query is rewritten to a lookup on the `i18n` field, "
+                "the arguments to `distinct()` and filtered aggregates are not."
+            )
+        else:
+            hint = (
+                "Add `objects = MultilingualManager()` to {model} to use translated fields "
+                "in its queries.".format(model=model._meta.label)
+            )
+
+        raise FieldError(
+            "Cannot use the translated field '{field}' in a query on {model}. {hint}".format(
+                field="{}.{}".format(self.target.model._meta.label, self.target.name),
+                model=model._meta.label,
+                hint=hint,
+            )
+        )
 
 
 class TranslatedVirtualField:
@@ -87,6 +123,9 @@ class TranslatedVirtualField:
 
     def db_type(self, connection):
         return None
+
+    def get_col(self, alias, output_field=None):
+        return TranslatedVirtualFieldCol(alias, self, output_field)
 
     def get_instance_fallback_chain(self, instance, language):
         """
