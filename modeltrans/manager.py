@@ -83,8 +83,8 @@ class MultilingualQuerySet(QuerySet):
             fallback (bool): If `True`, `COALESCE` will be used to get the value of the original
                 field if the requested translation is not in the `i18n` dict.
             bare_lookup:
-            annotation_name (str): name of the annotation, if None the default
-                `<original_field>_<lang>_annotation` will be used.
+            annotation_name (str): name of the annotation, if None a name derived from
+                `bare_lookup` will be used.
 
         Returns:
             the name of the annotation created.
@@ -95,7 +95,11 @@ class MultilingualQuerySet(QuerySet):
             return expression.name
 
         if annotation_name is None:
-            annotation_name = "{}_annotation".format(virtual_field.name)
+            # The relation we traverse is part of the name: two lookups for the same
+            # translated field through different relations each need their own
+            # annotation, or the last one added is used for both of them.
+            lookup = bare_lookup if bare_lookup is not None else virtual_field.name
+            annotation_name = "{}_annotation".format(lookup.replace(LOOKUP_SEP, "_"))
 
         self.query.add_annotation(expression, annotation_name)
         return annotation_name
