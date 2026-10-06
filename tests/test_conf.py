@@ -1,7 +1,11 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 
-from modeltrans.conf import check_fallback_chain, get_available_languages_setting
+from modeltrans.conf import (
+    check_fallback_chain,
+    get_available_languages_setting,
+    get_modeltrans_setting,
+)
 from modeltrans.translator import check_languages, get_i18n_field, get_i18n_field_param
 
 from .app.models import Person
@@ -60,3 +64,14 @@ class DefaultLanguageConfTest(TestCase):
         i18n_field = get_i18n_field(Person)
         required_languages = get_i18n_field_param(Person, i18n_field, "required_languages")
         check_languages(required_languages, Person)
+
+
+class GetModeltransSettingTest(TestCase):
+    def test_unknown_setting_is_none(self):
+        self.assertIsNone(get_modeltrans_setting("MODELTRANS_NOT_A_SETTING"))
+
+    @override_settings(MODELTRANS_AVAILABLE_LANGUAGES=(("nl", "Dutch"), ("en", "English")))
+    def test_only_resolves_the_requested_setting(self):
+        # A misconfigured MODELTRANS_AVAILABLE_LANGUAGES must not make lookups of
+        # unrelated settings fail.
+        self.assertIs(get_modeltrans_setting("MODELTRANS_ADD_FIELD_HELP_TEXT"), True)
