@@ -291,6 +291,47 @@ class FilterTest(TestCase):
         self.assertEqual({m.name for m in qs}, {"Modeltrans blog"})
 
 
+class ActiveLanguageAtExecutionTest(TestCase):
+    """
+    A `<field>_i18n` lookup must use the language active when the query is executed,
+    not the language that happened to be active when the queryset was constructed.
+    """
+
+    @classmethod
+    def setUpTestData(self):
+        Blog.objects.create(title="Falcon", i18n={"title_nl": "Valk", "title_de": "Falk"})
+        Blog.objects.create(title="Frog", i18n={"title_nl": "Kikker", "title_de": "Frosch"})
+
+    def test_filter(self):
+        with override("en"):
+            qs = Blog.objects.filter(title_i18n="Valk")
+
+        with override("nl"):
+            self.assertEqual({m.title for m in qs}, {"Falcon"})
+
+    def test_filter_default_language(self):
+        with override("nl"):
+            qs = Blog.objects.filter(title_i18n="Falcon")
+
+        with override("en"):
+            self.assertEqual({m.title for m in qs}, {"Falcon"})
+
+    def test_order_by(self):
+        with override("en"):
+            # ordering by the English titles would be "Falcon Frog"
+            qs = Blog.objects.order_by("title_i18n")
+
+        with override("nl"):
+            self.assertEqual(key(qs, "title"), "Frog Falcon")
+
+    def test_values_list(self):
+        with override("en"):
+            qs = Blog.objects.order_by("title").values_list("title_i18n", flat=True)
+
+        with override("de"):
+            self.assertEqual(list(qs), ["Falk", "Frosch"])
+
+
 class CustomFallbackTest(TestCase):
     def test_custom_fallback(self):
         instance = Challenge.objects.create(
@@ -661,7 +702,9 @@ class FilteredOrderByTest(TestCase):
             qs = Blog.objects.filter(title_i18n__contains="G").order_by("-title_i18n")
 
             self.assertEqual(key(qs, "title_i18n"), "Gerbil Gecko")
-            self.assertTrue("annotation" not in str(qs.query))
+            # the annotation is added regardless of the active language, but for the
+            # default language it is just the original field, without a COALESCE.
+            self.assertTrue("COALESCE" not in str(qs.query))
 
 
 @skipIf(django.VERSION < (2, 0), "Only supported in Django 2.0 and later")
