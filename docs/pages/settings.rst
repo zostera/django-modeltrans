@@ -49,6 +49,9 @@ If configured like this::
        'fy': ('nl', 'en')
     }
 
+If none of the languages in the chain has a value, the value of the original field is used as a
+last resort, even if the chain does not mention `MODELTRANS_DEFAULT_LANGUAGE`.
+
 Note that a custom fallback language can be configured on a model instance if the `i18n` field is configured like this::
 
     class Model(models.Model):

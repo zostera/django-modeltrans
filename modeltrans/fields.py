@@ -247,6 +247,13 @@ class TranslatedVirtualField:
         # and now, add the list of fallback languages to the lookup list
         for fallback_language in fallback_chain:
             lookups.append(self._localized_lookup(fallback_language, bare_lookup))
+
+        # Finally, the original field is the last resort, just like in `__get__()`.
+        # It is only appended if the fallback chain did not add it already.
+        original_lookup = self._localized_lookup(DEFAULT_LANGUAGE, bare_lookup)
+        if original_lookup not in lookups:
+            lookups.append(original_lookup)
+
         return Coalesce(*lookups, output_field=self.output_field())
 
 
