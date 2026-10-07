@@ -275,6 +275,26 @@ class MultilingualQuerySet(QuerySet):
 
         return super().order_by(*new_field_names)
 
+    def distinct(self, *field_names):
+        """
+        Annotate translated fields before using them in the `DISTINCT ON` clause.
+
+        Postgres requires the `DISTINCT ON` expressions to match the leading `ORDER BY`
+        expressions. `order_by()` inlines the expression for a translated field, so the
+        annotation added here has to resolve to the same SQL.
+
+        https://docs.djangoproject.com/en/stable/ref/models/querysets/#distinct
+        """
+        new_field_names = []
+        for field_name in field_names:
+            field, lookup_type = self._get_field(field_name)
+            if isinstance(field, TranslatedVirtualField):
+                assert lookup_type is None, "{} is not a valid distinct lookup".format(field_name)
+                field_name = self._add_i18n_annotation(virtual_field=field, bare_lookup=field_name)
+            new_field_names.append(field_name)
+
+        return super().distinct(*new_field_names)
+
     def _filter_or_exclude(self, negate, args, kwargs):
         """
         Annotate lookups for `filter()` and `exclude()`.
