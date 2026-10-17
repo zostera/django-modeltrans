@@ -63,6 +63,8 @@ jobs:
               python-version: 3.11
             - django-version: main
               postgres-version: "postgres:14"
+            - django-version: main
+              postgres-version: "postgres:15"
 
     services:
       postgres:
