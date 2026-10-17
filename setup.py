@@ -48,7 +48,8 @@ setup(
     long_description_content_type="text/markdown",
     author="Jan Pieter Waagmeester",
     author_email="jieter@zostera.nl",
-    license="Simplified BSD",
+    license_expression="BSD-3-Clause",
+    license_files=["LICENSE"],
     url="https://github.com/zostera/django-modeltrans/",
     packages=find_namespace_packages(
         include=["modeltrans", "modeltrans.*"], exclude=["*.__pycache__"]
@@ -63,7 +64,6 @@ setup(
         "Framework :: Django :: 6.0",
         "Framework :: Django :: 6.1",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
