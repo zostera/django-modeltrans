@@ -1,6 +1,10 @@
 django-modeltrans change log
 ============================
 
+## 0.10.1 (2026-10-17)
+- Cache the available languages and the default language- (#156)
+- Drop python 3.10 support
+
 ## 0.10.0 (2026-08-28)
 - Drop Django 4.2 and 5.1 support
 - Support python 3.14
