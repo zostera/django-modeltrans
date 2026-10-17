@@ -1,7 +1,12 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 
-from modeltrans.conf import check_fallback_chain, get_available_languages_setting
+from modeltrans.conf import (
+    check_fallback_chain,
+    get_available_languages,
+    get_available_languages_setting,
+    get_default_language,
+)
 from modeltrans.translator import check_languages, get_i18n_field, get_i18n_field_param
 
 from .app.models import Person
@@ -50,6 +55,18 @@ class DefaultLanguageConfTest(TestCase):
         required_languages = get_i18n_field_param(Person, i18n_field, "required_languages")
         with self.assertRaisesMessage(ImproperlyConfigured, message):
             check_languages(required_languages, Person)
+
+    def test_cached_languages_follow_changed_settings(self):
+        self.assertEqual(get_default_language(), "en")
+        self.assertCountEqual(get_available_languages(), ("en", "nl", "de", "fr"))
+
+        with override_settings(LANGUAGE_CODE="nl", MODELTRANS_AVAILABLE_LANGUAGES=("en", "fy")):
+            self.assertEqual(get_default_language(), "nl")
+            self.assertCountEqual(get_available_languages(), ("nl", "en", "fy"))
+            self.assertCountEqual(get_available_languages(include_default=False), ("en", "fy"))
+
+        self.assertEqual(get_default_language(), "en")
+        self.assertCountEqual(get_available_languages(), ("en", "nl", "de", "fr"))
 
     @override_settings(
         LANGUAGE_CODE="es",
