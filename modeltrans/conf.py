@@ -1,7 +1,18 @@
+import functools
 import itertools
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.core.signals import setting_changed
+from django.dispatch import receiver
+
+# The settings the cached languages are derived from.
+LANGUAGE_SETTINGS = {
+    "LANGUAGE_CODE",
+    "LANGUAGES",
+    "MODELTRANS_AVAILABLE_LANGUAGES",
+    "MODELTRANS_DEFAULT_LANGUAGE",
+}
 
 
 def get_modeltrans_setting(key):
@@ -16,6 +27,7 @@ def get_modeltrans_setting(key):
     return modeltrans_settings.get(key)
 
 
+@functools.cache
 def get_default_language():
     return getattr(settings, "MODELTRANS_DEFAULT_LANGUAGE", getattr(settings, "LANGUAGE_CODE"))
 
@@ -41,12 +53,16 @@ def get_available_languages_setting():
         )
 
     # make sure LANGUAGE_CODE is not in available languages
-    return (lang for lang in languages if lang != get_default_language())
+    default_language = get_default_language()
+    return tuple(lang for lang in languages if lang != default_language)
 
 
+@functools.cache
 def get_available_languages(include_default=True):
     """
     Returns a tuple of available languages for django-modeltrans.
+
+    The result is cached, because it is used for every read of a translated field.
     """
     MODELTRANS_AVAILABLE_LANGUAGES = get_available_languages_setting()
 
@@ -56,6 +72,14 @@ def get_available_languages(include_default=True):
         )
     else:
         return MODELTRANS_AVAILABLE_LANGUAGES
+
+
+@receiver(setting_changed)
+def clear_language_cache(*, setting, **kwargs):
+    """Clear the cached languages when a setting they depend on changes, for example using `override_settings`."""
+    if setting in LANGUAGE_SETTINGS:
+        get_default_language.cache_clear()
+        get_available_languages.cache_clear()
 
 
 def check_fallback_chain():
