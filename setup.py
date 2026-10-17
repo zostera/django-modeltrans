@@ -4,7 +4,7 @@ import shlex
 import subprocess
 import sys
 
-from setuptools import find_packages, setup
+from setuptools import find_namespace_packages, setup
 
 # get version without importing
 with open("modeltrans/__init__.py", "rb") as f:
@@ -50,7 +50,9 @@ setup(
     author_email="jieter@zostera.nl",
     license="Simplified BSD",
     url="https://github.com/zostera/django-modeltrans/",
-    packages=find_packages(exclude=["tests.*", "tests", "example.*", "example"]),
+    packages=find_namespace_packages(
+        include=["modeltrans", "modeltrans.*"], exclude=["*.__pycache__"]
+    ),
     include_package_data=True,  # declarations in MANIFEST.in
     python_requires=">=3.11",
     install_requires=["Django>=5.2"],
