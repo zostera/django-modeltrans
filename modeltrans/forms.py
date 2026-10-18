@@ -37,16 +37,22 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
         settings of the form instance (e.g. kwarg overrides, or model instance fallbacks).
         """
         meta = attrs.get("Meta")
-        if meta is None:
+        inherits_meta = meta is None
+        if inherits_meta:
             meta = next((base.Meta for base in bases if hasattr(base, "Meta")), None)
 
         model_class = getattr(meta, "model", None)
         if model_class and (i18n_field := get_i18n_field(model_class)):
-            declared_fields = {
-                key for key, value in attrs.items() if isinstance(value, forms.Field)
-            }
+            # Like DeclarativeFieldsMetaclass: the fields declared on the bases and on this class,
+            # except fields removed by setting them to None.
+            declared_fields = set()
             for base in bases:
                 declared_fields.update(getattr(base, "declared_fields", {}))
+            for key, value in attrs.items():
+                if isinstance(value, forms.Field):
+                    declared_fields.add(key)
+                elif value is None:
+                    declared_fields.discard(key)
 
             fields, exclude = mcs.get_translation_fields_and_exclude(
                 i18n_field,
@@ -66,8 +72,16 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
 
         # replace options with the options including the extra translation form options.
         model_form_options = new_class._meta
-        new_class._meta = TranslationModelFormOptions(getattr(new_class, "Meta", None))
+        new_class._meta = TranslationModelFormOptions(meta)
         new_class._meta.fields = model_form_options.fields
+        new_class._meta.exclude = model_form_options.exclude
+
+        # Restore the original Meta, so subclasses extend the Meta options as defined,
+        # rather than the options already extended with translation fields.
+        if not inherits_meta:
+            new_class.Meta = meta
+        elif "Meta" in vars(new_class):
+            del new_class.Meta
 
         return new_class
 
