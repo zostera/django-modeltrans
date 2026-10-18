@@ -21,13 +21,14 @@ You can define a form using `TranslationModelForm` as::
     class NewsRoomTranslationForm(TranslationModelForm):
 
         class Meta:
+            model = NewsRoom
             fields = ("name", "text")
             languages = ["browser", "fr", "fallback"]
             fallback_language = "en"
 
 This defines a form with at most three language inputs per field, say `"nl"`, `"fr"` and `"en"`,
 where `"nl"` is the active browser language, and `"en"` the defined fallback language.
-`Meta.exclude` can also be used to define which fields are in the form,
+`Meta.exclude` or `Meta.fields = "__all__"` can also be used to define which fields are in the form,
 where the forms' `field_order` parameter can be used to define the field ordering.
 
 Setting the form languages
