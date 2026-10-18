@@ -69,6 +69,18 @@ class DefaultLanguageConfTest(TestCase):
         self.assertCountEqual(get_available_languages(), ("en", "nl", "de", "fr"))
 
     @override_settings(
+        LANGUAGE_CODE="en",
+        MODELTRANS_AVAILABLE_LANGUAGES=("nl", "de", "fr", "en", "es", "it", "de"),
+    )
+    def test_available_languages_preserve_order(self):
+        """The order of the available languages should follow the setting, without duplicates."""
+        self.assertEqual(get_available_languages_setting(), ("nl", "de", "fr", "es", "it"))
+        self.assertEqual(get_available_languages(), ("nl", "de", "fr", "es", "it", "en"))
+        self.assertEqual(
+            get_available_languages(include_default=False), ("nl", "de", "fr", "es", "it")
+        )
+
+    @override_settings(
         LANGUAGE_CODE="es",
         MODELTRANS_DEFAULT_LANGUAGE="en",
         MODELTRANS_AVAILABLE_LANGUAGES=("nl", "de", "fr"),
