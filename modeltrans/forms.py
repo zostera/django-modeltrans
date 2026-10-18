@@ -11,15 +11,6 @@ from .utils import build_localized_fieldname, get_language
 LANGUAGE_OPTIONS = ["browser", "fallback"]
 
 
-class TranslationModelFormOptions(forms.models.ModelFormOptions):
-    """Add the translation form options to the Meta options."""
-
-    def __init__(self, options=None):
-        super().__init__(options)
-        self.languages = getattr(options, "languages", ["browser", "fallback"])
-        self.fallback_language = getattr(options, "fallback_language", None)
-
-
 class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
     def __new__(mcs, name, bases, attrs):
         """
@@ -70,11 +61,9 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
 
         new_class = super().__new__(mcs, name, bases, attrs)
 
-        # replace options with the options including the extra translation form options.
-        model_form_options = new_class._meta
-        new_class._meta = TranslationModelFormOptions(meta)
-        new_class._meta.fields = model_form_options.fields
-        new_class._meta.exclude = model_form_options.exclude
+        # Add the translation form options to the options created by ModelFormMetaclass.
+        new_class._meta.languages = getattr(meta, "languages", LANGUAGE_OPTIONS)
+        new_class._meta.fallback_language = getattr(meta, "fallback_language", None)
 
         # Restore the original Meta, so subclasses extend the Meta options as defined,
         # rather than the options already extended with translation fields.
