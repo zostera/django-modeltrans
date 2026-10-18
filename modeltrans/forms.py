@@ -41,8 +41,7 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
             meta = next((base.Meta for base in bases if hasattr(base, "Meta")), None)
 
         model_class = getattr(meta, "model", None)
-        i18n_field = get_i18n_field(model_class) if model_class else None
-        if i18n_field:
+        if model_class and (i18n_field := get_i18n_field(model_class)):
             declared_fields = {
                 key for key, value in attrs.items() if isinstance(value, forms.Field)
             }
@@ -55,16 +54,13 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
                 getattr(meta, "exclude", None),
                 declared_fields,
             )
-            attrs["Meta"] = type(
-                "Meta",
-                (meta,),
-                {
-                    "__module__": meta.__module__,
-                    "__qualname__": meta.__qualname__,
-                    "fields": fields,
-                    "exclude": exclude,
-                },
-            )
+            meta_attrs = {
+                "__module__": meta.__module__,
+                "__qualname__": meta.__qualname__,
+                "fields": fields,
+                "exclude": exclude,
+            }
+            attrs["Meta"] = type("Meta", (meta,), meta_attrs)
 
         new_class = super().__new__(mcs, name, bases, attrs)
 
