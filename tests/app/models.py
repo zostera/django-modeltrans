@@ -1,14 +1,10 @@
 from django.db import models
+from django.db.models import JSONField
 from django.utils.translation import gettext_lazy
 
 from modeltrans.conf import get_default_language
 from modeltrans.fields import TranslationField
 from modeltrans.manager import MultilingualManager
-
-try:
-    from django.db.models import JSONField  # django==3.1 moved json field
-except ImportError:
-    from django.contrib.postgres.fields import JSONField
 
 
 class CategoryQueryset(models.QuerySet):

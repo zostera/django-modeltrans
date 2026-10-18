@@ -1,7 +1,6 @@
 import pickle
 from unittest import skipIf
 
-import django
 from django.db import models
 from django.db.models import F, Q
 from django.test import TestCase, override_settings
@@ -664,7 +663,6 @@ class FilteredOrderByTest(TestCase):
             self.assertTrue("annotation" not in str(qs.query))
 
 
-@skipIf(django.VERSION < (2, 0), "Only supported in Django 2.0 and later")
 class ModelMetaOrderByTest(TestCase):
     def test_meta_ordering(self):
         """
