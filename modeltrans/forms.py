@@ -87,7 +87,9 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
                 # add translation fields for an explicitly chosen field
                 if original_field_name in fields or original_field_name in declared_fields:
                     for language in languages:
-                        field_name = build_localized_fieldname( original_field_name, language, ignore_default=True)
+                        field_name = build_localized_fieldname(
+                            original_field_name, language, ignore_default=True
+                        )
                         if field_name != original_field_name and field_name not in fields:
                             fields.append(field_name)
 
@@ -111,7 +113,10 @@ class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
 
                 # Exclude the i18n field and the translation field for the system default language, because that
                 # already exists as the original field.
-                for name in (f"{original_field_name}_i18n", f"{original_field_name}_{default_language}"):
+                for name in (
+                    f"{original_field_name}_i18n",
+                    f"{original_field_name}_{default_language}",
+                ):
                     if name not in exclude:
                         exclude.append(name)
 
