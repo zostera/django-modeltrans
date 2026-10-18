@@ -90,8 +90,7 @@ def check_fallback_chain():
         raise ImproperlyConfigured("MODELTRANS_FALLBACK setting must have a `default` key.")
 
     message_fmt = (
-        "MODELTRANS_FALLBACK contains language `{}` "
-        "which is not in MODELTRANS_AVAILABLE_LANGUAGES"
+        "MODELTRANS_FALLBACK contains language `{}` which is not in MODELTRANS_AVAILABLE_LANGUAGES"
     )
     for lang, chain in MODELTRANS_FALLBACK.items():
         if lang != "default" and lang not in MODELTRANS_AVAILABLE_LANGUAGES:

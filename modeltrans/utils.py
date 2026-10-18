@@ -27,7 +27,7 @@ def split_translated_fieldname(field_name):
 
 @keep_lazy_text
 def get_translated_field_label(original_label, lang):
-    return original_label + " ({})".format(lang.upper())
+    return original_label + f" ({lang.upper()})"
 
 
 def build_localized_fieldname(field_name, lang, ignore_default=False):
@@ -109,4 +109,4 @@ class FallbackTransform(Transform):
         rhs_sql, rhs_params = compiler.compile(rhs)
         params = params + tuple(rhs_params)
 
-        return ("({} ->> (%s || {} ))".format(lhs, rhs_sql), params)
+        return (f"({lhs} ->> (%s || {rhs_sql} ))", params)

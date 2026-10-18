@@ -88,19 +88,19 @@ def cmd(c):
             print(result.decode().replace("\\n", "\n"))
         return result
     except CalledProcessError as e:
-        print("\033[31m Process errored: \033[0m, code: {}".format(e.returncode))
+        print(f"\033[31m Process errored: \033[0m, code: {e.returncode}")
         print(e.output.decode().replace("\\n", "\n"))
         sys.exit(1)
 
 
 def manage(c):
-    cmd("coverage run -a --rcfile=../.coveragerc ./manage.py {}".format(c))
+    cmd(f"coverage run -a --rcfile=../.coveragerc ./manage.py {c}")
 
 
 def run_test(test_module):
     assert not test_module.endswith(".py")
 
-    manage("test --keepdb {}".format(test_module))
+    manage(f"test --keepdb {test_module}")
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/zostera/django-modeltrans/actions/workflows/ci.yml/badge.svg)](https://github.com/zostera/django-modeltrans/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/django-modeltrans/badge/?version=latest)](http://django-modeltrans.readthedocs.io/en/latest/?badge=latest)
-[![Any color you like](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 Translates Django model fields in a `JSONField` using a registration approach.
 

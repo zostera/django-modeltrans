@@ -41,8 +41,8 @@ def transform_translatable_fields(model, fields):
             if field.get_language() == get_default_language():
                 if field.original_name in fields:
                     raise ValueError(
-                        'Attempted override of "{}" with "{}". '
-                        "Only one of the two is allowed.".format(field.original_name, field_name)
+                        f'Attempted override of "{field.original_name}" with "{field_name}". '
+                        "Only one of the two is allowed."
                     )
                 ret[field.original_name] = value
             else:
@@ -95,7 +95,7 @@ class MultilingualQuerySet(QuerySet):
             return expression.name
 
         if annotation_name is None:
-            annotation_name = "{}_annotation".format(virtual_field.name)
+            annotation_name = f"{virtual_field.name}_annotation"
 
         self.query.add_annotation(expression, annotation_name)
         return annotation_name
@@ -227,7 +227,7 @@ class MultilingualQuerySet(QuerySet):
                 new_field_names.append(sort_order + field_name)
                 continue
 
-            assert lookup_type is None, "{} is not a valid order_by lookup".format(field_name)
+            assert lookup_type is None, f"{field_name} is not a valid order_by lookup"
 
             sort_field = field.as_expression(bare_lookup=field_name)
             if sort_order == "-":
@@ -343,7 +343,7 @@ def multilingual_queryset_factory(old_cls, instantiate=True):
         class NewClass(old_cls, MultilingualQuerySet):
             pass
 
-        NewClass.__name__ = "Multilingual%s" % old_cls.__name__
+        NewClass.__name__ = f"Multilingual{old_cls.__name__}"
     return NewClass() if instantiate else NewClass
 
 

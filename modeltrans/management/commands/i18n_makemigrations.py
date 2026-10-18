@@ -33,12 +33,8 @@ class Command(BaseCommand):
             for Model in apps[app]:
                 translatable_fields = tuple(get_translated_fields(Model))
 
-                print(
-                    'added model "{}" with fields [{}]'.format(
-                        Model.__name__, str(translatable_fields)
-                    )
-                )
+                print(f'added model "{Model.__name__}" with fields [{str(translatable_fields)}]')
                 migration.add_model(Model, translatable_fields)
 
             filename = migration.write_migration_file()
-            print("Wrote migration for {} to {}".format(app, filename))
+            print(f"Wrote migration for {app} to {filename}")
