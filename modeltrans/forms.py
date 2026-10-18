@@ -11,128 +11,115 @@ from .utils import build_localized_fieldname, get_language
 LANGUAGE_OPTIONS = ["browser", "fallback"]
 
 
-class TranslationModelFormOptions(forms.models.ModelFormOptions):
-    """Add the translation form options to the Meta options."""
-
-    def __init__(self, options=None):
-        super().__init__(options)
-        self.languages = getattr(options, "languages", ["browser", "fallback"])
-        self.fallback_language = getattr(options, "fallback_language", None)
-
-
 class TranslationModelFormMetaClass(forms.models.ModelFormMetaclass):
     def __new__(mcs, name, bases, attrs):
         """
         Include all translation fields for translatable fields declared in the form.
 
-        We use the standard ModelForm field declaration procedure of the ModelFormMetaClass,
-        so that all fields are declared during creation of the new object.
-
-        Different actions are required for different Meta class options:
+        The fields and exclude Meta options are extended before the standard ModelFormMetaClass creates the
+        form fields, so that the form fields are only created once:
         1) fields - if fields are declared explicitly with the fields option, the related i18n fields will not be
-        included, and these have to be added to base_fields.
-        2) exclude - if fields are declared implicitly with the exclude option, the i18n translation fields, as well as
-        the i18n field itself, will be included. We will remove the i18n field.
+        included, and these are added to fields.
+        2) exclude - if fields are declared implicitly with the exclude option (or fields = "__all__"), the i18n
+        translation fields, as well as the i18n field itself, will be included. The i18n field and the translation
+        fields of excluded fields are added to exclude.
 
         Here all languages are included, so that in the form we can curate which fields are available according to
         settings of the form instance (e.g. kwarg overrides, or model instance fallbacks).
         """
+        meta = attrs.get("Meta")
+        inherits_meta = meta is None
+        if inherits_meta:
+            meta = next((base.Meta for base in bases if hasattr(base, "Meta")), None)
+
+        model_class = getattr(meta, "model", None)
+        if model_class and (i18n_field := get_i18n_field(model_class)):
+            # Like DeclarativeFieldsMetaclass: the fields declared on the bases and on this class,
+            # except fields removed by setting them to None.
+            declared_fields = set()
+            for base in bases:
+                declared_fields.update(getattr(base, "declared_fields", {}))
+            for key, value in attrs.items():
+                if isinstance(value, forms.Field):
+                    declared_fields.add(key)
+                elif value is None:
+                    declared_fields.discard(key)
+
+            fields, exclude = mcs.get_translation_fields_and_exclude(
+                i18n_field,
+                getattr(meta, "fields", None),
+                getattr(meta, "exclude", None),
+                declared_fields,
+            )
+            meta_attrs = {
+                "__module__": meta.__module__,
+                "__qualname__": meta.__qualname__,
+                "fields": fields,
+                "exclude": exclude,
+            }
+            attrs["Meta"] = type("Meta", (meta,), meta_attrs)
+
         new_class = super().__new__(mcs, name, bases, attrs)
 
-        # from ModelFormMetaClass, needed for calling fields for model
-        base_formfield_callback = None
-        for b in bases:
-            if hasattr(b, "Meta") and hasattr(b.Meta, "formfield_callback"):
-                base_formfield_callback = b.Meta.formfield_callback
-                break
-        formfield_callback = attrs.pop("formfield_callback", base_formfield_callback)
+        # Add the translation form options to the options created by ModelFormMetaclass.
+        new_class._meta.languages = getattr(meta, "languages", LANGUAGE_OPTIONS)
+        new_class._meta.fallback_language = getattr(meta, "fallback_language", None)
 
-        # get options, with extra translation form options
-        opts = new_class._meta = TranslationModelFormOptions(getattr(new_class, "Meta", None))
-        model_class = opts.model
+        # Restore the original Meta, so subclasses extend the Meta options as defined,
+        # rather than the options already extended with translation fields.
+        if not inherits_meta:
+            new_class.Meta = meta
+        elif "Meta" in vars(new_class):
+            del new_class.Meta
 
+        return new_class
+
+    @staticmethod
+    def get_translation_fields_and_exclude(i18n_field, fields, exclude, declared_fields):
+        """Return the fields and exclude Meta options, extended with the translation fields."""
+        default_language = get_default_language()
         languages = get_available_languages()
 
-        # Note that base_fields generated by ModelForm do not yet include translation fields if generated with "fields"
-        # Meta option, but includes all translation fields if generated with "excludes" Meta option.
-        base_fields = list(new_class.base_fields.keys())
-
-        # convert to list in case it is a tuple
-        opts_fields = list(opts.fields) if opts.fields else None
-        opts_exclude = list(opts.exclude) if opts.exclude else None
-
-        if model_class:
-            i18n_field = get_i18n_field(model_class)
-            if i18n_field:
-                for original_field_name in i18n_field.fields:  # for all translated fields
-                    # for all possible system languages
+        if fields is not None and fields != forms.models.ALL_FIELDS:
+            fields = list(fields)
+            for original_field_name in i18n_field.fields:
+                # add translation fields for an explicitly chosen field
+                if original_field_name in fields or original_field_name in declared_fields:
                     for language in languages:
                         field_name = build_localized_fieldname(
                             original_field_name, language, ignore_default=True
                         )
+                        if field_name != original_field_name and field_name not in fields:
+                            fields.append(field_name)
 
-                        # add i18n field if an explicitly chosen field
-                        if (
-                            opts.fields
-                            and original_field_name in base_fields
-                            and field_name not in base_fields
-                        ):
-                            base_fields.append(field_name)
-                            opts_fields.append(field_name)
+                # Remove the translation field for the system default language, because that already exists
+                # as the original field.
+                name = f"{original_field_name}_{default_language}"
+                if name in fields:
+                    fields.remove(name)
 
-                        # remove field if an explicitly excluded field
-                        if (
-                            opts.exclude
-                            and original_field_name in opts.exclude
-                            and field_name in base_fields
-                        ):
-                            base_fields.remove(field_name)
-                            opts_exclude.append(field_name)
+        if exclude is not None or fields == forms.models.ALL_FIELDS:
+            exclude = list(exclude or [])
+            for original_field_name in i18n_field.fields:
+                # exclude translation fields of an explicitly excluded field
+                if original_field_name in exclude:
+                    for language in languages:
+                        field_name = build_localized_fieldname(
+                            original_field_name, language, ignore_default=True
+                        )
+                        if field_name not in exclude:
+                            exclude.append(field_name)
 
-                    # Remove the i18n field if present (e.g. because of using the exclude option)
-                    name = f"{original_field_name}_i18n"
-                    if name in base_fields:
-                        base_fields.remove(name)
-                    if opts.exclude:
-                        opts_exclude.append(name)
+                # Exclude the i18n field and the translation field for the system default language, because that
+                # already exists as the original field.
+                for name in (
+                    f"{original_field_name}_i18n",
+                    f"{original_field_name}_{default_language}",
+                ):
+                    if name not in exclude:
+                        exclude.append(name)
 
-                    # Remove the i18n field for the system default language, because that already exists as the default
-                    name = f"{original_field_name}_{get_default_language()}"
-                    if name in base_fields:
-                        base_fields.remove(name)
-                    if opts.fields and name in opts.fields:
-                        opts_fields.remove(name)
-                    if opts.exclude and name not in opts.exclude:
-                        opts_exclude.append(name)
-
-                opts.fields = opts_fields
-                opts.exclude = opts_exclude
-
-                base_fields = forms.fields_for_model(
-                    opts.model,
-                    opts.fields,
-                    opts.exclude,
-                    opts.widgets,
-                    formfield_callback,
-                    opts.localized_fields,
-                    opts.labels,
-                    opts.help_texts,
-                    opts.error_messages,
-                    opts.field_classes,
-                    # limit_choices_to will be applied during ModelForm.__init__().
-                    apply_limit_choices_to=False,
-                )
-
-                # Override default model fields with any custom declared ones
-                # (plus, include all the other declared fields).
-                base_fields.update(new_class.declared_fields)
-            else:
-                base_fields = new_class.declared_fields
-
-            # Override base_fields with properly determined set of all translation fields based on ModelForm
-            new_class.base_fields = base_fields
-
-        return new_class
+        return fields, exclude
 
 
 class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaClass):
@@ -265,7 +252,7 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
 
         # Form parameter field_order takes priority, otherwise adopt order of fields in Meta fields option, if available
         field_order = self.field_order or None
-        if not field_order and self._meta.fields and self._meta.fields != "all":
+        if not field_order and self._meta.fields:
             field_order = self._meta.fields
 
         # in case of an explicit field order replace original field with set of included fields

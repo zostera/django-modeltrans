@@ -189,6 +189,77 @@ class TranslationModelFormTestCase(TestCase):
         form = TupleForm()
         self.assertEqual(list(form.fields.keys()), ["title", "header"])
 
+    def test_fields_defined_with_empty_exclude_option(self):
+        """Test that the i18n field and default language fields are excluded with an empty 'exclude' option."""
+
+        class EmptyExcludeForm(TranslationModelForm):
+            class Meta:
+                model = Challenge
+                exclude = []
+
+        form = EmptyExcludeForm()
+        self.assertEqual(list(form.fields.keys()), ["title", "header", "default_language"])
+
+        form = EmptyExcludeForm(languages=["de", "fallback"])
+        self.assertEqual(
+            list(form.fields.keys()),
+            ["title_de", "title", "header_de", "header", "default_language"],
+        )
+
+    def test_fields_defined_with_all_fields_option(self):
+        """Test that fields = "__all__" includes all translation fields, except the i18n and default language fields."""
+
+        class AllFieldsForm(TranslationModelForm):
+            class Meta:
+                model = Challenge
+                fields = "__all__"
+
+        form = AllFieldsForm(languages=["de", "fallback"])
+        self.assertEqual(
+            list(form.fields.keys()),
+            ["title_de", "title", "header_de", "header", "default_language"],
+        )
+
+    def test_declared_field_removed_in_subclass(self):
+        """Test that no translation fields are added for a declared field removed in a subclass."""
+
+        class ParentForm(TranslationModelForm):
+            title = forms.CharField()
+
+            class Meta:
+                model = Challenge
+                fields = ["header"]
+
+        class ChildForm(ParentForm):
+            title = None
+
+        self.assertEqual(
+            sorted(ChildForm.base_fields.keys()), ["header", "header_de", "header_fr", "header_nl"]
+        )
+
+        form = ChildForm(languages=["de", "fallback"])
+        self.assertEqual(list(form.fields.keys()), ["header_de", "header"])
+
+    def test_subclass_extending_meta(self):
+        """Test that a subclass extending Meta gets the translation fields of its own fields option."""
+
+        class ParentForm(TranslationModelForm):
+            class Meta:
+                model = Challenge
+                fields = ["title", "header"]
+
+        class ChildForm(ParentForm):
+            class Meta(ParentForm.Meta):
+                fields = ["header"]
+
+        self.assertEqual(ParentForm.Meta.fields, ["title", "header"])
+        self.assertEqual(
+            sorted(ChildForm.base_fields.keys()), ["header", "header_de", "header_fr", "header_nl"]
+        )
+
+        form = ChildForm(languages=["de", "fallback"])
+        self.assertEqual(list(form.fields.keys()), ["header_de", "header"])
+
     def test_fields_with_languages_kwarg_with_exclude_option(self):
         """Test fields and their order with parameter override in form with 'exclude' option."""
         form = ExcludeForm(languages=["de", "fallback"], fallback_language="nl")
