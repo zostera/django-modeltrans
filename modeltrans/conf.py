@@ -38,8 +38,9 @@ def get_available_languages_setting():
     list of available languages for modeltrans translations.
     defaults to the list of language codes extracted from django setting LANGUAGES
     """
+    # remove duplicates while preserving the order, so the translation fields are always in the same order
     languages = tuple(
-        set(
+        dict.fromkeys(
             getattr(
                 settings,
                 "MODELTRANS_AVAILABLE_LANGUAGES",
@@ -69,7 +70,9 @@ def get_available_languages(include_default=True):
 
     if include_default:
         return tuple(
-            set(itertools.chain(MODELTRANS_AVAILABLE_LANGUAGES, (get_default_language(),)))
+            dict.fromkeys(
+                itertools.chain(MODELTRANS_AVAILABLE_LANGUAGES, (get_default_language(),))
+            )
         )
     else:
         return MODELTRANS_AVAILABLE_LANGUAGES
