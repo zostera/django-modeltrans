@@ -220,6 +220,26 @@ class TranslationModelFormTestCase(TestCase):
             ["title_de", "title", "header_de", "header", "default_language"],
         )
 
+    def test_declared_field_removed_in_subclass(self):
+        """Test that no translation fields are added for a declared field removed in a subclass."""
+
+        class ParentForm(TranslationModelForm):
+            title = forms.CharField()
+
+            class Meta:
+                model = Challenge
+                fields = ["header"]
+
+        class ChildForm(ParentForm):
+            title = None
+
+        self.assertEqual(
+            sorted(ChildForm.base_fields.keys()), ["header", "header_de", "header_fr", "header_nl"]
+        )
+
+        form = ChildForm(languages=["de", "fallback"])
+        self.assertEqual(list(form.fields.keys()), ["header_de", "header"])
+
     def test_fields_with_languages_kwarg_with_exclude_option(self):
         """Test fields and their order with parameter override in form with 'exclude' option."""
         form = ExcludeForm(languages=["de", "fallback"], fallback_language="nl")
