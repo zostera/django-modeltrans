@@ -16,15 +16,16 @@ LANGUAGE_SETTINGS = {
 
 
 def get_modeltrans_setting(key):
-    modeltrans_settings = {
-        "MODELTRANS_AVAILABLE_LANGUAGES": get_available_languages(),
-        "MODELTRANS_FALLBACK": getattr(
-            settings, "MODELTRANS_FALLBACK", {"default": (get_default_language(),)}
-        ),
-        "MODELTRANS_ADD_FIELD_HELP_TEXT": getattr(settings, "MODELTRANS_ADD_FIELD_HELP_TEXT", True),
-        "MODELTRANS_DEFAULT_LANGUAGE": get_default_language(),
-    }
-    return modeltrans_settings.get(key)
+    # Only evaluate the requested setting, as this is called for every read of a field's help_text.
+    if key == "MODELTRANS_AVAILABLE_LANGUAGES":
+        return get_available_languages()
+    if key == "MODELTRANS_FALLBACK":
+        return getattr(settings, "MODELTRANS_FALLBACK", {"default": (get_default_language(),)})
+    if key == "MODELTRANS_ADD_FIELD_HELP_TEXT":
+        return getattr(settings, "MODELTRANS_ADD_FIELD_HELP_TEXT", True)
+    if key == "MODELTRANS_DEFAULT_LANGUAGE":
+        return get_default_language()
+    return None
 
 
 @functools.cache
