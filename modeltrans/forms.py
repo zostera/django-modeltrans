@@ -252,7 +252,7 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
 
         # Form parameter field_order takes priority, otherwise adopt order of fields in Meta fields option, if available
         field_order = self.field_order or None
-        if not field_order and self._meta.fields and self._meta.fields != "all":
+        if not field_order and self._meta.fields:
             field_order = self._meta.fields
 
         # in case of an explicit field order replace original field with set of included fields
