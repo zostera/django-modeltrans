@@ -18,7 +18,7 @@ def run(command):
 
 def run_python(command):
     """Run command with the current interpreter, aborting the release if it fails."""
-    run("{} {}".format(shlex.quote(sys.executable), command))
+    run(f"{shlex.quote(sys.executable)} {command}")
 
 
 if sys.argv[-1] == "publish":
@@ -26,15 +26,15 @@ if sys.argv[-1] == "publish":
     run_python("-m build")
     run_python(
         "-m twine upload"
-        " dist/django_modeltrans-{version}.tar.gz"
-        " dist/django_modeltrans-{version}-py3-none-any.whl".format(version=VERSION)
+        f" dist/django_modeltrans-{VERSION}.tar.gz"
+        f" dist/django_modeltrans-{VERSION}-py3-none-any.whl"
     )
     message = "\nreleased [{version}](https://pypi.python.org/pypi/django-modeltrans/{version})"
     print(message.format(version=VERSION))
     sys.exit()
 
 if sys.argv[-1] == "tag":
-    run("git tag -a v{version} -m 'tagging v{version}'".format(version=VERSION))
+    run(f"git tag -a v{VERSION} -m 'tagging v{VERSION}'")
     run("git push --tags")
     run("git push origin master")
     sys.exit()

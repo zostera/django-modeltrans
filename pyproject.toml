@@ -2,6 +2,23 @@
 requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
+[tool.ruff]
 line-length = 100
-target-version = ["py311"]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+  "E",  # pycodestyle
+  "F",  # pyflakes
+  "I",  # isort
+  "UP"  # pyupgrade
+]
+ignore = [
+  "E501",  # Line too long
+  "E731"  # Do not assign a lambda expression
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+known-first-party = ["modeltrans", "app"]
+known-third-party = ["django", "django_filters", "django_tables2"]

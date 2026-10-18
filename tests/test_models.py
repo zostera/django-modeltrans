@@ -144,7 +144,7 @@ class TranslatedFieldTest(TestCase):
 
     def test_creationg_prevents_double_definition(self):
         expected_message = (
-            'Attempted override of "title" with "title_en". Only ' "one of the two is allowed."
+            'Attempted override of "title" with "title_en". Only one of the two is allowed.'
         )
         with self.assertRaisesMessage(ValueError, expected_message):
             Blog.objects.create(title="Foo", title_en="Bar")

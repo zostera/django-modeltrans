@@ -1,7 +1,9 @@
 
 test: pyclean
 	./manage.py test --no-input
-	flake8
+
+pre-commit:
+	pre-commit run --all-files
 
 pyclean:
 	find . -name "*.pyc" -exec rm -rf {} \;
@@ -16,7 +18,4 @@ shell:
 notebook:
 	cd example && PYTHONPATH=.. ./manage.py shell_plus --notebook
 
-isort:
-	isort --diff --check modeltrans tests test_migrations example
-
-.PHONY: test example
+.PHONY: test example pre-commit

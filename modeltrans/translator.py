@@ -73,8 +73,8 @@ def check_languages(languages, model):
     for lang in languages:
         if lang not in get_available_languages():
             raise ImproperlyConfigured(
-                'Language "{}" is in required_languages on Model "{}" but '
-                "not in settings.MODELTRANS_AVAILABLE_LANGUAGES.".format(lang, model.__name__)
+                f'Language "{lang}" is in required_languages on Model "{model.__name__}" but '
+                "not in settings.MODELTRANS_AVAILABLE_LANGUAGES."
             )
 
 
@@ -88,16 +88,16 @@ def validate(Model):
             Model._meta.get_field(field)
         except FieldDoesNotExist:
             raise ImproperlyConfigured(
-                'Argument "fields" to TranslationField contains an item "{}", '
-                "which is not a field (missing a comma?).".format(field)
+                f'Argument "fields" to TranslationField contains an item "{field}", '
+                "which is not a field (missing a comma?)."
             )
 
     if i18n_field.fallback_language_field:
         field = get_model_field(Model, i18n_field.fallback_language_field)
         if field is None:
             raise ImproperlyConfigured(
-                'Argument "fallback_language_field" to TranslationField is "{}", '
-                "which is not an existing field.".format(i18n_field.fallback_language_field)
+                f'Argument "fallback_language_field" to TranslationField is "{i18n_field.fallback_language_field}", '
+                "which is not an existing field."
             )
 
     if i18n_field.required_languages:
@@ -109,12 +109,12 @@ def validate(Model):
             for fieldname, languages in required_languages.items():
                 if fieldname not in i18n_field.fields:
                     raise ImproperlyConfigured(
-                        'Fieldname "{}" in required_languages which is not '
-                        'defined as translatable in "{}.i18n".'.format(field, Model.__name__)
+                        f'Fieldname "{field}" in required_languages which is not '
+                        f'defined as translatable in "{Model.__name__}.i18n".'
                     )
                 if not isinstance(languages, allowed_types):
                     raise ImproperlyConfigured(
-                        'required_languages["{}"] must be a tuple, list or set'.format(fieldname)
+                        f'required_languages["{fieldname}"] must be a tuple, list or set'
                     )
                 check_languages(languages, Model)
         else:
@@ -131,8 +131,8 @@ def raise_if_field_exists(Model, field_name):
         return
 
     raise ImproperlyConfigured(
-        'Error adding translation field. Model "{}" already contains '
-        'a field named "{}".'.format(Model._meta.object_name, field_name)
+        f'Error adding translation field. Model "{Model._meta.object_name}" already contains '
+        f'a field named "{field_name}".'
     )
 
 
@@ -224,7 +224,7 @@ def add_manager(model):
                 def deconstruct(self):
                     return (
                         False,  # as_manager
-                        "{}.{}".format(self._old_module, self._old_class),  # manager_class
+                        f"{self._old_module}.{self._old_class}",  # manager_class
                         None,  # qs_class
                         self._constructor_args[0],  # args
                         self._constructor_args[1],  # kwargs

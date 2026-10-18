@@ -28,7 +28,7 @@ class PostMigrateTest(TestCase):
         Check if the i18n column has the gin index.
         """
         db_table = Blog._meta.db_table
-        index_prefix = "{}_i18n".format(db_table)
+        index_prefix = f"{db_table}_i18n"
 
         with connection.cursor() as cursor:
             cursor.execute(

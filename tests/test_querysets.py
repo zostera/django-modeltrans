@@ -720,7 +720,7 @@ class ValuesTest(TestCase):
         try:
             self.assertEqual(list(qs), expected)
         except AssertionError:
-            print("Queryset query: {}".format(qs.query))
+            print(f"Queryset query: {qs.query}")
 
             raise
 

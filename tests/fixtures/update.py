@@ -29,7 +29,7 @@ def get_articles(article_list, language="en"):
     r = requests.get(url)
     if r.status_code != 200:
         print(r.text)
-        raise Exception("Error from wikipedia [status: {}], url: {}".format(r.status_code, url))
+        raise Exception(f"Error from wikipedia [status: {r.status_code}], url: {url}")
 
     articles = {}
     for page in r.json()["query"]["pages"].values():
@@ -54,4 +54,4 @@ if __name__ == "__main__":
     with open(OUTPUT_FILE, "w") as outfile:
         json.dump(fixture.values(), outfile, indent=2)
 
-    print("Wrote {} articles to {}".format(len(articles), OUTPUT_FILE))
+    print(f"Wrote {len(articles)} articles to {OUTPUT_FILE}")

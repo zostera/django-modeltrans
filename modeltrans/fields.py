@@ -21,13 +21,13 @@ DEFAULT_LANGUAGE = get_default_language()
 def translated_field_factory(original_field, language=None, *args, **kwargs):
     if not isinstance(original_field, SUPPORTED_FIELDS):
         raise ImproperlyConfigured(
-            "{} is not supported by django-modeltrans.".format(original_field.__class__.__name__)
+            f"{original_field.__class__.__name__} is not supported by django-modeltrans."
         )
 
     class Specific(TranslatedVirtualField, original_field.__class__):
         pass
 
-    Specific.__name__ = "Translated{}".format(original_field.__class__.__name__)
+    Specific.__name__ = f"Translated{original_field.__class__.__name__}"
 
     return Specific(original_field, language, *args, **kwargs)
 
@@ -309,6 +309,6 @@ class TranslationField(JSONField):
 
     def contribute_to_class(self, cls, name):
         if name != "i18n":
-            raise ImproperlyConfigured('{} must have name "i18n"'.format(self.__class__.__name__))
+            raise ImproperlyConfigured(f'{self.__class__.__name__} must have name "i18n"')
 
         super().contribute_to_class(cls, name)

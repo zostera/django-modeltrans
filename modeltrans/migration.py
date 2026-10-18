@@ -109,7 +109,7 @@ def get_latest_migration(app_name, connection=None):
                 if plan_node in loader.applied_migrations:
                     last = plan_node[1]
                 else:
-                    raise Exception("You have unapplied migration(s) for app {}".format(app_name))
+                    raise Exception(f"You have unapplied migration(s) for app {app_name}")
                 shown.add(plan_node)
 
     return last
@@ -120,8 +120,8 @@ def get_next_migration_filename(app_name, connection=None, migration_type="data"
     Return name (including the absolute path) of the next migration to insert for this app
     """
     latest_migration_name = get_latest_migration(app_name)
-    next_migration_name = "{:04d}_i18n_{}_migration.py".format(
-        int(latest_migration_name[0:4]) + 1, migration_type
+    next_migration_name = (
+        f"{int(latest_migration_name[0:4]) + 1:04d}_i18n_{migration_type}_migration.py"
     )
     app_base_path = os.path.dirname(apps.get_app_config(app_name).module.__file__)
 
