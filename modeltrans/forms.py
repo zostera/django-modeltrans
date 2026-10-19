@@ -272,11 +272,17 @@ class TranslationModelForm(forms.ModelForm, metaclass=TranslationModelFormMetaCl
 
     def remove_excess_fields(self):
         """Remove translations fields that are not included in languages."""
-        fields = self.fields.copy()
+        languages = get_available_languages()
+        translation_fields = set()
         for original_field_name in self.i18n_fields:
-            for field in fields:
-                if original_field_name in field and field not in self.included_fields["__all__"]:
-                    self.fields.pop(field)
+            translation_fields.add(f"{original_field_name}_i18n")
+            translation_fields.update(
+                build_localized_fieldname(original_field_name, language, ignore_default=True)
+                for language in languages
+            )
+
+        for field_name in translation_fields.difference(self.included_fields["__all__"]):
+            self.fields.pop(field_name, None)
 
     def get_fallback_language(self, fallback_language=None):
         """
