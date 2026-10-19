@@ -1,8 +1,15 @@
 django-modeltrans change log
 ============================
 
+## 0.10.2 (2026-10-19)
+- Build `TranslationModelForm` fields only once, which makes defining a form about 1.5 times faster (#157) fixes: #90
+- Fix `TranslationModelForm` with `Meta.fields = "__all__"` (#157)
+- Remove `TranslationModelFormOptions`, `languages` and `fallback_language` are now added to the form's `_meta` (#157)
+- Fix `TranslationModelForm` removing fields whose name contains the name of a translated field, for example `header_image` if `header` is translated (#160)
+- Keep the order of `MODELTRANS_AVAILABLE_LANGUAGES` (or `LANGUAGES`) for the translation fields, instead of an order that could change between processes
+
 ## 0.10.1 (2026-10-17)
-- Cache the available languages and the default language- (#156)
+- Cache the available languages and the default language (#156)
 - Drop python 3.10 support
 
 ## 0.10.0 (2026-08-28)
