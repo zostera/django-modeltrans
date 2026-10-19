@@ -220,6 +220,19 @@ class TranslationModelFormTestCase(TestCase):
             ["title_de", "title", "header_de", "header", "default_language"],
         )
 
+    def test_field_name_containing_translated_field_name(self):
+        """Test that a field whose name contains the name of a translated field is not removed."""
+
+        class HeaderImageForm(TranslationModelForm):
+            header_image = forms.CharField()
+
+            class Meta:
+                model = Challenge
+                fields = ["title", "header"]
+
+        form = HeaderImageForm()
+        self.assertEqual(list(form.fields.keys()), ["title", "header", "header_image"])
+
     def test_declared_field_removed_in_subclass(self):
         """Test that no translation fields are added for a declared field removed in a subclass."""
 
