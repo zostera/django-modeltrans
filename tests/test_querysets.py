@@ -546,23 +546,20 @@ class OrderByTest(TestCase):
 
             self.assertEqual(key(qs, "title"), "Wolf Wolf2")
 
-    @skipIf(True, "Needs a solution")
     def test_order_by_distinct(self):
         """
-        Postgres requires the distict expression to match the order_by expression.
+        Postgres requires the distinct expression to match the order_by expression.
         This is because it needs to reliably choose the first row from a set of
         duplicates, which is only possible if the results are also ordered by the
         value that needs to be distinct.
 
         https://github.com/zostera/django-modeltrans/issues/27
 
-        The english case works, as the queryset is sorted on `title_i18n`, which is
-        translated to `title`.
+        For the default language, `title_i18n` is translated to `title`, so passing
+        either name to `distinct()` matches the `order_by()` expression.
 
-        For the dutch case, this error message is raised, because `title_i18n`
-        translates to a COALESCE-expression, resulting in a database error:
-
-        SELECT DISTINCT ON expressions must match initial ORDER BY expressions.
+        For the dutch case, `title_i18n` translates to a COALESCE-expression, so
+        `distinct()` has to point at the same expression to be accepted.
         """
 
         with override("en"):
@@ -573,13 +570,27 @@ class OrderByTest(TestCase):
             )
             self.assertEqual(key(qs, "title_i18n"), "Falcon Vulture")
 
+            qs = (
+                Blog.objects.filter(category__name_i18n="Birds")
+                .order_by("title_i18n")
+                .distinct("title_i18n")
+            )
+            self.assertEqual(key(qs, "title_i18n"), "Falcon Vulture")
+
         with override("nl"):
             qs = (
                 Blog.objects.filter(category__name_i18n="Vogels")
                 .order_by("title_i18n")
                 .distinct("title_i18n")
             )
-            self.assertEqual(key(qs, "title_i18n"), "Valk Gier")
+            self.assertEqual(key(qs, "title_i18n"), "Gier Valk")
+
+            qs = (
+                Blog.objects.filter(category__name_i18n="Vogels")
+                .order_by("-title_nl")
+                .distinct("title_nl")
+            )
+            self.assertEqual(key(qs, "title_nl"), "Valk Gier")
 
 
 class FallbackOrderByTest(TestCase):
