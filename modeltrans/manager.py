@@ -314,7 +314,9 @@ class MultilingualQuerySet(QuerySet):
 
             fallback = field.language is None
 
-            if field.get_language() == get_default_language():
+            # for `<field>_i18n`, the language is only known once the query is executed,
+            # so the annotation is added regardless of the currently active language.
+            if field.language is not None and field.get_language() == get_default_language():
                 original_field = field_name.replace(field.name, field.original_field.name)
                 self.query.add_annotation(Cast(original_field, field.output_field()), field_name)
             else:
