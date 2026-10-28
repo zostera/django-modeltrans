@@ -1,7 +1,10 @@
+from pathlib import Path
+
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.test import TestCase
 
+import modeltrans
 from modeltrans.fields import TranslationField
 from modeltrans.manager import MultilingualManager, MultilingualQuerySet
 from modeltrans.translator import get_i18n_field, get_translated_models, translate_model
@@ -295,3 +298,18 @@ class TranslateModelTest(TestCase):
         with self.assertRaisesMessage(ValidationError, expected):
             comment.post = unpublished_post
             comment.full_clean()
+
+
+class TypeCheckingSupportTest(TestCase):
+    """
+    Type checkers look up the manager of a model by the full name of its class, so the
+    manager modeltrans assigns must be shipped with inline type information and be
+    reachable from the package root.
+    """
+
+    def test_py_typed_marker_is_present(self):
+        self.assertTrue((Path(modeltrans.__file__).parent / "py.typed").exists())
+
+    def test_manager_is_available_on_the_package(self):
+        self.assertIs(modeltrans.MultilingualManager, MultilingualManager)
+        self.assertIsInstance(app_models.Blog.objects, modeltrans.MultilingualManager)
