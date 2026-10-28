@@ -1,10 +1,15 @@
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models import F, JSONField, fields
+from django.db.models import Expression, F, JSONField, fields
 from django.db.models.fields.json import KeyTextTransform
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import gettext
 
-from .conf import get_default_language, get_fallback_chain, get_modeltrans_setting
+from .conf import (
+    get_available_languages,
+    get_default_language,
+    get_fallback_chain,
+    get_modeltrans_setting,
+)
 from .utils import (
     FallbackTransform,
     build_localized_fieldname,
@@ -30,6 +35,38 @@ def translated_field_factory(original_field, language=None, *args, **kwargs):
     Specific.__name__ = f"Translated{original_field.__class__.__name__}"
 
     return Specific(original_field, language, *args, **kwargs)
+
+
+class ActiveLanguageExpression(Expression):
+    """
+    An expression for a `<field>_i18n` lookup, picking the language when the query is
+    compiled rather than when the queryset is constructed.
+
+    It holds the expression for every available language, so all of them are resolved
+    against the query (and reuse its joins) while the queryset is built, and only the
+    choice between them is deferred to `as_sql()`.
+
+    Arguments:
+        expressions (dict): maps a language code to the expression for that language.
+    """
+
+    def __init__(self, expressions, output_field=None):
+        super().__init__(output_field=output_field)
+        self.expressions = expressions
+
+    def get_source_expressions(self):
+        return list(self.expressions.values())
+
+    def set_source_expressions(self, expressions):
+        self.expressions = dict(zip(self.expressions.keys(), expressions))
+
+    def as_sql(self, compiler, connection):
+        language = get_language()
+        if language not in self.expressions:
+            # The available languages changed after this expression was created.
+            language = get_default_language()
+
+        return compiler.compile(self.expressions[language])
 
 
 class TranslatedVirtualField:
@@ -224,8 +261,25 @@ class TranslatedVirtualField:
     def as_expression(self, bare_lookup, fallback=True):
         """
         Compose an expression to get the value for this virtual field in a query.
+
+        For `<field>_i18n`, the language is not known until the query is executed, so an
+        `ActiveLanguageExpression` over all available languages is returned.
         """
-        language = self.get_language()
+        if self.language is None:
+            return ActiveLanguageExpression(
+                {
+                    language: self._as_expression(language, bare_lookup, fallback)
+                    for language in get_available_languages()
+                },
+                output_field=self.output_field(),
+            )
+
+        return self._as_expression(self.get_language(), bare_lookup, fallback)
+
+    def _as_expression(self, language, bare_lookup, fallback=True):
+        """
+        Compose the expression to get the value for this virtual field in `language`.
+        """
         if language == DEFAULT_LANGUAGE:
             return F(self._localized_lookup(language, bare_lookup))
 
