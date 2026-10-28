@@ -10,7 +10,13 @@ Reading the explanation of the :ref:`inner_workings` might also help to understa
 Unsupported QuerySet methods
 ----------------------------
 Using translated fields in ``QuerySet``/``Manager`` methods
-``.distinct()``, ``.extra()``, ``.aggregate()``, ``.update()`` is not supported.
+``.extra()``, ``.aggregate()``, ``.update()`` is not supported.
+
+Translated fields in ``.distinct()`` are supported, but the database requires the
+``DISTINCT ON`` expressions to match the leading ``ORDER BY`` expressions, so the same
+translated field names must be passed to ``.order_by()``::
+
+    Blog.objects.order_by("title_i18n").distinct("title_i18n")
 
 
 Fields supported
