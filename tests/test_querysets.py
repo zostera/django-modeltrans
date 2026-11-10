@@ -1,5 +1,4 @@
 import pickle
-from unittest import skipIf
 
 from django.db import models
 from django.db.models import F, Q

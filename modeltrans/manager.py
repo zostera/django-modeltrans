@@ -289,7 +289,7 @@ class MultilingualQuerySet(QuerySet):
         for field_name in field_names:
             field, lookup_type = self._get_field(field_name)
             if isinstance(field, TranslatedVirtualField):
-                assert lookup_type is None, "{} is not a valid distinct lookup".format(field_name)
+                assert lookup_type is None, f"{field_name} is not a valid distinct lookup"
                 field_name = self._add_i18n_annotation(virtual_field=field, bare_lookup=field_name)
             new_field_names.append(field_name)
 
