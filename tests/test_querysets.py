@@ -794,6 +794,15 @@ class FallbackEmptyStringTest(TestCase):
                 {m.title for m in Blog.objects.filter(title_i18n="Falcon")}, {"Falcon"}
             )
 
+    def test_order_by_i18n(self):
+        # `Zebra` has no dutch title, so it must be ordered by its fallback value, not
+        # by the empty string, which would sort it before `Kikker`.
+        Blog.objects.create(title="Zebra", title_nl="")
+
+        with override("nl"):
+            qs = Blog.objects.order_by("title_i18n")
+            self.assertEqual(key(qs, "title_i18n"), "Falcon Kikker Zebra")
+
     def test_values_i18n_custom_fallback(self):
         Challenge.objects.create(default_language="nl", title="Hurray", i18n={"title_nl": ""})
 
