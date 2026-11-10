@@ -55,13 +55,13 @@ class TranslatedVirtualFieldCol(Col):
             )
         else:
             hint = (
-                "Add `objects = MultilingualManager()` to {model} to use translated fields "
-                "in its queries.".format(model=model._meta.label)
+                f"Add `objects = MultilingualManager()` to {model._meta.label} to use translated fields "
+                "in its queries."
             )
 
         raise FieldError(
             "Cannot use the translated field '{field}' in a query on {model}. {hint}".format(
-                field="{}.{}".format(self.target.model._meta.label, self.target.name),
+                field=f"{self.target.model._meta.label}.{self.target.name}",
                 model=model._meta.label,
                 hint=hint,
             )
