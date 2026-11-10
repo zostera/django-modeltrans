@@ -1,7 +1,7 @@
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models import F, JSONField, fields
+from django.db.models import F, JSONField, Value, fields
 from django.db.models.fields.json import KeyTextTransform
-from django.db.models.functions import Cast, Coalesce
+from django.db.models.functions import Cast, Coalesce, NullIf
 from django.utils.translation import gettext
 
 from .conf import get_default_language, get_fallback_chain, get_modeltrans_setting
@@ -247,6 +247,14 @@ class TranslatedVirtualField:
         # and now, add the list of fallback languages to the lookup list
         for fallback_language in fallback_chain:
             lookups.append(self._localized_lookup(fallback_language, bare_lookup))
+
+        # An empty translation in `i18n` must be skipped, just like `__get__()` does, so
+        # `NULLIF(<lookup>, '')` is used to make `COALESCE` continue to the next language
+        # in the chain. The lookup for the default language is a plain reference to the
+        # original field (a string), which is the last resort and is left as it is.
+        lookups = [
+            lookup if isinstance(lookup, str) else NullIf(lookup, Value("")) for lookup in lookups
+        ]
         return Coalesce(*lookups, output_field=self.output_field())
 
 
