@@ -344,8 +344,10 @@ class RelatedLookupAnnotationTest(TestCase):
                 self.assertEqual(sql.count("_annotation"), 2)
                 # one join per relation in the lookups, and both of them are used
                 self.assertEqual(sql.count("JOIN"), 2)
-                self.assertIn('COALESCE(("T2"."i18n"', sql)
-                self.assertIn('COALESCE(("T3"."i18n"', sql)
+                # each annotation resolves against its own join alias. Whether the alias
+                # itself is quoted differs per django version, so it is matched loosely.
+                self.assertRegex(sql, r'COALESCE\(\("?T2"?\."i18n"')
+                self.assertRegex(sql, r'COALESCE\(\("?T3"?\."i18n"')
 
                 self.assertEqual({c.name for c in qs}, {"Falcons", "Ducks"})
 
