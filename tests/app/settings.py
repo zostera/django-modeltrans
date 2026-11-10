@@ -101,3 +101,12 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "/static/"
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.InMemoryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
