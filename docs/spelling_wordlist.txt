@@ -23,3 +23,4 @@ lookup
 lookups
 psycopg
 kwarg
+queryset
