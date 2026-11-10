@@ -45,6 +45,11 @@ language::
     # SELECT ... FROM "app_blog"
     # WHERE COALESCE((app_blog.i18n->>'title_nl'), "app_blog"."title") = 'Valk'
 
+The language used for ``<fieldname>_i18n`` is the language which is active when the
+query is executed, not the one active while the queryset was built. So a queryset can
+be defined once and reused, for example as the ``queryset`` of a form field, and still
+follow the language of the request it is used in.
+
 Model objects containing translated fields get virtual fields for each field/
 language combination plus a field which always returns the active language.
 In the example, we have configured 3 translation languages: ``('nl', 'de', 'fr')``
